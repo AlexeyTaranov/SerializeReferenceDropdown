@@ -1,0 +1,13 @@
+{
+  "name": "com.alexeytaranov.serializereferencedropdown",
+  "version": "0.0.1",
+  "displayName": "Serialize Reference Dropdown",
+  "description": "Editor dropdown for SerializeReference Attribute",
+  "unity": "2019.1",
+  "unityRelease": "0b5",
+  "dependencies": {},
+  "author": {
+    "name": "Alexey Taranov",
+    "email": "alexey.taranov0@gmail.com"
+  }
+}
