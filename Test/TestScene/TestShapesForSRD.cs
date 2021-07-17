@@ -1,39 +1,46 @@
 using System;
-using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 
-namespace Test.TestScene
+public class TestShapesForSRD : MonoBehaviour
 {
-    public class TestShapesForSRD : MonoBehaviour
+    
+    [SRD]
+    [SerializeReference]
+    private IShape _singleShape;
+    
+    [SRD]
+    [SerializeReference]
+    private IShape[] _shapesArray;
+    
+    [SRD]
+    [SerializeField]
+    private int _nonSRDAttribute;
+    
+    [SRD]
+    [SerializeReference]
+    private int _refToInt;
+
+    private void OnValidate()
     {
-        [SerializeReference] 
-        private IShape _shape;
-        
-        [SerializeReference] 
-        private List<IShape> _shapes;
+        LogAllShapesArea();
+    }
 
-        private void OnValidate()
+    private void LogAllShapesArea()
+    {
+        string GetShapeAreaString(IShape shape)
         {
-            LogAllShapesArea();
+            return $"Area of {shape?.GetType().Name} : {shape?.GetArea()}";
         }
-
-        private void LogAllShapesArea()
-        {
-            string GetShapeAreaString(IShape shape)
-            {
-                return $"Area of {shape?.GetType().Name} : {shape?.GetArea()}";
-            }
             
-            Debug.Log(GetShapeAreaString(_shape));
-
-            if (_shapes != null)
-            {
-                var shapesAreaSb = new StringBuilder();
-                shapesAreaSb.AppendLine("Shapes area");
-                _shapes.ForEach((shape => shapesAreaSb.AppendLine(GetShapeAreaString(shape))));
-                Debug.Log(shapesAreaSb);
-            }
+        Debug.Log(GetShapeAreaString(_singleShape));
+        
+        if (_shapesArray != null)
+        {
+            var shapesAreaSb = new StringBuilder();
+            shapesAreaSb.AppendLine("Shapes area");
+            Array.ForEach(_shapesArray,shape => shapesAreaSb.AppendLine(GetShapeAreaString(shape)));
+            Debug.Log(shapesAreaSb);
         }
     }
 }

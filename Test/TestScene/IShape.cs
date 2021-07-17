@@ -1,7 +1,4 @@
-﻿namespace Test.TestScene
+﻿public interface IShape
 {
-    public interface IShape
-    {
-        float GetArea();
-    }
+    float GetArea();
 }
