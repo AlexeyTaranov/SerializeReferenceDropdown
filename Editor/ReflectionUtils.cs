@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
+using UnityEngine;
 
 namespace SRD.Editor
 {
@@ -22,8 +23,21 @@ namespace SRD.Editor
 
         public static IEnumerable<Type> GetAllTypesInCurrentDomain()
         {
-            return AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(s => s.GetTypes());
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            var types = new List<Type>();
+            foreach (var assembly in assemblies)
+            {
+                try
+                {
+                    types.AddRange(assembly.GetTypes());
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError(e);
+                }
+            }
+
+            return types;
         }
 
         public static Type[] GetFinalAssignableTypes(Type baseType, IEnumerable<Type> types)
