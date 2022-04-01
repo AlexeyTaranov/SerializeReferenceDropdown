@@ -16,17 +16,20 @@ namespace SRD.Editor
             {
                 return EditorGUI.GetPropertyHeight(property, label, true) + DropdownHeight;
             }
+
             return EditorGUI.GetPropertyHeight(property, label, true);
         }
 
         public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
         {
             EditorGUI.BeginProperty(rect, label, property);
-            
+
             var indent = EditorGUI.indentLevel;
             EditorGUI.indentLevel = 0;
-            
-            if (property.propertyType == SerializedPropertyType.ManagedReference)
+
+            _serializedPropertyInfo ??= new SerializedPropertyInfo(property);
+            if (property.propertyType == SerializedPropertyType.ManagedReference &&
+                _serializedPropertyInfo.CanShowSRD())
             {
                 var rects = SplitRect();
                 DrawSRDTypeDropdown(rects.dropdownRect, property, label);
@@ -50,20 +53,18 @@ namespace SRD.Editor
 
         void DrawSRDTypeDropdown(Rect rect, SerializedProperty property, GUIContent label)
         {
-            _serializedPropertyInfo ??= new SerializedPropertyInfo(property);
             var selectedIndex = _serializedPropertyInfo.GetIndexAssignedTypeOfProperty(property);
             var oldText = label.text;
             var srdLabel = $"[SRD] {label.text}";
-            var newIndex = EditorGUI.Popup(rect, srdLabel, selectedIndex,
-                _serializedPropertyInfo.AssignableTypeNames);
+            var newIndex = EditorGUI.Popup(rect, srdLabel, selectedIndex, _serializedPropertyInfo.AssignableTypeNames);
             label.text = oldText;
             if (selectedIndex != newIndex)
             {
-                Undo.RecordObject(property.serializedObject.targetObject, "Dropdown");
+                Undo.RecordObject(property.serializedObject.targetObject, "Update type in SRD");
                 object newObject = null;
                 if (newIndex != 0)
                 {
-                    newObject = Activator.CreateInstance(_serializedPropertyInfo.AssignableTypes[newIndex]);
+                    newObject = Activator.CreateInstance(_serializedPropertyInfo.GetTypeAtIndex(newIndex));
                 }
 
                 _serializedPropertyInfo.ApplyValueToProperty(newObject, property);
