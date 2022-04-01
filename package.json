@@ -1,6 +1,6 @@
 {
   "name": "com.alexeytaranov.srd",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "displayName": "SRD",
   "description": "Editor dropdown for SerializeReference Attribute",
   "unity": "2021.1",
