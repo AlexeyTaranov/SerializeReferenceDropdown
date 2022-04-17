@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEditor;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace SRD.Editor
@@ -9,6 +10,8 @@ namespace SRD.Editor
     {
         private const int DropdownHeight = 20;
         private SerializedPropertyInfo _serializedPropertyInfo;
+        private SRDDropdown _dropdown;
+        private int _lastUsedIndex = -1;
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
@@ -54,20 +57,27 @@ namespace SRD.Editor
         void DrawSRDTypeDropdown(Rect rect, SerializedProperty property, GUIContent label)
         {
             var selectedIndex = _serializedPropertyInfo.GetIndexAssignedTypeOfProperty(property);
-            var oldText = label.text;
-            var srdLabel = $"[SRD] {label.text}";
-            var newIndex = EditorGUI.Popup(rect, srdLabel, selectedIndex, _serializedPropertyInfo.AssignableTypeNames);
-            label.text = oldText;
-            if (selectedIndex != newIndex)
+            if (GUI.Button(rect, new GUIContent("Show types"), EditorStyles.toolbarButton))
             {
-                Undo.RecordObject(property.serializedObject.targetObject, "Update type in SRD");
-                object newObject = null;
-                if (newIndex != 0)
-                {
-                    newObject = Activator.CreateInstance(_serializedPropertyInfo.GetTypeAtIndex(newIndex));
-                }
+                _dropdown ??= new SRDDropdown(new AdvancedDropdownState(),
+                    _serializedPropertyInfo.AssignableTypeNames, WriteNewInstanceByIndexType);
+                _dropdown.Show(rect);
+            }
 
-                _serializedPropertyInfo.ApplyValueToProperty(newObject, property);
+            void WriteNewInstanceByIndexType(int typeIndex)
+            {
+                if (selectedIndex != _lastUsedIndex)
+                {
+                    _lastUsedIndex = typeIndex;
+                    Undo.RecordObject(property.serializedObject.targetObject, "Update type in SRD");
+                    object newObject = null;
+                    if (_lastUsedIndex != 0)
+                    {
+                        newObject = Activator.CreateInstance(_serializedPropertyInfo.GetTypeAtIndex(_lastUsedIndex));
+                    }
+
+                    _serializedPropertyInfo.ApplyValueToProperty(newObject, property);
+                }
             }
         }
     }
