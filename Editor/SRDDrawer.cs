@@ -8,18 +8,12 @@ namespace SRD.Editor
     [CustomPropertyDrawer(typeof(SRDAttribute))]
     public class SRDDrawer : PropertyDrawer
     {
-        private const int DropdownHeight = 20;
         private SerializedPropertyInfo _serializedPropertyInfo;
         private SRDDropdown _dropdown;
         private int _lastUsedIndex = -1;
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            if (property.propertyType == SerializedPropertyType.ManagedReference)
-            {
-                return EditorGUI.GetPropertyHeight(property, label, true) + DropdownHeight;
-            }
-
             return EditorGUI.GetPropertyHeight(property, label, true);
         }
 
@@ -34,9 +28,12 @@ namespace SRD.Editor
             if (property.propertyType == SerializedPropertyType.ManagedReference &&
                 _serializedPropertyInfo.CanShowSRD())
             {
-                var rects = SplitRect();
-                DrawSRDTypeDropdown(rects.dropdownRect, property, label);
-                EditorGUI.PropertyField(rects.propertyRect, property, label, true);
+                Rect dropdowRect = new Rect(rect);
+                dropdowRect.width -= EditorGUIUtility.labelWidth;
+                dropdowRect.x += EditorGUIUtility.labelWidth;
+                dropdowRect.height = EditorGUIUtility.singleLineHeight;
+                DrawSRDTypeDropdown(dropdowRect, property, label);
+                EditorGUI.PropertyField(rect, property, label, true);
             }
             else
             {
@@ -45,19 +42,13 @@ namespace SRD.Editor
 
             EditorGUI.indentLevel = indent;
             EditorGUI.EndProperty();
-
-            (Rect dropdownRect, Rect propertyRect) SplitRect()
-            {
-                var dropdownRect = new Rect(rect.x, rect.y, rect.width, DropdownHeight);
-                var propertyRect = new Rect(rect.x, rect.y + DropdownHeight, rect.width, rect.height - DropdownHeight);
-                return (dropdownRect, propertyRect);
-            }
         }
 
         void DrawSRDTypeDropdown(Rect rect, SerializedProperty property, GUIContent label)
         {
             var selectedIndex = _serializedPropertyInfo.GetIndexAssignedTypeOfProperty(property);
-            if (GUI.Button(rect, new GUIContent("Show types"), EditorStyles.toolbarButton))
+            if (EditorGUI.DropdownButton(rect,
+                    new GUIContent(_serializedPropertyInfo.AssignableTypeNames[selectedIndex]), FocusType.Keyboard))
             {
                 _dropdown ??= new SRDDropdown(new AdvancedDropdownState(),
                     _serializedPropertyInfo.AssignableTypeNames, WriteNewInstanceByIndexType);
@@ -66,18 +57,16 @@ namespace SRD.Editor
 
             void WriteNewInstanceByIndexType(int typeIndex)
             {
-                if (selectedIndex != _lastUsedIndex)
+                if (selectedIndex == _lastUsedIndex) return;
+                _lastUsedIndex = typeIndex;
+                Undo.RecordObject(property.serializedObject.targetObject, "Update type in SRD");
+                object newObject = null;
+                if (_lastUsedIndex != 0)
                 {
-                    _lastUsedIndex = typeIndex;
-                    Undo.RecordObject(property.serializedObject.targetObject, "Update type in SRD");
-                    object newObject = null;
-                    if (_lastUsedIndex != 0)
-                    {
-                        newObject = Activator.CreateInstance(_serializedPropertyInfo.GetTypeAtIndex(_lastUsedIndex));
-                    }
-
-                    _serializedPropertyInfo.ApplyValueToProperty(newObject, property);
+                    newObject = Activator.CreateInstance(_serializedPropertyInfo.GetTypeAtIndex(_lastUsedIndex));
                 }
+
+                _serializedPropertyInfo.ApplyValueToProperty(newObject, property);
             }
         }
     }

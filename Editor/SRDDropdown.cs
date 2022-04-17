@@ -25,9 +25,10 @@ namespace SRD.Editor
             for (int i = 0; i < _fieldFieldTypes.Length; i++)
             {
                 var item = new AdvancedDropdownItem(_fieldFieldTypes[i]);
-                _itemAndIndexes.Add(item,i);
+                _itemAndIndexes.Add(item, i);
                 root.AddChild(item);
             }
+
             return root;
         }
 
