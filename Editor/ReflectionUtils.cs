@@ -40,14 +40,14 @@ namespace SRD.Editor
             return types;
         }
 
-        public static Type[] GetFinalAssignableTypes(Type baseType, IEnumerable<Type> types)
+        public static IEnumerable<Type> GetFinalAssignableTypes(Type baseType, IEnumerable<Type> types)
         {
             bool IsFinalClass(Type type)
             {
                 return baseType.IsAssignableFrom(type) && !type.IsAbstract && !type.IsInterface;
             }
 
-            return types.Where(IsFinalClass).ToArray();
+            return types.Where(IsFinalClass);
         }
     }
 }

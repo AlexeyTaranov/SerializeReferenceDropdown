@@ -13,7 +13,8 @@ namespace SRD.Editor
         public readonly string[] AssignableTypeNames;
 
         private readonly Type[] _assignableTypes;
-        private readonly FieldInfo _fieldInfo;
+
+        private readonly List<FieldInfo> _fieldHierarchyToTarget = new List<FieldInfo>();
 
         public SerializedPropertyInfo(SerializedProperty property)
         {
@@ -22,13 +23,15 @@ namespace SRD.Editor
             if (IsArrayProperty(property))
             {
                 var startIndexArrayPropertyPath = property.propertyPath.IndexOf(ArrayPropertySubstring);
-                propertyPath = propertyPath.Remove(startIndexArrayPropertyPath);
+                propertyPath = property.propertyPath.Remove(startIndexArrayPropertyPath);
             }
 
-            _fieldInfo = GetFieldFromHierarchyToBaseType(serializedObjectType);
+            GetFieldFromPathPropertyHierarchy(serializedObjectType, propertyPath.Split('.'));
+            _fieldHierarchyToTarget.Reverse();
             var fieldType = ReflectionUtils.ExtractReferenceFieldTypeFromSerializedProperty(property);
             var allTypes = ReflectionUtils.GetAllTypesInCurrentDomain();
-            _assignableTypes = ReflectionUtils.GetFinalAssignableTypes(fieldType, allTypes);
+            _assignableTypes = ReflectionUtils.GetFinalAssignableTypes(fieldType, allTypes)
+                .Where(type => type.IsSubclassOf(typeof(UnityEngine.Object)) == false).ToArray();
             AssignableTypeNames = _assignableTypes.Select(type => type.Name).ToArray();
             if (!fieldType.IsValueType)
             {
@@ -40,16 +43,40 @@ namespace SRD.Editor
                 AssignableTypeNames = typeNamesWithNull.ToArray();
             }
 
-            FieldInfo GetFieldFromHierarchyToBaseType(Type type)
+            FieldInfo GetFieldFromPathPropertyHierarchy(Type type, string[] splitPath, int index = 0)
             {
-                var field = type.GetField(propertyPath,
+                var fieldPath = splitPath[index];
+                if (IsArrayProperty(property))
+                {
+                    var startIndexArrayPropertyPath = property.propertyPath.IndexOf(ArrayPropertySubstring);
+                    fieldPath = property.propertyPath.Remove(startIndexArrayPropertyPath);
+                }
+
+                if (index == splitPath.Length - 1)
+                {
+                    var field = GetFieldFromHierarchyToBaseType(type, fieldPath);
+                    _fieldHierarchyToTarget.Add(field);
+                    return field;
+                }
+                else
+                {
+                    var field = GetFieldFromHierarchyToBaseType(type, fieldPath);
+                    var baseField = GetFieldFromPathPropertyHierarchy(field.FieldType, splitPath, index + 1);
+                    _fieldHierarchyToTarget.Add(field);
+                    return baseField;
+                }
+            }
+
+            FieldInfo GetFieldFromHierarchyToBaseType(Type type, string path)
+            {
+                var field = type.GetField(path,
                     BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
                 if (field == null)
                 {
                     var baseType = type.BaseType;
                     if (baseType != null)
                     {
-                        return GetFieldFromHierarchyToBaseType(baseType);
+                        return GetFieldFromHierarchyToBaseType(baseType, path);
                     }
                 }
 
@@ -57,12 +84,12 @@ namespace SRD.Editor
             }
         }
 
-        public bool CanShowSRD() => _assignableTypes.Any() && _fieldInfo != null;
+        public bool CanShowSRD() => _assignableTypes.Any() && _fieldHierarchyToTarget.Any();
 
         public int GetIndexAssignedTypeOfProperty(SerializedProperty property)
         {
             var targetObject = property.serializedObject.targetObject;
-            var objectValue = _fieldInfo.GetValue(targetObject);
+            var objectValue = GetObjectValueFromHierarchy(targetObject);
             if (IsArrayProperty(property))
             {
                 int index = GetIndexArrayElementProperty(property);
@@ -82,15 +109,30 @@ namespace SRD.Editor
             var targetObject = property.serializedObject.targetObject;
             if (IsArrayProperty(property))
             {
-                var arrayFieldObjects = _fieldInfo.GetValue(targetObject);
+                var arrayFieldObjects = GetObjectValueFromHierarchy(targetObject);
                 int index = GetIndexArrayElementProperty(property);
                 var objectsArray = (object[])arrayFieldObjects;
                 objectsArray[index] = value;
             }
             else
             {
-                _fieldInfo.SetValue(targetObject, value);
+                property.managedReferenceValue = value;
+                property.serializedObject.ApplyModifiedProperties();
+                property.serializedObject.Update();
             }
+        }
+
+        object GetObjectValueFromHierarchy(object objectValue)
+        {
+            foreach (var field in _fieldHierarchyToTarget)
+            {
+                if (objectValue != null)
+                {
+                    objectValue = field.GetValue(objectValue);
+                }
+            }
+
+            return objectValue;
         }
 
         bool IsArrayProperty(SerializedProperty property) => property.propertyPath.Contains(ArrayPropertySubstring);
