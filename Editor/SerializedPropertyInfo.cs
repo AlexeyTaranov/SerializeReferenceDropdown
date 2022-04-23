@@ -10,11 +10,10 @@ namespace SRD.Editor
     {
         private const string ArrayPropertySubstring = ".Array.data[";
 
-        public readonly string[] AssignableTypeNames;
-
         private readonly Type[] _assignableTypes;
-
         private readonly List<FieldInfo> _fieldHierarchyToTarget = new List<FieldInfo>();
+
+        public readonly string[] AssignableTypeNames;
 
         public SerializedPropertyInfo(SerializedProperty property)
         {
@@ -122,7 +121,7 @@ namespace SRD.Editor
             }
         }
 
-        object GetObjectValueFromHierarchy(object objectValue)
+        private object GetObjectValueFromHierarchy(object objectValue)
         {
             foreach (var field in _fieldHierarchyToTarget)
             {
@@ -135,7 +134,8 @@ namespace SRD.Editor
             return objectValue;
         }
 
-        bool IsArrayProperty(SerializedProperty property) => property.propertyPath.Contains(ArrayPropertySubstring);
+        private bool IsArrayProperty(SerializedProperty property) =>
+            property.propertyPath.Contains(ArrayPropertySubstring);
 
         private int GetIndexArrayElementProperty(SerializedProperty property)
         {

@@ -8,8 +8,9 @@ namespace SRD.Editor
     {
         private readonly string[] _fieldFieldTypes;
         private readonly Action<int> _onSelectedTypeIndex;
-        private Dictionary<AdvancedDropdownItem, int> _itemAndIndexes = new Dictionary<AdvancedDropdownItem, int>();
 
+        private readonly Dictionary<AdvancedDropdownItem, int> _itemAndIndexes =
+            new Dictionary<AdvancedDropdownItem, int>();
 
         public SRDDropdown(AdvancedDropdownState state, string[] fieldTypes, Action<int> onSelectedNewType) :
             base(state)
