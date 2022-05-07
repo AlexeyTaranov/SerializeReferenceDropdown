@@ -8,12 +8,13 @@ namespace SRD.Editor
 {
     public class SerializedPropertyInfo
     {
+        private static readonly Dictionary<Type, Type[]> AssignableTypesCache = new Dictionary<Type, Type[]>();
         private const string ArrayPropertySubstring = ".Array.data[";
 
-        private readonly Type[] _assignableTypes;
+        private readonly Type _propertyType;
         private readonly List<FieldInfo> _fieldHierarchyToTarget = new List<FieldInfo>();
 
-        public readonly string[] AssignableTypeNames;
+        public Type[] AssignableTypes => AssignableTypesCache[_propertyType];
 
         public SerializedPropertyInfo(SerializedProperty property)
         {
@@ -27,20 +28,23 @@ namespace SRD.Editor
 
             GetFieldFromPathPropertyHierarchy(serializedObjectType, propertyPath.Split('.'));
             _fieldHierarchyToTarget.Reverse();
-            var fieldType = ReflectionUtils.ExtractReferenceFieldTypeFromSerializedProperty(property);
-            var allTypes = ReflectionUtils.GetAllTypesInCurrentDomain();
-            _assignableTypes = ReflectionUtils.GetFinalAssignableTypes(fieldType, allTypes)
-                .Where(type => type.IsSubclassOf(typeof(UnityEngine.Object)) == false).ToArray();
-            AssignableTypeNames = _assignableTypes.Select(type => type.Name).ToArray();
-            if (!fieldType.IsValueType)
+            _propertyType = ReflectionUtils.ExtractReferenceFieldTypeFromSerializedProperty(property);
+            if (AssignableTypesCache.ContainsKey(_propertyType))
             {
-                var typesWithNull = new List<Type> { null };
-                typesWithNull.AddRange(_assignableTypes);
-                _assignableTypes = typesWithNull.ToArray();
-                var typeNamesWithNull = new List<string> { "null" };
-                typeNamesWithNull.AddRange(AssignableTypeNames);
-                AssignableTypeNames = typeNamesWithNull.ToArray();
+                return;
             }
+
+            var allTypes = ReflectionUtils.GetAllTypesInCurrentDomain();
+            var assignableTypes = ReflectionUtils.GetFinalAssignableTypes(_propertyType, allTypes,
+                predicate: type => type.IsSubclassOf(typeof(UnityEngine.Object)) == false).ToArray();
+            var assignableTypesCache = new Type[assignableTypes.Length + 1];
+            assignableTypesCache[0] = null;
+            for (int i = 1; i < assignableTypesCache.Length; i++)
+            {
+                assignableTypesCache[i] = assignableTypes[i - 1];
+            }
+
+            AssignableTypesCache.Add(_propertyType, assignableTypesCache);
 
             FieldInfo GetFieldFromPathPropertyHierarchy(Type type, string[] splitPath, int index = 0)
             {
@@ -83,7 +87,7 @@ namespace SRD.Editor
             }
         }
 
-        public bool CanShowSRD() => _assignableTypes.Any() && _fieldHierarchyToTarget.Any();
+        public bool CanShowSRD() => AssignableTypes.Any() && _fieldHierarchyToTarget.Any();
 
         public int GetIndexAssignedTypeOfProperty(SerializedProperty property)
         {
@@ -98,10 +102,18 @@ namespace SRD.Editor
 
             if (objectValue is null) return 0;
 
-            return Array.IndexOf(_assignableTypes, objectValue.GetType());
-        }
+            var type = objectValue.GetType();
+            var cacheTypes = AssignableTypesCache[_propertyType];
+            for (int i = 0; i < cacheTypes.Length; i++)
+            {
+                if (cacheTypes[i] == type)
+                {
+                    return i;
+                }
+            }
 
-        public Type GetTypeAtIndex(int index) => _assignableTypes[index];
+            return -1;
+        }
 
         public void ApplyValueToProperty(object value, SerializedProperty property)
         {

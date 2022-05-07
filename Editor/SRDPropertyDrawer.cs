@@ -6,7 +6,7 @@ using UnityEngine;
 namespace SRD.Editor
 {
     [CustomPropertyDrawer(typeof(SRDAttribute))]
-    public class SRDDrawer : PropertyDrawer
+    public class SRDPropertyDrawer : PropertyDrawer
     {
         private SerializedPropertyInfo _serializedPropertyInfo;
         private int _lastUsedIndex = -1;
@@ -46,11 +46,11 @@ namespace SRD.Editor
         void DrawSRDTypeDropdown(Rect rect, SerializedProperty property, GUIContent label)
         {
             var selectedIndex = _serializedPropertyInfo.GetIndexAssignedTypeOfProperty(property);
-            if (EditorGUI.DropdownButton(rect,
-                    new GUIContent(_serializedPropertyInfo.AssignableTypeNames[selectedIndex]), FocusType.Keyboard))
+            var typeName = _serializedPropertyInfo.AssignableTypes[selectedIndex]?.Name ?? "null";
+            if (EditorGUI.DropdownButton(rect, new GUIContent(typeName), FocusType.Keyboard))
             {
                 var dropdown = new SRDDropdown(new AdvancedDropdownState(),
-                    _serializedPropertyInfo.AssignableTypeNames, WriteNewInstanceByIndexType);
+                    _serializedPropertyInfo.AssignableTypes, WriteNewInstanceByIndexType);
                 dropdown.Show(rect);
             }
 
@@ -62,7 +62,7 @@ namespace SRD.Editor
                 object newObject = null;
                 if (_lastUsedIndex != 0)
                 {
-                    newObject = Activator.CreateInstance(_serializedPropertyInfo.GetTypeAtIndex(_lastUsedIndex));
+                    newObject = Activator.CreateInstance(_serializedPropertyInfo.AssignableTypes[_lastUsedIndex]);
                 }
 
                 _serializedPropertyInfo.ApplyValueToProperty(newObject, property);

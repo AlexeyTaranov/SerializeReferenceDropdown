@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEditor;
@@ -8,8 +9,9 @@ namespace SRD.Editor.AnyType
 {
     public class AnyTypeDrawerUnityObject
     {
+        private Dictionary<Type, string> SearchFilterCache = new Dictionary<Type, string>();
+        
         private readonly SerializedProperty _unityObjectProperty;
-        private readonly string _searchFilter;
         private readonly Type _targetType;
         private bool _needCheckObjectSelector;
 
@@ -17,7 +19,10 @@ namespace SRD.Editor.AnyType
         {
             _unityObjectProperty = unityObjectProperty;
             _targetType = GetPropertyType(nativeTypeProperty);
-            _searchFilter = GetSearchFilter();
+            if (SearchFilterCache.ContainsKey(_targetType) == false)
+            {
+                SearchFilterCache.Add(_targetType,GetSearchFilter());
+            }
         }
 
         public void DrawUnityReferenceType(GUIContent label, Rect mainRect, Rect leftButtonRect)
@@ -29,7 +34,7 @@ namespace SRD.Editor.AnyType
             mainRect.width -= 25;
             if (GUI.Button(searchButton, "Pick"))
             {
-                EditorGUIUtility.ShowObjectPicker<UnityEngine.Object>(null, true, _searchFilter, 0);
+                EditorGUIUtility.ShowObjectPicker<UnityEngine.Object>(null, true, SearchFilterCache[_targetType], 0);
                 _needCheckObjectSelector = true;
             }
 
@@ -72,8 +77,8 @@ namespace SRD.Editor.AnyType
         private string GetSearchFilter()
         {
             var allTypes = ReflectionUtils.GetAllTypesInCurrentDomain();
-            var types = ReflectionUtils.GetFinalAssignableTypes(_targetType, allTypes)
-                .Where(type => type.IsSubclassOf(typeof(UnityEngine.Object))).ToArray();
+            var types = ReflectionUtils.GetFinalAssignableTypes(_targetType, allTypes,
+                predicate: type => type.IsSubclassOf(typeof(UnityEngine.Object)));
 
             var sb = new StringBuilder();
             foreach (var type in types)

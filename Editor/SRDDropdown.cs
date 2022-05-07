@@ -6,16 +6,16 @@ namespace SRD.Editor
 {
     public class SRDDropdown : AdvancedDropdown
     {
-        private readonly string[] _fieldFieldTypes;
+        private readonly Type[] _fieldTypes;
         private readonly Action<int> _onSelectedTypeIndex;
 
         private readonly Dictionary<AdvancedDropdownItem, int> _itemAndIndexes =
             new Dictionary<AdvancedDropdownItem, int>();
 
-        public SRDDropdown(AdvancedDropdownState state, string[] fieldTypes, Action<int> onSelectedNewType) :
+        public SRDDropdown(AdvancedDropdownState state, Type[] fieldTypes, Action<int> onSelectedNewType) :
             base(state)
         {
-            _fieldFieldTypes = fieldTypes;
+            _fieldTypes = fieldTypes;
             _onSelectedTypeIndex = onSelectedNewType;
         }
 
@@ -23,9 +23,10 @@ namespace SRD.Editor
         {
             var root = new AdvancedDropdownItem("Types");
             _itemAndIndexes.Clear();
-            for (int i = 0; i < _fieldFieldTypes.Length; i++)
+            for (int i = 0; i < _fieldTypes.Length; i++)
             {
-                var item = new AdvancedDropdownItem(_fieldFieldTypes[i]);
+                var typeName = _fieldTypes[i]?.Name ?? "null";
+                var item = new AdvancedDropdownItem(typeName);
                 _itemAndIndexes.Add(item, i);
                 root.AddChild(item);
             }
