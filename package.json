@@ -9,5 +9,11 @@
   "author": {
     "name": "Alexey Taranov",
     "email": "alexey.taranov0@gmail.com"
-  }
+  },
+    "samples": [
+    {
+      "displayName": "SRD Test Samples",
+      "path": "Samples~"
+    }
+  ]
 }
