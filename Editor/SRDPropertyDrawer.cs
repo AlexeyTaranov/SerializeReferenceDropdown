@@ -9,7 +9,6 @@ namespace SRD.Editor
     public class SRDDrawer : PropertyDrawer
     {
         private SerializedPropertyInfo _serializedPropertyInfo;
-        private SRDDropdown _dropdown;
         private int _lastUsedIndex = -1;
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
@@ -50,9 +49,9 @@ namespace SRD.Editor
             if (EditorGUI.DropdownButton(rect,
                     new GUIContent(_serializedPropertyInfo.AssignableTypeNames[selectedIndex]), FocusType.Keyboard))
             {
-                _dropdown ??= new SRDDropdown(new AdvancedDropdownState(),
+                var dropdown = new SRDDropdown(new AdvancedDropdownState(),
                     _serializedPropertyInfo.AssignableTypeNames, WriteNewInstanceByIndexType);
-                _dropdown.Show(rect);
+                dropdown.Show(rect);
             }
 
             void WriteNewInstanceByIndexType(int typeIndex)
