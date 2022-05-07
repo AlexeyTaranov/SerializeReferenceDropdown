@@ -1,14 +1,16 @@
 {
-    "name": "SRDRuntime",
+    "name": "SerializeReferenceDropdownRuntime",
     "rootNamespace": "",
-    "references": [],
+    "references": ["GUID:343deaaf83e0cee4ca978e7df0b80d21","GUID:2bafac87e7f4b9b418d9448d219b01ab"],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [],
+    "defineConstraints": [
+        "UNITY_2019_3_OR_NEWER "
+    ],
     "versionDefines": [],
     "noEngineReferences": false
 }

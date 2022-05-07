@@ -4,16 +4,17 @@ using System.Linq;
 using System.Reflection;
 using UnityEditor;
 
-namespace SRD.Editor
+namespace SerializeReferenceDropdown.Editor
 {
     public class SerializedPropertyInfo
     {
+        private static readonly Dictionary<Type, Type[]> AssignableTypesCache = new Dictionary<Type, Type[]>();
         private const string ArrayPropertySubstring = ".Array.data[";
 
-        public readonly string[] AssignableTypeNames;
+        private readonly Type _propertyType;
+        private readonly List<FieldInfo> _fieldHierarchyToTarget = new List<FieldInfo>();
 
-        private readonly Type[] _assignableTypes;
-        private readonly FieldInfo _fieldInfo;
+        public Type[] AssignableTypes => AssignableTypesCache[_propertyType];
 
         public SerializedPropertyInfo(SerializedProperty property)
         {
@@ -22,34 +23,63 @@ namespace SRD.Editor
             if (IsArrayProperty(property))
             {
                 var startIndexArrayPropertyPath = property.propertyPath.IndexOf(ArrayPropertySubstring);
-                propertyPath = propertyPath.Remove(startIndexArrayPropertyPath);
+                propertyPath = property.propertyPath.Remove(startIndexArrayPropertyPath);
             }
 
-            _fieldInfo = GetFieldFromHierarchyToBaseType(serializedObjectType);
-            var fieldType = ReflectionUtils.ExtractReferenceFieldTypeFromSerializedProperty(property);
+            GetFieldFromPathPropertyHierarchy(serializedObjectType, propertyPath.Split('.'));
+            _fieldHierarchyToTarget.Reverse();
+            _propertyType = ReflectionUtils.ExtractReferenceFieldTypeFromSerializedProperty(property);
+            if (AssignableTypesCache.ContainsKey(_propertyType))
+            {
+                return;
+            }
+
             var allTypes = ReflectionUtils.GetAllTypesInCurrentDomain();
-            _assignableTypes = ReflectionUtils.GetFinalAssignableTypes(fieldType, allTypes);
-            AssignableTypeNames = _assignableTypes.Select(type => type.Name).ToArray();
-            if (!fieldType.IsValueType)
+            var assignableTypes = ReflectionUtils.GetFinalAssignableTypes(_propertyType, allTypes,
+                predicate: type => type.IsSubclassOf(typeof(UnityEngine.Object)) == false).ToArray();
+            var assignableTypesCache = new Type[assignableTypes.Length + 1];
+            assignableTypesCache[0] = null;
+            for (int i = 1; i < assignableTypesCache.Length; i++)
             {
-                var typesWithNull = new List<Type> { null };
-                typesWithNull.AddRange(_assignableTypes);
-                _assignableTypes = typesWithNull.ToArray();
-                var typeNamesWithNull = new List<string> { "null" };
-                typeNamesWithNull.AddRange(AssignableTypeNames);
-                AssignableTypeNames = typeNamesWithNull.ToArray();
+                assignableTypesCache[i] = assignableTypes[i - 1];
             }
 
-            FieldInfo GetFieldFromHierarchyToBaseType(Type type)
+            AssignableTypesCache.Add(_propertyType, assignableTypesCache);
+
+            FieldInfo GetFieldFromPathPropertyHierarchy(Type type, string[] splitPath, int index = 0)
             {
-                var field = type.GetField(propertyPath,
+                var fieldPath = splitPath[index];
+                if (IsArrayProperty(property))
+                {
+                    var startIndexArrayPropertyPath = property.propertyPath.IndexOf(ArrayPropertySubstring);
+                    fieldPath = property.propertyPath.Remove(startIndexArrayPropertyPath);
+                }
+
+                if (index == splitPath.Length - 1)
+                {
+                    var field = GetFieldFromHierarchyToBaseType(type, fieldPath);
+                    _fieldHierarchyToTarget.Add(field);
+                    return field;
+                }
+                else
+                {
+                    var field = GetFieldFromHierarchyToBaseType(type, fieldPath);
+                    var baseField = GetFieldFromPathPropertyHierarchy(field.FieldType, splitPath, index + 1);
+                    _fieldHierarchyToTarget.Add(field);
+                    return baseField;
+                }
+            }
+
+            FieldInfo GetFieldFromHierarchyToBaseType(Type type, string path)
+            {
+                var field = type.GetField(path,
                     BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
                 if (field == null)
                 {
                     var baseType = type.BaseType;
                     if (baseType != null)
                     {
-                        return GetFieldFromHierarchyToBaseType(baseType);
+                        return GetFieldFromHierarchyToBaseType(baseType, path);
                     }
                 }
 
@@ -57,12 +87,12 @@ namespace SRD.Editor
             }
         }
 
-        public bool CanShowSRD() => _assignableTypes.Any() && _fieldInfo != null;
+        public bool CanShowDropdown() => AssignableTypes.Any() && _fieldHierarchyToTarget.Any();
 
         public int GetIndexAssignedTypeOfProperty(SerializedProperty property)
         {
             var targetObject = property.serializedObject.targetObject;
-            var objectValue = _fieldInfo.GetValue(targetObject);
+            var objectValue = GetObjectValueFromHierarchy(targetObject);
             if (IsArrayProperty(property))
             {
                 int index = GetIndexArrayElementProperty(property);
@@ -72,28 +102,52 @@ namespace SRD.Editor
 
             if (objectValue is null) return 0;
 
-            return Array.IndexOf(_assignableTypes, objectValue.GetType());
-        }
+            var type = objectValue.GetType();
+            var cacheTypes = AssignableTypesCache[_propertyType];
+            for (int i = 0; i < cacheTypes.Length; i++)
+            {
+                if (cacheTypes[i] == type)
+                {
+                    return i;
+                }
+            }
 
-        public Type GetTypeAtIndex(int index) => _assignableTypes[index];
+            return -1;
+        }
 
         public void ApplyValueToProperty(object value, SerializedProperty property)
         {
             var targetObject = property.serializedObject.targetObject;
             if (IsArrayProperty(property))
             {
-                var arrayFieldObjects = _fieldInfo.GetValue(targetObject);
+                var arrayFieldObjects = GetObjectValueFromHierarchy(targetObject);
                 int index = GetIndexArrayElementProperty(property);
                 var objectsArray = (object[])arrayFieldObjects;
                 objectsArray[index] = value;
             }
             else
             {
-                _fieldInfo.SetValue(targetObject, value);
+                property.managedReferenceValue = value;
+                property.serializedObject.ApplyModifiedProperties();
+                property.serializedObject.Update();
             }
         }
 
-        bool IsArrayProperty(SerializedProperty property) => property.propertyPath.Contains(ArrayPropertySubstring);
+        private object GetObjectValueFromHierarchy(object objectValue)
+        {
+            foreach (var field in _fieldHierarchyToTarget)
+            {
+                if (objectValue != null)
+                {
+                    objectValue = field.GetValue(objectValue);
+                }
+            }
+
+            return objectValue;
+        }
+
+        private bool IsArrayProperty(SerializedProperty property) =>
+            property.propertyPath.Contains(ArrayPropertySubstring);
 
         private int GetIndexArrayElementProperty(SerializedProperty property)
         {
