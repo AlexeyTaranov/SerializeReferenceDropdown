@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace SRD.Editor.AnyType
+namespace SerializeReferenceDropdown.Editor.AnyType
 {
     [CustomPropertyDrawer(typeof(AnyType<>))]
     public class AnyTypeDrawer : PropertyDrawer

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEditor;
 
-namespace SRD.Editor
+namespace SerializeReferenceDropdown.Editor
 {
     public class SerializedPropertyInfo
     {
@@ -87,7 +87,7 @@ namespace SRD.Editor
             }
         }
 
-        public bool CanShowSRD() => AssignableTypes.Any() && _fieldHierarchyToTarget.Any();
+        public bool CanShowDropdown() => AssignableTypes.Any() && _fieldHierarchyToTarget.Any();
 
         public int GetIndexAssignedTypeOfProperty(SerializedProperty property)
         {

@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using UnityEditor.IMGUI.Controls;
 
-namespace SRD.Editor
+namespace SerializeReferenceDropdown.Editor
 {
-    public class SRDDropdown : AdvancedDropdown
+    public class SerializeReferenceDropdownAdvancedDropdown : AdvancedDropdown
     {
         private readonly Type[] _fieldTypes;
         private readonly Action<int> _onSelectedTypeIndex;
@@ -12,7 +12,7 @@ namespace SRD.Editor
         private readonly Dictionary<AdvancedDropdownItem, int> _itemAndIndexes =
             new Dictionary<AdvancedDropdownItem, int>();
 
-        public SRDDropdown(AdvancedDropdownState state, Type[] fieldTypes, Action<int> onSelectedNewType) :
+        public SerializeReferenceDropdownAdvancedDropdown(AdvancedDropdownState state, Type[] fieldTypes, Action<int> onSelectedNewType) :
             base(state)
         {
             _fieldTypes = fieldTypes;

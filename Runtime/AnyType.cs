@@ -6,7 +6,7 @@ public sealed class AnyType<T> where T : class
 {
     [SerializeField] private bool _isUnityObjectReference;
     [SerializeField] private UnityEngine.Object _unityObject;
-    [SerializeReference,SRD] private T _nativeObject;
+    [SerializeReference,SerializeReferenceDropdown] private T _nativeObject;
 
     public T Get()
     {

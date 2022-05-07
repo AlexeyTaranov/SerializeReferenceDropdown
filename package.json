@@ -1,10 +1,10 @@
 {
-  "name": "com.alexeytaranov.srd",
-  "version": "0.0.3",
-  "displayName": "SRD",
+  "name": "com.alexeytaranov.serializereferencedropdown",
+  "version": "0.1.0",
+  "displayName": "SerializeReferenceDropdown",
   "description": "Editor dropdown for SerializeReference Attribute",
-  "unity": "2021.1",
-  "unityRelease": "0b5",
+  "unity": "2019.3",
+  "unityRelease": "0a1",
   "dependencies": {},
   "author": {
     "name": "Alexey Taranov",
@@ -12,7 +12,7 @@
   },
     "samples": [
     {
-      "displayName": "SRD Test Samples",
+      "displayName": "SerializeReferenceDropdown Test Samples",
       "path": "Samples~"
     }
   ]

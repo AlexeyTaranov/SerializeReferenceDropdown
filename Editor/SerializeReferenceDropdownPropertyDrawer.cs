@@ -3,10 +3,10 @@ using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
-namespace SRD.Editor
+namespace SerializeReferenceDropdown.Editor
 {
-    [CustomPropertyDrawer(typeof(SRDAttribute))]
-    public class SRDPropertyDrawer : PropertyDrawer
+    [CustomPropertyDrawer(typeof(SerializeReferenceDropdownAttribute))]
+    public class SerializeReferenceDropdownPropertyDrawer : PropertyDrawer
     {
         private SerializedPropertyInfo _serializedPropertyInfo;
         private int _lastUsedIndex = -1;
@@ -24,14 +24,14 @@ namespace SRD.Editor
             EditorGUI.indentLevel = 0;
 
             _serializedPropertyInfo ??= new SerializedPropertyInfo(property);
-            if (property.propertyType == SerializedPropertyType.ManagedReference &&
-                _serializedPropertyInfo.CanShowSRD())
+            if (property.propertyType == SerializedPropertyType.ManagedReference && 
+                _serializedPropertyInfo.CanShowDropdown())
             {
-                Rect dropdowRect = new Rect(rect);
-                dropdowRect.width -= EditorGUIUtility.labelWidth;
-                dropdowRect.x += EditorGUIUtility.labelWidth;
-                dropdowRect.height = EditorGUIUtility.singleLineHeight;
-                DrawSRDTypeDropdown(dropdowRect, property, label);
+                Rect dropdownRect = new Rect(rect);
+                dropdownRect.width -= EditorGUIUtility.labelWidth;
+                dropdownRect.x += EditorGUIUtility.labelWidth;
+                dropdownRect.height = EditorGUIUtility.singleLineHeight;
+                DrawTypeDropdown(dropdownRect, property, label);
                 EditorGUI.PropertyField(rect, property, label, true);
             }
             else
@@ -43,13 +43,13 @@ namespace SRD.Editor
             EditorGUI.EndProperty();
         }
 
-        void DrawSRDTypeDropdown(Rect rect, SerializedProperty property, GUIContent label)
+        void DrawTypeDropdown(Rect rect, SerializedProperty property, GUIContent label)
         {
             var selectedIndex = _serializedPropertyInfo.GetIndexAssignedTypeOfProperty(property);
             var typeName = _serializedPropertyInfo.AssignableTypes[selectedIndex]?.Name ?? "null";
             if (EditorGUI.DropdownButton(rect, new GUIContent(typeName), FocusType.Keyboard))
             {
-                var dropdown = new SRDDropdown(new AdvancedDropdownState(),
+                var dropdown = new SerializeReferenceDropdownAdvancedDropdown(new AdvancedDropdownState(),
                     _serializedPropertyInfo.AssignableTypes, WriteNewInstanceByIndexType);
                 dropdown.Show(rect);
             }

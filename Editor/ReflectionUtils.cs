@@ -5,7 +5,7 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-namespace SRD.Editor
+namespace SerializeReferenceDropdown.Editor
 {
     public static class ReflectionUtils
     {

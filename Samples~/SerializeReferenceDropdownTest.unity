@@ -276,24 +276,24 @@ MonoBehaviour:
   references:
     version: 1
     00000000:
-      type: {class: Circle, ns: SRD.Sample, asm: SRDSample}
+      type: {class: Circle, ns: SRD.Sample, asm: SerializeReferenceDropdownSample}
       data:
-        _radius: 1.52
+        _radius: 1.69
     00000001:
-      type: {class: Circle, ns: SRD.Sample, asm: SRDSample}
+      type: {class: Circle, ns: SRD.Sample, asm: SerializeReferenceDropdownSample}
       data:
-        _radius: 1.08
+        _radius: 1.82
     00000002:
-      type: {class: ColliderShape, ns: SRD.Sample, asm: SRDSample}
+      type: {class: Rectangle, ns: SRD.Sample, asm: SerializeReferenceDropdownSample}
       data:
-        _collider: {fileID: 0}
+        _sideA: 1.71
+        _sideB: 2.82
     00000003:
-      type: {class: Rectangle, ns: SRD.Sample, asm: SRDSample}
+      type: {class: ColliderShape, ns: SRD.Sample, asm: SerializeReferenceDropdownSample}
       data:
-        _sideA: 0.69
-        _sideB: 1.55
+        _collider: {fileID: 1261749241}
     00000004:
-      type: {class: Circle, ns: SRD.Sample, asm: SRDSample}
+      type: {class: Circle, ns: SRD.Sample, asm: SerializeReferenceDropdownSample}
       data:
         _radius: 0
 --- !u!4 &1617203132
