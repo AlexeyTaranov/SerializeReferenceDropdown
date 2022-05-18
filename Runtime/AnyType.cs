@@ -4,19 +4,19 @@ using UnityEngine;
 [Serializable]
 public sealed class AnyType<T> where T : class
 {
-    [SerializeField] private bool _isUnityObjectReference;
-    [SerializeField] private UnityEngine.Object _unityObject;
-    [SerializeReference,SerializeReferenceDropdown] private T _nativeObject;
+    [SerializeField] private bool isUnityObjectReference;
+    [SerializeField] private UnityEngine.Object unityObject;
+    [SerializeReference,SerializeReferenceDropdown] private T nativeObject;
 
     public T Get()
     {
-        if (_isUnityObjectReference)
+        if (isUnityObjectReference)
         {
-            return _nativeObject;
+            return nativeObject;
         }
-        if (_unityObject != null)
+        if (unityObject != null)
         {
-            return _unityObject as T;
+            return unityObject as T;
         }
 
         return null;
@@ -24,15 +24,15 @@ public sealed class AnyType<T> where T : class
 
     public void Set(T value)
     {
-        if (value is UnityEngine.Object unityObject)
+        if (value is UnityEngine.Object unityObjectCast)
         {
-            _isUnityObjectReference = true;
-            _unityObject = unityObject;
+            isUnityObjectReference = true;
+            this.unityObject = unityObjectCast;
         }
         else
         {
-            _isUnityObjectReference = false;
-            _nativeObject = value;
+            isUnityObjectReference = false;
+            nativeObject = value;
         }
     }
 }

@@ -6,28 +6,28 @@ namespace SerializeReferenceDropdown.Editor
 {
     public class SerializeReferenceDropdownAdvancedDropdown : AdvancedDropdown
     {
-        private readonly Type[] _fieldTypes;
-        private readonly Action<int> _onSelectedTypeIndex;
+        private readonly Type[] fieldTypes;
+        private readonly Action<int> onSelectedTypeIndex;
 
-        private readonly Dictionary<AdvancedDropdownItem, int> _itemAndIndexes =
+        private readonly Dictionary<AdvancedDropdownItem, int> itemAndIndexes =
             new Dictionary<AdvancedDropdownItem, int>();
 
         public SerializeReferenceDropdownAdvancedDropdown(AdvancedDropdownState state, Type[] fieldTypes, Action<int> onSelectedNewType) :
             base(state)
         {
-            _fieldTypes = fieldTypes;
-            _onSelectedTypeIndex = onSelectedNewType;
+            this.fieldTypes = fieldTypes;
+            onSelectedTypeIndex = onSelectedNewType;
         }
 
         protected override AdvancedDropdownItem BuildRoot()
         {
             var root = new AdvancedDropdownItem("Types");
-            _itemAndIndexes.Clear();
-            for (int i = 0; i < _fieldTypes.Length; i++)
+            itemAndIndexes.Clear();
+            for (int i = 0; i < fieldTypes.Length; i++)
             {
-                var typeName = _fieldTypes[i]?.Name ?? "null";
+                var typeName = fieldTypes[i]?.Name ?? "null";
                 var item = new AdvancedDropdownItem(typeName);
-                _itemAndIndexes.Add(item, i);
+                itemAndIndexes.Add(item, i);
                 root.AddChild(item);
             }
 
@@ -37,9 +37,9 @@ namespace SerializeReferenceDropdown.Editor
         protected override void ItemSelected(AdvancedDropdownItem item)
         {
             base.ItemSelected(item);
-            if (_itemAndIndexes.TryGetValue(item, out var index))
+            if (itemAndIndexes.TryGetValue(item, out var index))
             {
-                _onSelectedTypeIndex.Invoke(index);
+                onSelectedTypeIndex.Invoke(index);
             }
         }
     }

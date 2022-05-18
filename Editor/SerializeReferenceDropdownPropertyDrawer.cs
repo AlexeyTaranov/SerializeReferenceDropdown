@@ -8,8 +8,8 @@ namespace SerializeReferenceDropdown.Editor
     [CustomPropertyDrawer(typeof(SerializeReferenceDropdownAttribute))]
     public class SerializeReferenceDropdownPropertyDrawer : PropertyDrawer
     {
-        private SerializedPropertyInfo _serializedPropertyInfo;
-        private int _lastUsedIndex = -1;
+        private SerializedPropertyInfo serializedPropertyInfo;
+        private int lastUsedIndex = -1;
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
@@ -23,9 +23,9 @@ namespace SerializeReferenceDropdown.Editor
             var indent = EditorGUI.indentLevel;
             EditorGUI.indentLevel = 0;
 
-            _serializedPropertyInfo ??= new SerializedPropertyInfo(property);
-            if (property.propertyType == SerializedPropertyType.ManagedReference && 
-                _serializedPropertyInfo.CanShowDropdown())
+            serializedPropertyInfo ??= new SerializedPropertyInfo(property);
+            if (property.propertyType == SerializedPropertyType.ManagedReference &&
+                serializedPropertyInfo.CanShowDropdown())
             {
                 Rect dropdownRect = new Rect(rect);
                 dropdownRect.width -= EditorGUIUtility.labelWidth;
@@ -45,27 +45,30 @@ namespace SerializeReferenceDropdown.Editor
 
         void DrawTypeDropdown(Rect rect, SerializedProperty property, GUIContent label)
         {
-            var selectedIndex = _serializedPropertyInfo.GetIndexAssignedTypeOfProperty(property);
-            var typeName = _serializedPropertyInfo.AssignableTypes[selectedIndex]?.Name ?? "null";
+            var selectedIndex = serializedPropertyInfo.GetIndexAssignedTypeOfProperty(property);
+            var typeName = serializedPropertyInfo.AssignableTypes[selectedIndex]?.Name ?? "null";
             if (EditorGUI.DropdownButton(rect, new GUIContent(typeName), FocusType.Keyboard))
             {
                 var dropdown = new SerializeReferenceDropdownAdvancedDropdown(new AdvancedDropdownState(),
-                    _serializedPropertyInfo.AssignableTypes, WriteNewInstanceByIndexType);
+                    serializedPropertyInfo.AssignableTypes, WriteNewInstanceByIndexType);
                 dropdown.Show(rect);
             }
 
             void WriteNewInstanceByIndexType(int typeIndex)
             {
-                if (selectedIndex == _lastUsedIndex) return;
-                _lastUsedIndex = typeIndex;
+                if (selectedIndex == lastUsedIndex)
+                {
+                    return;
+                }
+                lastUsedIndex = typeIndex;
                 Undo.RecordObject(property.serializedObject.targetObject, "Update type in SRD");
                 object newObject = null;
-                if (_lastUsedIndex != 0)
+                if (lastUsedIndex != 0)
                 {
-                    newObject = Activator.CreateInstance(_serializedPropertyInfo.AssignableTypes[_lastUsedIndex]);
+                    newObject = Activator.CreateInstance(serializedPropertyInfo.AssignableTypes[lastUsedIndex]);
                 }
 
-                _serializedPropertyInfo.ApplyValueToProperty(newObject, property);
+                serializedPropertyInfo.ApplyValueToProperty(newObject, property);
             }
         }
     }

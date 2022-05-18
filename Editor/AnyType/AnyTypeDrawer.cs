@@ -7,9 +7,9 @@ namespace SerializeReferenceDropdown.Editor.AnyType
     public class AnyTypeDrawer : PropertyDrawer
     {
         private static readonly (string typeEnum, string unityObject, string nativeObject) PropertyName =
-            ("_isUnityObjectReference", "_unityObject", "_nativeObject");
+            ("isUnityObjectReference", "unityObject", "nativeObject");
 
-        private AnyTypeDrawerUnityObject _unityObjectDrawer;
+        private AnyTypeDrawerUnityObject unityObjectDrawer;
 
         public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
         {
@@ -24,10 +24,10 @@ namespace SerializeReferenceDropdown.Editor.AnyType
             rect.x += 40;
             if (isUnityObj)
             {
-                _unityObjectDrawer ??= new AnyTypeDrawerUnityObject(
+                unityObjectDrawer ??= new AnyTypeDrawerUnityObject(
                     GetFieldProperty(property, true),
                     GetFieldProperty(property, false));
-                _unityObjectDrawer.DrawUnityReferenceType(label, rect, leftButtonRect);
+                unityObjectDrawer.DrawUnityReferenceType(label, rect, leftButtonRect);
             }
             else
             {

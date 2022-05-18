@@ -8,13 +8,13 @@ namespace SerializeReferenceDropdown.Editor
 {
     public class SerializedPropertyInfo
     {
-        private static readonly Dictionary<Type, Type[]> AssignableTypesCache = new Dictionary<Type, Type[]>();
         private const string ArrayPropertySubstring = ".Array.data[";
+        private static readonly Dictionary<Type, Type[]> AssignableTypesCache = new Dictionary<Type, Type[]>();
 
-        private readonly Type _propertyType;
-        private readonly List<FieldInfo> _fieldHierarchyToTarget = new List<FieldInfo>();
+        private readonly Type propertyType;
+        private readonly List<FieldInfo> fieldHierarchyToTarget = new List<FieldInfo>();
 
-        public Type[] AssignableTypes => AssignableTypesCache[_propertyType];
+        public Type[] AssignableTypes => AssignableTypesCache[propertyType];
 
         public SerializedPropertyInfo(SerializedProperty property)
         {
@@ -27,15 +27,15 @@ namespace SerializeReferenceDropdown.Editor
             }
 
             GetFieldFromPathPropertyHierarchy(serializedObjectType, propertyPath.Split('.'));
-            _fieldHierarchyToTarget.Reverse();
-            _propertyType = ReflectionUtils.ExtractReferenceFieldTypeFromSerializedProperty(property);
-            if (AssignableTypesCache.ContainsKey(_propertyType))
+            fieldHierarchyToTarget.Reverse();
+            propertyType = ReflectionUtils.ExtractReferenceFieldTypeFromSerializedProperty(property);
+            if (AssignableTypesCache.ContainsKey(propertyType))
             {
                 return;
             }
 
             var allTypes = ReflectionUtils.GetAllTypesInCurrentDomain();
-            var assignableTypes = ReflectionUtils.GetFinalAssignableTypes(_propertyType, allTypes,
+            var assignableTypes = ReflectionUtils.GetFinalAssignableTypes(propertyType, allTypes,
                 predicate: type => type.IsSubclassOf(typeof(UnityEngine.Object)) == false).ToArray();
             var assignableTypesCache = new Type[assignableTypes.Length + 1];
             assignableTypesCache[0] = null;
@@ -44,7 +44,7 @@ namespace SerializeReferenceDropdown.Editor
                 assignableTypesCache[i] = assignableTypes[i - 1];
             }
 
-            AssignableTypesCache.Add(_propertyType, assignableTypesCache);
+            AssignableTypesCache.Add(propertyType, assignableTypesCache);
 
             FieldInfo GetFieldFromPathPropertyHierarchy(Type type, string[] splitPath, int index = 0)
             {
@@ -58,14 +58,14 @@ namespace SerializeReferenceDropdown.Editor
                 if (index == splitPath.Length - 1)
                 {
                     var field = GetFieldFromHierarchyToBaseType(type, fieldPath);
-                    _fieldHierarchyToTarget.Add(field);
+                    fieldHierarchyToTarget.Add(field);
                     return field;
                 }
                 else
                 {
                     var field = GetFieldFromHierarchyToBaseType(type, fieldPath);
                     var baseField = GetFieldFromPathPropertyHierarchy(field.FieldType, splitPath, index + 1);
-                    _fieldHierarchyToTarget.Add(field);
+                    fieldHierarchyToTarget.Add(field);
                     return baseField;
                 }
             }
@@ -87,7 +87,7 @@ namespace SerializeReferenceDropdown.Editor
             }
         }
 
-        public bool CanShowDropdown() => AssignableTypes.Any() && _fieldHierarchyToTarget.Any();
+        public bool CanShowDropdown() => AssignableTypes.Any() && fieldHierarchyToTarget.Any();
 
         public int GetIndexAssignedTypeOfProperty(SerializedProperty property)
         {
@@ -103,7 +103,7 @@ namespace SerializeReferenceDropdown.Editor
             if (objectValue is null) return 0;
 
             var type = objectValue.GetType();
-            var cacheTypes = AssignableTypesCache[_propertyType];
+            var cacheTypes = AssignableTypesCache[propertyType];
             for (int i = 0; i < cacheTypes.Length; i++)
             {
                 if (cacheTypes[i] == type)
@@ -135,7 +135,7 @@ namespace SerializeReferenceDropdown.Editor
 
         private object GetObjectValueFromHierarchy(object objectValue)
         {
-            foreach (var field in _fieldHierarchyToTarget)
+            foreach (var field in fieldHierarchyToTarget)
             {
                 if (objectValue != null)
                 {
