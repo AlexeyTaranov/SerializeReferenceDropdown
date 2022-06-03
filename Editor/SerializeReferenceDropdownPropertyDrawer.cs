@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -8,8 +10,8 @@ namespace SerializeReferenceDropdown.Editor
     [CustomPropertyDrawer(typeof(SerializeReferenceDropdownAttribute))]
     public class SerializeReferenceDropdownPropertyDrawer : PropertyDrawer
     {
-        private SerializedPropertyInfo serializedPropertyInfo;
-        private int lastUsedIndex = -1;
+        public const string NullName = "null";
+        private List<Type> assignableTypes;
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
@@ -22,17 +24,10 @@ namespace SerializeReferenceDropdown.Editor
 
             var indent = EditorGUI.indentLevel;
             EditorGUI.indentLevel = 0;
-
-            serializedPropertyInfo ??= new SerializedPropertyInfo(property);
-            if (property.propertyType == SerializedPropertyType.ManagedReference &&
-                serializedPropertyInfo.CanShowDropdown())
+            
+            if (property.propertyType == SerializedPropertyType.ManagedReference)
             {
-                Rect dropdownRect = new Rect(rect);
-                dropdownRect.width -= EditorGUIUtility.labelWidth;
-                dropdownRect.x += EditorGUIUtility.labelWidth;
-                dropdownRect.height = EditorGUIUtility.singleLineHeight;
-                DrawTypeDropdown(dropdownRect, property, label);
-                EditorGUI.PropertyField(rect, property, label, true);
+                DrawIMGUITypeDropdown(rect, property, label);
             }
             else
             {
@@ -43,33 +38,46 @@ namespace SerializeReferenceDropdown.Editor
             EditorGUI.EndProperty();
         }
 
-        void DrawTypeDropdown(Rect rect, SerializedProperty property, GUIContent label)
+        private void DrawIMGUITypeDropdown(Rect rect, SerializedProperty property,GUIContent label)
         {
-            var selectedIndex = serializedPropertyInfo.GetIndexAssignedTypeOfProperty(property);
-            var typeName = serializedPropertyInfo.AssignableTypes[selectedIndex]?.Name ?? "null";
-            if (EditorGUI.DropdownButton(rect, new GUIContent(typeName), FocusType.Keyboard))
+            assignableTypes ??= GetAssignableTypes(property);
+            Rect dropdownRect = new Rect(rect);
+            dropdownRect.width -= EditorGUIUtility.labelWidth;
+            dropdownRect.x += EditorGUIUtility.labelWidth;
+            dropdownRect.height = EditorGUIUtility.singleLineHeight;
+            var objectType = ReflectionUtils.ExtractTypeFromString(property.managedReferenceFullTypename);
+            var objectTypeName = objectType == null ? NullName : ObjectNames.NicifyVariableName(objectType.Name);
+            if (EditorGUI.DropdownButton(rect, new GUIContent(objectTypeName), FocusType.Keyboard))
             {
                 var dropdown = new SerializeReferenceDropdownAdvancedDropdown(new AdvancedDropdownState(),
-                    serializedPropertyInfo.AssignableTypes, WriteNewInstanceByIndexType);
-                dropdown.Show(rect);
+                    assignableTypes, index => WriteNewInstanceByIndexType(index,property));
+                dropdown.Show(dropdownRect);
             }
+            EditorGUI.PropertyField(rect, property, label, true);
+        }
 
-            void WriteNewInstanceByIndexType(int typeIndex)
-            {
-                if (selectedIndex == lastUsedIndex)
-                {
-                    return;
-                }
-                lastUsedIndex = typeIndex;
-                Undo.RecordObject(property.serializedObject.targetObject, "Update type in SRD");
-                object newObject = null;
-                if (lastUsedIndex != 0)
-                {
-                    newObject = Activator.CreateInstance(serializedPropertyInfo.AssignableTypes[lastUsedIndex]);
-                }
-
-                serializedPropertyInfo.ApplyValueToProperty(newObject, property);
-            }
+        private List<Type> GetAssignableTypes(SerializedProperty property)
+        {
+            var propertyType = ReflectionUtils.ExtractTypeFromString(property.managedReferenceFieldTypename);
+            var allTypes = ReflectionUtils.GetAllTypesInCurrentDomain();
+            var targetAssignableTypes = ReflectionUtils.GetFinalAssignableTypes(propertyType, allTypes,
+                predicate: type => type.IsSubclassOf(typeof(UnityEngine.Object)) == false).ToList();
+            targetAssignableTypes.Insert(0,null);
+            return targetAssignableTypes;
+        }
+        
+        void WriteNewInstanceByIndexType(int typeIndex,SerializedProperty property)
+        {
+            var newType = assignableTypes[typeIndex];
+            var newObject = newType != null ? Activator.CreateInstance(newType) : null;
+            ApplyValueToProperty(newObject, property);
+        }
+        
+        private void ApplyValueToProperty(object value, SerializedProperty property)
+        {
+            property.managedReferenceValue = value;
+            property.serializedObject.ApplyModifiedProperties();
+            property.serializedObject.Update();
         }
     }
 }

@@ -90,7 +90,7 @@ namespace SerializeReferenceDropdown.Editor.AnyType
 
         private Type GetPropertyType(SerializedProperty property)
         {
-            return ReflectionUtils.ExtractReferenceFieldTypeFromSerializedProperty(property);
+            return ReflectionUtils.ExtractTypeFromString(property.managedReferenceFieldTypename);
         }
 
         private void FillUnityObjectToProperty(UnityEngine.Object pickedObject)

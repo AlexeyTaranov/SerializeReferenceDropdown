@@ -12,14 +12,13 @@ namespace SerializeReferenceDropdown.Editor
         private static readonly Dictionary<AppDomain, List<Type>> CachedDomainTypes =
             new Dictionary<AppDomain, List<Type>>();
 
-        public static Type ExtractReferenceFieldTypeFromSerializedProperty(SerializedProperty property)
+        public static Type ExtractTypeFromString(string managerReferenceTypeName)
         {
-            var fieldTypeName = property.managedReferenceFieldTypename;
-            if (string.IsNullOrEmpty(fieldTypeName))
+            if (string.IsNullOrEmpty(managerReferenceTypeName))
             {
                 return null;
             }
-            var splitFieldTypename = fieldTypeName.Split(' ');
+            var splitFieldTypename = managerReferenceTypeName.Split(' ');
             var assemblyName = splitFieldTypename[0];
             var typeName = splitFieldTypename[1];
             var assembly = Assembly.Load(assemblyName);
