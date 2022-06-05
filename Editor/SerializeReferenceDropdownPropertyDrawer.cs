@@ -10,7 +10,7 @@ namespace SerializeReferenceDropdown.Editor
     [CustomPropertyDrawer(typeof(SerializeReferenceDropdownAttribute))]
     public class SerializeReferenceDropdownPropertyDrawer : PropertyDrawer
     {
-        public const string NullName = "null";
+        private const string NullName = "null";
         private List<Type> assignableTypes;
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
@@ -24,7 +24,7 @@ namespace SerializeReferenceDropdown.Editor
 
             var indent = EditorGUI.indentLevel;
             EditorGUI.indentLevel = 0;
-            
+
             if (property.propertyType == SerializedPropertyType.ManagedReference)
             {
                 DrawIMGUITypeDropdown(rect, property, label);
@@ -38,23 +38,26 @@ namespace SerializeReferenceDropdown.Editor
             EditorGUI.EndProperty();
         }
 
-        private void DrawIMGUITypeDropdown(Rect rect, SerializedProperty property,GUIContent label)
+        private void DrawIMGUITypeDropdown(Rect rect, SerializedProperty property, GUIContent label)
         {
             assignableTypes ??= GetAssignableTypes(property);
             Rect dropdownRect = new Rect(rect);
             dropdownRect.width -= EditorGUIUtility.labelWidth;
             dropdownRect.x += EditorGUIUtility.labelWidth;
             dropdownRect.height = EditorGUIUtility.singleLineHeight;
-            var objectType = ReflectionUtils.ExtractTypeFromString(property.managedReferenceFullTypename);
-            var objectTypeName = objectType == null ? NullName : ObjectNames.NicifyVariableName(objectType.Name);
-            if (EditorGUI.DropdownButton(rect, new GUIContent(objectTypeName), FocusType.Keyboard))
+            var referenceType = ReflectionUtils.ExtractTypeFromString(property.managedReferenceFullTypename);
+            if (EditorGUI.DropdownButton(dropdownRect, new GUIContent(GetTypeName(referenceType)), FocusType.Keyboard))
             {
                 var dropdown = new SerializeReferenceDropdownAdvancedDropdown(new AdvancedDropdownState(),
-                    assignableTypes, index => WriteNewInstanceByIndexType(index,property));
+                    assignableTypes.Select(GetTypeName),
+                    index => WriteNewInstanceByIndexType(index, property));
                 dropdown.Show(dropdownRect);
             }
+
             EditorGUI.PropertyField(rect, property, label, true);
         }
+
+        private string GetTypeName(Type type) => type == null ? NullName : ObjectNames.NicifyVariableName(type.Name);
 
         private List<Type> GetAssignableTypes(SerializedProperty property)
         {
@@ -62,17 +65,17 @@ namespace SerializeReferenceDropdown.Editor
             var allTypes = ReflectionUtils.GetAllTypesInCurrentDomain();
             var targetAssignableTypes = ReflectionUtils.GetFinalAssignableTypes(propertyType, allTypes,
                 predicate: type => type.IsSubclassOf(typeof(UnityEngine.Object)) == false).ToList();
-            targetAssignableTypes.Insert(0,null);
+            targetAssignableTypes.Insert(0, null);
             return targetAssignableTypes;
         }
-        
-        void WriteNewInstanceByIndexType(int typeIndex,SerializedProperty property)
+
+        private void WriteNewInstanceByIndexType(int typeIndex, SerializedProperty property)
         {
             var newType = assignableTypes[typeIndex];
             var newObject = newType != null ? Activator.CreateInstance(newType) : null;
             ApplyValueToProperty(newObject, property);
         }
-        
+
         private void ApplyValueToProperty(object value, SerializedProperty property)
         {
             property.managedReferenceValue = value;

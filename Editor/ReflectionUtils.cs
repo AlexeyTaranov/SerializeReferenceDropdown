@@ -18,6 +18,7 @@ namespace SerializeReferenceDropdown.Editor
             {
                 return null;
             }
+
             var splitFieldTypename = managerReferenceTypeName.Split(' ');
             var assemblyName = splitFieldTypename[0];
             var typeName = splitFieldTypename[1];
