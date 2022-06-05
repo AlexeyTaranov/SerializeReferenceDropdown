@@ -45,7 +45,7 @@ namespace SerializeReferenceDropdown.Editor
             dropdownRect.width -= EditorGUIUtility.labelWidth;
             dropdownRect.x += EditorGUIUtility.labelWidth;
             dropdownRect.height = EditorGUIUtility.singleLineHeight;
-            var referenceType = ReflectionUtils.ExtractTypeFromString(property.managedReferenceFullTypename);
+            var referenceType = TypeUtils.ExtractTypeFromString(property.managedReferenceFullTypename);
             if (EditorGUI.DropdownButton(dropdownRect, new GUIContent(GetTypeName(referenceType)), FocusType.Keyboard))
             {
                 var dropdown = new SerializeReferenceDropdownAdvancedDropdown(new AdvancedDropdownState(),
@@ -61,12 +61,15 @@ namespace SerializeReferenceDropdown.Editor
 
         private List<Type> GetAssignableTypes(SerializedProperty property)
         {
-            var propertyType = ReflectionUtils.ExtractTypeFromString(property.managedReferenceFieldTypename);
-            var allTypes = ReflectionUtils.GetAllTypesInCurrentDomain();
-            var targetAssignableTypes = ReflectionUtils.GetFinalAssignableTypes(propertyType, allTypes,
-                predicate: type => type.IsSubclassOf(typeof(UnityEngine.Object)) == false).ToList();
-            targetAssignableTypes.Insert(0, null);
-            return targetAssignableTypes;
+            var propertyType = TypeUtils.ExtractTypeFromString(property.managedReferenceFieldTypename);
+            var nonUnityTypes = TypeCache.GetTypesDerivedFrom(propertyType).Where(IsAssignableNonUnityType).ToList();
+            nonUnityTypes.Insert(0, null);
+            return nonUnityTypes;
+
+            bool IsAssignableNonUnityType(Type type)
+            {
+                return TypeUtils.IsFinalAssignableType(type) && !type.IsSubclassOf(typeof(UnityEngine.Object));
+            }
         }
 
         private void WriteNewInstanceByIndexType(int typeIndex, SerializedProperty property)

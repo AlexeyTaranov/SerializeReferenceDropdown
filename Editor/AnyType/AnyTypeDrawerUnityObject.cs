@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
@@ -8,8 +8,7 @@ namespace SerializeReferenceDropdown.Editor.AnyType
 {
     public class AnyTypeDrawerUnityObject
     {
-        private readonly Dictionary<Type, string> searchFilterCache = new Dictionary<Type, string>();
-
+        private readonly string searchFilter;
         private readonly SerializedProperty unityObjectProperty;
         private readonly Type targetType;
         private bool needCheckObjectSelector;
@@ -18,10 +17,7 @@ namespace SerializeReferenceDropdown.Editor.AnyType
         {
             this.unityObjectProperty = unityObjectProperty;
             targetType = GetPropertyType(nativeTypeProperty);
-            if (searchFilterCache.ContainsKey(targetType) == false)
-            {
-                searchFilterCache.Add(targetType, GetSearchFilter());
-            }
+            searchFilter = GetSearchFilter();
         }
 
         public void DrawUnityReferenceType(GUIContent label, Rect mainRect, Rect leftButtonRect)
@@ -33,7 +29,7 @@ namespace SerializeReferenceDropdown.Editor.AnyType
             mainRect.width -= 25;
             if (GUI.Button(searchButton, "Pick"))
             {
-                EditorGUIUtility.ShowObjectPicker<UnityEngine.Object>(null, true, searchFilterCache[targetType], 0);
+                EditorGUIUtility.ShowObjectPicker<UnityEngine.Object>(null, true, searchFilter, 0);
                 needCheckObjectSelector = true;
             }
 
@@ -75,22 +71,25 @@ namespace SerializeReferenceDropdown.Editor.AnyType
 
         private string GetSearchFilter()
         {
-            var allTypes = ReflectionUtils.GetAllTypesInCurrentDomain();
-            var types = ReflectionUtils.GetFinalAssignableTypes(targetType, allTypes,
-                predicate: type => type.IsSubclassOf(typeof(UnityEngine.Object)));
+            var unityTypes = TypeCache.GetTypesDerivedFrom(targetType).Where(IsAssignableUnityType);
 
             var sb = new StringBuilder();
-            foreach (var type in types)
+            foreach (var type in unityTypes)
             {
                 sb.Append($"t: {type.Name} ");
             }
 
             return sb.ToString();
+
+            bool IsAssignableUnityType(Type type)
+            {
+                return TypeUtils.IsFinalAssignableType(type) && type.IsSubclassOf(typeof(UnityEngine.Object));
+            }
         }
 
         private Type GetPropertyType(SerializedProperty property)
         {
-            return ReflectionUtils.ExtractTypeFromString(property.managedReferenceFieldTypename);
+            return TypeUtils.ExtractTypeFromString(property.managedReferenceFieldTypename);
         }
 
         private void FillUnityObjectToProperty(UnityEngine.Object pickedObject)

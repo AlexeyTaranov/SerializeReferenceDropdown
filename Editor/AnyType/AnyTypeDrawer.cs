@@ -10,10 +10,18 @@ namespace SerializeReferenceDropdown.Editor.AnyType
             ("isUnityObjectReference", "unityObject", "nativeObject");
 
         private AnyTypeDrawerUnityObject unityObjectDrawer;
+        
+        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+        {
+            var isUnityObject = property.FindPropertyRelative(PropertyName.typeEnum).boolValue;
+            return EditorGUI.GetPropertyHeight(GetFieldProperty(property, isUnityObject), label, true);
+        }
 
         public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
         {
             EditorGUI.BeginProperty(rect, label, property);
+            var indent = EditorGUI.indentLevel;
+            EditorGUI.indentLevel = 0;
 
             var refTypeProperty = property.FindPropertyRelative(PropertyName.typeEnum);
             var isUnityObj = refTypeProperty.boolValue;
@@ -34,6 +42,7 @@ namespace SerializeReferenceDropdown.Editor.AnyType
                 EditorGUI.PropertyField(rect, GetFieldProperty(property, false), label);
             }
 
+            EditorGUI.indentLevel = indent;
             EditorGUI.EndProperty();
 
             Rect DrawLeftReferenceTypeButton()
@@ -51,12 +60,6 @@ namespace SerializeReferenceDropdown.Editor.AnyType
 
                 return buttonRect;
             }
-        }
-
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-        {
-            var isUnityObject = property.FindPropertyRelative(PropertyName.typeEnum).boolValue;
-            return EditorGUI.GetPropertyHeight(GetFieldProperty(property, isUnityObject), label, true);
         }
 
         private SerializedProperty GetFieldProperty(SerializedProperty property, bool isUnityObject)

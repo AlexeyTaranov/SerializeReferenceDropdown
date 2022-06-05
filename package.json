@@ -1,16 +1,15 @@
 {
   "name": "com.alexeytaranov.serializereferencedropdown",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "displayName": "SerializeReferenceDropdown",
   "description": "Editor dropdown for SerializeReference Attribute",
   "unity": "2019.3",
   "unityRelease": "0a1",
-  "dependencies": {},
   "author": {
     "name": "Alexey Taranov",
     "email": "alexey.taranov0@gmail.com"
   },
-    "samples": [
+  "samples": [
     {
       "displayName": "SerializeReferenceDropdown Test Samples",
       "path": "Samples~"

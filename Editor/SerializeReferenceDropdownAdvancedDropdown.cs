@@ -7,10 +7,10 @@ namespace SerializeReferenceDropdown.Editor
     public class SerializeReferenceDropdownAdvancedDropdown : AdvancedDropdown
     {
         private readonly IEnumerable<string> typeNames;
-        private readonly Action<int> onSelectedTypeIndex;
-
         private readonly Dictionary<AdvancedDropdownItem, int> itemAndIndexes =
             new Dictionary<AdvancedDropdownItem, int>();
+        
+        private readonly Action<int> onSelectedTypeIndex;
 
         public SerializeReferenceDropdownAdvancedDropdown(AdvancedDropdownState state, IEnumerable<string> typeNames,
             Action<int> onSelectedNewType) :
