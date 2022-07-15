@@ -96,7 +96,7 @@ namespace SerializeReferenceDropdown.Editor
 
         private void SaveReferenceValueToClipBoard(SerializedProperty property)
         {
-            var refValue = property.managedReferenceValue;
+            var refValue = GetReferenceToValueFromSerializerPropertyReference(property);
             var stringValue = JsonUtility.ToJson(refValue);
             EditorGUIUtility.systemCopyBuffer = stringValue;
         }
@@ -105,16 +105,26 @@ namespace SerializeReferenceDropdown.Editor
         {
             //TODO need learn how to check can paste values to target type =_=
             var stringValue = EditorGUIUtility.systemCopyBuffer;
-            var isValueType = stringValue?.StartsWith('{') == true && stringValue?.EndsWith('}') == true;
+            var isValueType = stringValue?.StartsWith("{") == true && stringValue?.EndsWith("}") == true;
             return isValueType;
         }
 
         private void PasteReferenceValueFromClipBoard(SerializedProperty property)
         {
             var stringValue = EditorGUIUtility.systemCopyBuffer;
-            JsonUtility.FromJsonOverwrite(stringValue, property.managedReferenceValue);
+            var refValue = GetReferenceToValueFromSerializerPropertyReference(property);
+            JsonUtility.FromJsonOverwrite(stringValue, refValue);
             property.serializedObject.ApplyModifiedProperties();
             property.serializedObject.Update();
+        }
+
+        private object GetReferenceToValueFromSerializerPropertyReference(SerializedProperty property)
+        {
+#if UNITY_2021_2_OR_NEWER
+            return property.managedReferenceValue;
+#else
+            return property.GetTarget();
+#endif
         }
 
         private string GetTypeName(Type type) => type == null ? NullName : ObjectNames.NicifyVariableName(type.Name);
