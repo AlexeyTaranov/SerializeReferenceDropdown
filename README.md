@@ -68,27 +68,3 @@ public class Rectangle : IShape
 }
 ```
 [![](https://github.com/AlexeyTaranov/SRD/blob/master/Documentation~/SerializeReferenceDropdown_Example.gif "SerializeReferenceDropdown Example")](https://github.com/AlexeyTaranov/SRD/blob/master/Documentation~/SerializeReferenceDropdown_Example.gif "SerializeReferenceDropdown Example")
-
-[AnyType](https://github.com/AlexeyTaranov/SerializeReferenceDropdown/blob/master/Runtime/AnyType.cs)
-
-Generic type with:
-- non-UnityObject with SerializeReferenceDropdown
-- UnityObject reference with runtime cast and editor checks (save to property object with target types, button "Pick": search filter with available types)
-
-### AnyType Example:
-```csharp
-public class TestShapesForSRD : MonoBehaviour
-{
-    [SerializeField] private AnyType<IShape> _anyShape;
-}
-
-public interface IShape
-{
-}
-
-public class MonoColliderShape : MonoBehaviour, IShape
-{
-}
-```
-
-[![](https://github.com/AlexeyTaranov/SRD/blob/master/Documentation~/AnyType_Example.gif "AnyType Example")](https://github.com/AlexeyTaranov/SRD/blob/master/Documentation~/AnyType_Example.gif "AnyType Example")
