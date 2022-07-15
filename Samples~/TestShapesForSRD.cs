@@ -7,7 +7,5 @@ namespace SRD.Sample
         [SerializeReferenceDropdown] [SerializeReference] private IShape _singleShape;
 
         [SerializeReferenceDropdown] [SerializeReference] private IShape[] _shapesArray;
-
-        [SerializeField] private AnyType<IShape> _anyShape;
     }
 }
