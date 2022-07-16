@@ -43,22 +43,7 @@ namespace SerializeReferenceDropdown.Editor
             assignableTypes ??= GetAssignableTypes(property);
             var referenceType = TypeUtils.ExtractTypeFromString(property.managedReferenceFullTypename);
 
-            const float firstButtonWidth = 40;
-            const float secondButtonWidth = 45;
-            const float offset = 2;
-
-            var (copyRect, pasteRect, dropdownRect) = GetIMGUIRects(rect, firstButtonWidth, secondButtonWidth, offset);
-
-            if (GUI.Button(copyRect, "Copy"))
-            {
-                SaveReferenceValueToClipBoard(property);
-            }
-
-            EditorGUI.BeginDisabledGroup(CanPasteValueFromClipBoard() == false);
-            if (GUI.Button(pasteRect, "Paste"))
-            {
-                PasteReferenceValueFromClipBoard(property);
-            }
+            var dropdownRect = GetDropdownIMGUIRect(rect);
 
             EditorGUI.EndDisabledGroup();
 
@@ -71,60 +56,17 @@ namespace SerializeReferenceDropdown.Editor
             }
 
             EditorGUI.PropertyField(rect, property, label, true);
-        }
 
-        (Rect firstButton, Rect secondButton, Rect dropdown) GetIMGUIRects(Rect mainRect, float firstButtonWidth,
-            float secondButtonWidth, float offset)
-        {
-            Rect firstButton = new Rect(mainRect);
-            firstButton.width = firstButtonWidth;
-            firstButton.height = EditorGUIUtility.singleLineHeight;
-            firstButton.x += EditorGUIUtility.labelWidth + offset;
+            Rect GetDropdownIMGUIRect(Rect mainRect)
+            {
+                var dropdownOffset = EditorGUIUtility.labelWidth;
+                Rect rect = new Rect(mainRect);
+                rect.width -= dropdownOffset;
+                rect.x += dropdownOffset;
+                rect.height = EditorGUIUtility.singleLineHeight;
 
-            Rect secondButton = new Rect(firstButton);
-            secondButton.width = secondButtonWidth;
-            secondButton.x += secondButtonWidth;
-
-            var dropdownOffset = (EditorGUIUtility.labelWidth + firstButtonWidth + secondButtonWidth + 5 * offset);
-            Rect dropdownRect = new Rect(mainRect);
-            dropdownRect.width -= dropdownOffset;
-            dropdownRect.x += dropdownOffset;
-            dropdownRect.height = EditorGUIUtility.singleLineHeight;
-
-            return (firstButton, secondButton, dropdownRect);
-        }
-
-        private void SaveReferenceValueToClipBoard(SerializedProperty property)
-        {
-            var refValue = GetReferenceToValueFromSerializerPropertyReference(property);
-            var stringValue = JsonUtility.ToJson(refValue);
-            EditorGUIUtility.systemCopyBuffer = stringValue;
-        }
-
-        private bool CanPasteValueFromClipBoard()
-        {
-            //TODO need learn how to check can paste values to target type =_=
-            var stringValue = EditorGUIUtility.systemCopyBuffer;
-            var isValueType = stringValue?.StartsWith("{") == true && stringValue?.EndsWith("}") == true;
-            return isValueType;
-        }
-
-        private void PasteReferenceValueFromClipBoard(SerializedProperty property)
-        {
-            var stringValue = EditorGUIUtility.systemCopyBuffer;
-            var refValue = GetReferenceToValueFromSerializerPropertyReference(property);
-            JsonUtility.FromJsonOverwrite(stringValue, refValue);
-            property.serializedObject.ApplyModifiedProperties();
-            property.serializedObject.Update();
-        }
-
-        private object GetReferenceToValueFromSerializerPropertyReference(SerializedProperty property)
-        {
-#if UNITY_2021_2_OR_NEWER
-            return property.managedReferenceValue;
-#else
-            return property.GetTarget();
-#endif
+                return rect;
+            }
         }
 
         private string GetTypeName(Type type) => type == null ? NullName : ObjectNames.NicifyVariableName(type.Name);
