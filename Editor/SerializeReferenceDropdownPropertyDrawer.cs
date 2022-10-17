@@ -4,7 +4,9 @@ using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
+using UnityEditor.UIElements;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace SerializeReferenceDropdown.Editor
 {
@@ -37,6 +39,47 @@ namespace SerializeReferenceDropdown.Editor
 
             EditorGUI.indentLevel = indent;
             EditorGUI.EndProperty();
+        }
+
+        public override VisualElement CreatePropertyGUI(SerializedProperty property)
+        {
+            var root = new VisualElement();
+            if (property.propertyType == SerializedPropertyType.ManagedReference)
+            {
+                DrawUIToolkitTypeDropdown(root, property);
+            }
+            else
+            {
+                root.Add(new PropertyField(property));
+            }
+
+            return root;
+        }
+
+        private void DrawUIToolkitTypeDropdown(VisualElement root, SerializedProperty property)
+        {
+            var uiToolkitLayoutPath =
+                "Packages/com.alexeytaranov.serializereferencedropdown/Editor/Layouts/SerializeReferenceDropdown.uxml";
+            var visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(uiToolkitLayoutPath);
+            root.Add(visualTreeAsset.Instantiate());
+            var selectTypeButton = root.Q<Button>();
+            var propertyField = root.Q<PropertyField>();
+            propertyField.BindProperty(property);
+            assignableTypes ??= GetAssignableTypes(property);
+            var selectedType = TypeUtils.ExtractTypeFromString(property.managedReferenceFullTypename);
+
+            var selectedTypeName = GetTypeName(selectedType);
+            selectTypeButton.clickable.clicked += ShowDropdown;
+            selectTypeButton.text = selectedTypeName;
+
+            void ShowDropdown()
+            {
+                var dropdown = new SerializeReferenceDropdownAdvancedDropdown(new AdvancedDropdownState(),
+                    assignableTypes.Select(GetTypeName), index => WriteNewInstanceByIndexType(index, property));
+                var buttonRect = new Rect(selectTypeButton.worldTransform.GetPosition(),
+                    selectTypeButton.contentRect.size);
+                dropdown.Show(buttonRect);
+            }
         }
 
         private void DrawIMGUITypeDropdown(Rect rect, SerializedProperty property, GUIContent label)
