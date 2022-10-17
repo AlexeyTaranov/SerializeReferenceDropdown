@@ -4,6 +4,7 @@ using UnityEngine;
 namespace SRD.Sample
 {
     [Serializable]
+    [SerializeReferenceDropdownName("Collider")]
     public class ColliderShape : IShape
     {
         [SerializeField] private Collider _collider;

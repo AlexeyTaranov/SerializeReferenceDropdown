@@ -11,12 +11,12 @@ namespace SerializeReferenceDropdown.Editor
 
         public static object GetTarget(this SerializedProperty prop)
         {
-            string[] propertyNames = prop.propertyPath.Split('.');
-            object target = prop.serializedObject.targetObject;
-            bool isNextPropertyArrayIndex = false;
+            var propertyNames = prop.propertyPath.Split('.');
+            var target = (object)prop.serializedObject.targetObject;
+            var isNextPropertyArrayIndex = false;
             for (int i = 0; i < propertyNames.Length && target != null; ++i)
             {
-                string propName = propertyNames[i];
+                var propName = propertyNames[i];
                 if (propName == "Array")
                 {
                     isNextPropertyArrayIndex = true;
@@ -25,7 +25,7 @@ namespace SerializeReferenceDropdown.Editor
                 {
                     isNextPropertyArrayIndex = false;
                     int arrayIndex = ParseArrayIndex(propName);
-                    object[] targetAsArray = (object[])target;
+                    var targetAsArray = (object[])target;
                     target = targetAsArray[arrayIndex];
                 }
                 else
@@ -44,8 +44,7 @@ namespace SerializeReferenceDropdown.Editor
                 targetType = target.GetType();
             }
 
-            FieldInfo fi = targetType.GetField(name,
-                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            var fi = targetType.GetField(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (fi != null)
             {
                 return fi.GetValue(target);
