@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -69,7 +70,22 @@ namespace SerializeReferenceDropdown.Editor
             }
         }
 
-        private string GetTypeName(Type type) => type == null ? NullName : ObjectNames.NicifyVariableName(type.Name);
+        private string GetTypeName(Type type)
+        {
+            if (type == null)
+            {
+                return NullName;
+            }
+
+            var typesWithNames = TypeCache.GetTypesWithAttribute(typeof(SerializeReferenceDropdownNameAttribute));
+            if (typesWithNames.Contains(type))
+            {
+                var dropdownNameAttribute = type.GetCustomAttribute<SerializeReferenceDropdownNameAttribute>();
+                return dropdownNameAttribute.Name;
+            }
+
+            return ObjectNames.NicifyVariableName(type.Name);
+        }
 
         private List<Type> GetAssignableTypes(SerializedProperty property)
         {
