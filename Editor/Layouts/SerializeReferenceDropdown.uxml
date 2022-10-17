@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:VisualElement>
+        <uie:PropertyField name="propertyField" style="min-height: 20px;" />
+        <ui:Button tabindex="-1" display-tooltip-when-elided="false" name="typeSelect" style="position: absolute; left: 80px; height: 18px; right: 0;" />
+    </ui:VisualElement>
+</ui:UXML>
