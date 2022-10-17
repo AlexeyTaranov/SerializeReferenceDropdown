@@ -76,8 +76,9 @@ namespace SerializeReferenceDropdown.Editor
             {
                 var dropdown = new SerializeReferenceDropdownAdvancedDropdown(new AdvancedDropdownState(),
                     assignableTypes.Select(GetTypeName), index => WriteNewInstanceByIndexType(index, property));
-                var buttonRect = new Rect(selectTypeButton.worldTransform.GetPosition(),
-                    selectTypeButton.contentRect.size);
+                var buttonMatrix = selectTypeButton.worldTransform;
+                var position = new Vector3(buttonMatrix.m03, buttonMatrix.m13, buttonMatrix.m23);
+                var buttonRect = new Rect(position, selectTypeButton.contentRect.size);
                 dropdown.Show(buttonRect);
             }
         }
