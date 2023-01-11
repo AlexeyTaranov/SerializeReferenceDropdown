@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.UIElements;
@@ -147,7 +148,7 @@ namespace SerializeReferenceDropdown.Editor
         private void WriteNewInstanceByIndexType(int typeIndex, SerializedProperty property)
         {
             var newType = assignableTypes[typeIndex];
-            var newObject = newType != null ? Activator.CreateInstance(newType) : null;
+            var newObject = newType != null ? FormatterServices.GetUninitializedObject(newType) : null;
             ApplyValueToProperty(newObject, property);
         }
 
