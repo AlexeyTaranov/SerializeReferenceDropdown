@@ -1,12 +1,12 @@
 {
-    "name": "SerializeReferenceDropdown",
+    "name": "SerializeReferenceDropdownEditor",
     "rootNamespace": "",
     "references": [
-        "GUID:0caab94c8c0a20b4e83e8dc1e4b2a416",
-        "GUID:343deaaf83e0cee4ca978e7df0b80d21",
-        "GUID:2bafac87e7f4b9b418d9448d219b01ab",
-        "GUID:27619889b8ba8c24980f49ee34dbb44a",
-        "GUID:0acc523941302664db1f4e527237feb3"
+        "UnityEditor.UI",
+        "UnityEngine.UI",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "SerializeReferenceDropdownRuntime"
     ],
     "includePlatforms": [
         "Editor"

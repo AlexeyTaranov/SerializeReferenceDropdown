@@ -93,7 +93,10 @@ namespace SerializeReferenceDropdown.Editor
 
             EditorGUI.EndDisabledGroup();
 
-            if (EditorGUI.DropdownButton(dropdownRect, new GUIContent(GetTypeName(referenceType)), FocusType.Keyboard))
+            var dropdownTypeContent = new GUIContent(
+                text: GetTypeName(referenceType),
+                tooltip: GetTypeTooltip(referenceType));
+            if (EditorGUI.DropdownButton(dropdownRect,dropdownTypeContent, FocusType.Keyboard))
             {
                 var dropdown = new SerializeReferenceDropdownAdvancedDropdown(new AdvancedDropdownState(),
                     assignableTypes.Select(GetTypeName),
@@ -130,6 +133,23 @@ namespace SerializeReferenceDropdown.Editor
             }
 
             return ObjectNames.NicifyVariableName(type.Name);
+        }
+
+        private string GetTypeTooltip(Type type)
+        {
+            if (type == null)
+            {
+                return String.Empty;
+            }
+
+            var typesWithTooltip = TypeCache.GetTypesWithAttribute(typeof(TypeTooltipAttribute));
+            if (typesWithTooltip.Contains(type))
+            {
+                var tooltipAttribute = type.GetCustomAttribute<TypeTooltipAttribute>();
+                return tooltipAttribute.tooltip;
+            }
+
+            return String.Empty;
         }
 
         private List<Type> GetAssignableTypes(SerializedProperty property)
