@@ -63,24 +63,32 @@ namespace SerializeReferenceDropdown.Editor
                 "Packages/com.alexeytaranov.serializereferencedropdown/Editor/Layouts/SerializeReferenceDropdown.uxml";
             var visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(uiToolkitLayoutPath);
             root.Add(visualTreeAsset.Instantiate());
-            var selectTypeButton = root.Q<Button>();
             var propertyField = root.Q<PropertyField>();
-            propertyField.BindProperty(property);
-            assignableTypes ??= GetAssignableTypes(property);
-            var selectedType = TypeUtils.ExtractTypeFromString(property.managedReferenceFullTypename);
-
-            var selectedTypeName = GetTypeName(selectedType);
+            var selectTypeButton = root.Q<Button>();
             selectTypeButton.clickable.clicked += ShowDropdown;
-            selectTypeButton.text = selectedTypeName;
+            assignableTypes ??= GetAssignableTypes(property);
+            UpdateDropdown();
 
             void ShowDropdown()
             {
                 var dropdown = new SerializeReferenceDropdownAdvancedDropdown(new AdvancedDropdownState(),
-                    assignableTypes.Select(GetTypeName), index => WriteNewInstanceByIndexType(index, property));
+                    assignableTypes.Select(GetTypeName), index =>
+                    {
+                        WriteNewInstanceByIndexType(index, property);
+                        UpdateDropdown();
+                    });
                 var buttonMatrix = selectTypeButton.worldTransform;
                 var position = new Vector3(buttonMatrix.m03, buttonMatrix.m13, buttonMatrix.m23);
                 var buttonRect = new Rect(position, selectTypeButton.contentRect.size);
                 dropdown.Show(buttonRect);
+            }
+            
+            void UpdateDropdown()
+            {
+                propertyField.BindProperty(property);
+                var selectedType = TypeUtils.ExtractTypeFromString(property.managedReferenceFullTypename);
+                var selectedTypeName = GetTypeName(selectedType);
+                selectTypeButton.text = selectedTypeName;
             }
         }
 
