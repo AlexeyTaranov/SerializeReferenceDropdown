@@ -1,6 +1,6 @@
 {
   "name": "com.alexeytaranov.serializereferencedropdown",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "displayName": "SerializeReferenceDropdown",
   "description": "Editor dropdown for SerializeReference Attribute",
   "unity": "2019.3",
