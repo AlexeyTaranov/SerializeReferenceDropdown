@@ -80,16 +80,3 @@ public class Rectangle : IShape
 ## Copy Paste context menu
 
 [![](Documentation~/CopyPaste.gif "Copy Paste Example")](Documentation~/CopyPaste.gif "Copy Paste Example")
-
-With right click on serialize reference you can copy/paste any serialize reference.
-
-With click "Copy Serialize Reference" will be 2 actions: copy json data to clipboard (like editor right click copy) and save
-property copy (is allow only copy in one editor session).
-
-Paste with 3 different type:
-
-- Paste Serialize Reference Value: apply from clipboard json data (allow copy\paste only on equal type)
-- Paste Serialize Reference as Ref: copy reference to copied object - you can edit once one reference in one Serialized
-  Object
-- Paste Serialize Reference as Deep Copy: its make object copy
-  with [MemberwiseClone](https://docs.microsoft.com/en-us/dotnet/api/system.object.memberwiseclone?view=net-6.0)

@@ -17,6 +17,8 @@ namespace SerializeReferenceDropdown.Editor
         private const string NullName = "null";
         private List<Type> assignableTypes;
 
+        public static Action UpdateDropdownCallback;
+
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             return EditorGUI.GetPropertyHeight(property, label, true);
@@ -68,6 +70,7 @@ namespace SerializeReferenceDropdown.Editor
             selectTypeButton.clickable.clicked += ShowDropdown;
             assignableTypes ??= GetAssignableTypes(property);
             UpdateDropdown();
+            UpdateDropdownCallback = UpdateDropdown;
 
             void ShowDropdown()
             {
@@ -82,7 +85,7 @@ namespace SerializeReferenceDropdown.Editor
                 var buttonRect = new Rect(position, selectTypeButton.contentRect.size);
                 dropdown.Show(buttonRect);
             }
-            
+
             void UpdateDropdown()
             {
                 propertyField.BindProperty(property);
@@ -104,7 +107,7 @@ namespace SerializeReferenceDropdown.Editor
             var dropdownTypeContent = new GUIContent(
                 text: GetTypeName(referenceType),
                 tooltip: GetTypeTooltip(referenceType));
-            if (EditorGUI.DropdownButton(dropdownRect,dropdownTypeContent, FocusType.Keyboard))
+            if (EditorGUI.DropdownButton(dropdownRect, dropdownTypeContent, FocusType.Keyboard))
             {
                 var dropdown = new SerializeReferenceDropdownAdvancedDropdown(new AdvancedDropdownState(),
                     assignableTypes.Select(GetTypeName),
