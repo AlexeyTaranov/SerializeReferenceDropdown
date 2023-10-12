@@ -179,7 +179,17 @@ namespace SerializeReferenceDropdown.Editor
         private void WriteNewInstanceByIndexType(int typeIndex, SerializedProperty property)
         {
             var newType = assignableTypes[typeIndex];
-            var newObject = newType != null ? FormatterServices.GetUninitializedObject(newType) : null;
+
+            object newObject;
+            if (newType.GetConstructor(Type.EmptyTypes) != null)
+            {
+                newObject = newType != null ? Activator.CreateInstance(newType) : null;
+            }
+            else
+            {
+                newObject = newType != null ? FormatterServices.GetUninitializedObject(newType) : null;
+            }
+
             ApplyValueToProperty(newObject, property);
         }
 
