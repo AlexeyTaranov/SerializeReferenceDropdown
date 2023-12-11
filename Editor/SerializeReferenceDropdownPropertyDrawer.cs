@@ -181,7 +181,7 @@ namespace SerializeReferenceDropdown.Editor
             var newType = assignableTypes[typeIndex];
 
             object newObject;
-            if (newType.GetConstructor(Type.EmptyTypes) != null)
+            if (newType?.GetConstructor(Type.EmptyTypes) != null)
             {
                 newObject = newType != null ? Activator.CreateInstance(newType) : null;
             }
