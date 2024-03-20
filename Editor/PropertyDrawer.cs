@@ -12,7 +12,7 @@ using UnityEngine.UIElements;
 namespace SerializeReferenceDropdown.Editor
 {
     [CustomPropertyDrawer(typeof(SerializeReferenceDropdownAttribute))]
-    public class SerializeReferenceDropdownPropertyDrawer : PropertyDrawer
+    public class PropertyDrawer : UnityEditor.PropertyDrawer
     {
         private const string NullName = "null";
         private List<Type> assignableTypes;
@@ -74,7 +74,7 @@ namespace SerializeReferenceDropdown.Editor
 
             void ShowDropdown()
             {
-                var dropdown = new SerializeReferenceDropdownAdvancedDropdown(new AdvancedDropdownState(),
+                var dropdown = new AdvancedDropdown(new AdvancedDropdownState(),
                     assignableTypes.Select(GetTypeName), index =>
                     {
                         WriteNewInstanceByIndexType(index, property);
@@ -109,7 +109,7 @@ namespace SerializeReferenceDropdown.Editor
                 tooltip: GetTypeTooltip(referenceType));
             if (EditorGUI.DropdownButton(dropdownRect, dropdownTypeContent, FocusType.Keyboard))
             {
-                var dropdown = new SerializeReferenceDropdownAdvancedDropdown(new AdvancedDropdownState(),
+                var dropdown = new AdvancedDropdown(new AdvancedDropdownState(),
                     assignableTypes.Select(GetTypeName),
                     index => WriteNewInstanceByIndexType(index, property));
                 dropdown.Show(dropdownRect);

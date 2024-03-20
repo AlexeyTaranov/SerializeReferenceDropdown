@@ -80,7 +80,7 @@ namespace SerializeReferenceDropdown.Editor
 
         public static Type GetConcreteGenericType(Type propertyType, Type genericType)
         {
-            if (CanCreateDirectGenericType())
+            if (propertyType.IsGenericType && CanCreateDirectGenericType())
             {
                 var genericConcreteType = genericType.MakeGenericType(propertyType.GetGenericArguments());
                 return genericConcreteType;
@@ -92,7 +92,8 @@ namespace SerializeReferenceDropdown.Editor
             {
                 var genericArguments = genericType.GetInterfaces();
                 var interfaceIndex = Array.FindIndex(genericArguments,
-                    argType => argType.IsGenericType && argType.GetGenericTypeDefinition() == propertyType.GetGenericTypeDefinition());
+                    argType => argType.IsGenericType &&
+                               argType.GetGenericTypeDefinition() == propertyType.GetGenericTypeDefinition());
                 var isHaveSameArgumentsCount =
                     propertyType.GetGenericArguments().Length == genericType.GetGenericArguments().Length &&
                     interfaceIndex != -1;
