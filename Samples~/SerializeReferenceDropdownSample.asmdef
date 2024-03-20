@@ -2,7 +2,6 @@
     "name": "SerializeReferenceDropdownSample",
     "rootNamespace": "",
     "references": [
-        "GUID:2bafac87e7f4b9b418d9448d219b01ab",
         "GUID:0caab94c8c0a20b4e83e8dc1e4b2a416"
     ],
     "includePlatforms": [],
