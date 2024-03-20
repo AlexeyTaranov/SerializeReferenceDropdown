@@ -166,31 +166,67 @@ namespace SerializeReferenceDropdown.Editor
         private List<Type> GetAssignableTypes(SerializedProperty property)
         {
             var propertyType = TypeUtils.ExtractTypeFromString(property.managedReferenceFieldTypename);
-            var nonUnityTypes = TypeCache.GetTypesDerivedFrom(propertyType).Where(IsAssignableNonUnityType).ToList();
+            var derivedTypes = TypeCache.GetTypesDerivedFrom(propertyType);
+            var nonUnityTypes = derivedTypes.Where(IsAssignableNonUnityType).ToList();
             nonUnityTypes.Insert(0, null);
+            if (propertyType.IsGenericType && propertyType.IsInterface)
+            {
+                var allTypes = TypeUtils.GetAllTypesInCurrentDomain().Where(IsAssignableNonUnityType)
+                    .Where(t => t.IsGenericType);
+
+                var assignableGenericTypes = allTypes.Where(IsImplementedGenericInterfacesFromGenericProperty);
+                nonUnityTypes.AddRange(assignableGenericTypes);
+            }
+
             return nonUnityTypes;
 
             bool IsAssignableNonUnityType(Type type)
             {
                 return TypeUtils.IsFinalAssignableType(type) && !type.IsSubclassOf(typeof(UnityEngine.Object));
             }
+
+            bool IsImplementedGenericInterfacesFromGenericProperty(Type type)
+            {
+                var interfaces = type.GetInterfaces().Where(t => t.IsGenericType);
+                var isImplementedInterface = interfaces.Any(t =>
+                    t.GetGenericTypeDefinition() == propertyType.GetGenericTypeDefinition());
+                return isImplementedInterface;
+            }
         }
 
         private void WriteNewInstanceByIndexType(int typeIndex, SerializedProperty property)
         {
             var newType = assignableTypes[typeIndex];
+            var propertyType = TypeUtils.ExtractTypeFromString(property.managedReferenceFieldTypename);
 
-            object newObject;
-            if (newType?.GetConstructor(Type.EmptyTypes) != null)
+            if (newType?.IsGenericType == true)
             {
-                newObject = newType != null ? Activator.CreateInstance(newType) : null;
+                var concreteGenericType = TypeUtils.GetConcreteGenericType(propertyType, newType);
+                if (concreteGenericType != null)
+                {
+                    CreateAndApplyNewInstanceFromType(concreteGenericType);
+                }
             }
             else
             {
-                newObject = newType != null ? FormatterServices.GetUninitializedObject(newType) : null;
+                CreateAndApplyNewInstanceFromType(newType);
             }
 
-            ApplyValueToProperty(newObject, property);
+
+            void CreateAndApplyNewInstanceFromType(Type type)
+            {
+                object newObject;
+                if (type?.GetConstructor(Type.EmptyTypes) != null)
+                {
+                    newObject = Activator.CreateInstance(type);
+                }
+                else
+                {
+                    newObject = type != null ? FormatterServices.GetUninitializedObject(type) : null;
+                }
+
+                ApplyValueToProperty(newObject, property);
+            }
         }
 
         private void ApplyValueToProperty(object value, SerializedProperty property)
