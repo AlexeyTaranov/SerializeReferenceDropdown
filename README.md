@@ -77,6 +77,46 @@ public class Rectangle : IShape
 
 [![](Documentation~/SerializeReferenceDropdown.gif "SerializeReferenceDropdown Example")](Documentation~/SerializeReferenceDropdown.gif "SerializeReferenceDropdown Example")
 
+### Generics
+
+You can use generics (Unity 2023.2+). Unspecified arguments need select in additional window.
+
+
+<details>
+<summary>Code Example</summary>
+
+```csharp
+public class TestShapesForSRD : MonoBehaviour
+{
+    [SerializeReference, SerializeReferenceDropdown]
+    private ISimpleGenericData<int> _intData;
+}
+
+public interface ISimpleGenericData<TData> : IAbstractData
+{
+    public TData Data { get; }
+}
+
+[Serializable]
+public class GenericData<TData> : ISimpleGenericData<TData>
+{
+    [SerializeField] private TData _data;
+
+    public TData Data => _data;
+}
+
+[Serializable]
+public class GenericKeyValuePair<TKeyData, TValueData> : ISimpleGenericData<TKeyData>, IAbstractData
+{
+    [SerializeField] private TKeyData _key;
+    [SerializeField] private TValueData _value;
+    public TKeyData Data => _key;
+}
+```
+</details>
+
+[![](Documentation~/Generics.gif "SerializeReferenceDropdown Example")](Documentation~/SerializeReferenceDropdown.gif "SerializeReferenceDropdown Example")
+
 ## Copy Paste context menu
 
 [![](Documentation~/CopyPaste.gif "Copy Paste Example")](Documentation~/CopyPaste.gif "Copy Paste Example")
