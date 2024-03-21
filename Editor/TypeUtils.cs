@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UnityEditor;
+using UnityEditor.Compilation;
 using UnityEngine;
+using Assembly = System.Reflection.Assembly;
 
 namespace SerializeReferenceDropdown.Editor
 {
@@ -102,14 +103,9 @@ namespace SerializeReferenceDropdown.Editor
             }
         }
 
-        public static Type[] GetBuiltInUnitySerializeTypes()
+        private static Type[] GetBuiltInUnitySerializeTypes()
         {
-            var list = new List<Type>();
-            var types = GetDefaultTypes();
-            var arrayTypes = types.Select(t => t.MakeArrayType());
-            list.AddRange(types);
-            list.AddRange(arrayTypes);
-            return list.ToArray();
+            return GetDefaultTypes();
         }
 
         private static Type[] GetDefaultTypes()
@@ -122,6 +118,41 @@ namespace SerializeReferenceDropdown.Editor
                 typeof(Color), typeof(Color32), typeof(Vector2), typeof(Vector3), typeof(Vector4), typeof(Quaternion),
                 typeof(Ray), typeof(Ray2D)
             };
+        }
+
+        private static IReadOnlyList<Type> SystemObjectTypes;
+
+
+        public static IReadOnlyList<Type> GetAllSystemObjectTypes()
+        {
+            if (SystemObjectTypes == null)
+            {
+                var assemblies = CompilationPipeline.GetAssemblies();
+                var playerAssemblies = assemblies.Where(t => t.flags.HasFlag(AssemblyFlags.EditorAssembly) == false)
+                    .Select(t => t.name).ToArray();
+                var baseType = typeof(object);
+                var typesCollection = TypeCache.GetTypesDerivedFrom(baseType);
+                var customTypes = typesCollection.Where(IsValidTypeForGenericParameter).OrderBy(t => t.FullName);
+
+                var typesList = new List<Type>();
+                typesList.AddRange(GetBuiltInUnitySerializeTypes());
+                typesList.AddRange(customTypes);
+                SystemObjectTypes = typesList.ToArray();
+
+                bool IsValidTypeForGenericParameter(Type t)
+                {
+                    var isUnityObjectType = t.IsSubclassOf(typeof(UnityEngine.Object));
+
+                    var isFinalSerializeType = !t.IsAbstract && !t.IsInterface && !t.IsGenericType && t.IsSerializable;
+                    var isEnum = t.IsEnum;
+                    var isTargetType = playerAssemblies.Any(asm => t.Assembly.FullName.StartsWith(asm)) ||
+                                       t.Assembly.FullName.StartsWith(nameof(UnityEngine));
+
+                    return isTargetType && (isFinalSerializeType || isEnum || isUnityObjectType);
+                }
+            }
+
+            return SystemObjectTypes;
         }
     }
 }

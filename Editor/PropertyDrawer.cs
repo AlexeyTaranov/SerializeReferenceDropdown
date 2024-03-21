@@ -77,11 +77,7 @@ namespace SerializeReferenceDropdown.Editor
             void ShowDropdown()
             {
                 var dropdown = new AdvancedDropdown(new AdvancedDropdownState(),
-                    assignableTypes.Select(GetTypeName), index =>
-                    {
-                        WriteNewInstanceByIndexType(index, property);
-                        UpdateDropdown();
-                    });
+                    assignableTypes.Select(GetTypeName), index => { WriteNewInstanceByIndexType(index, property); });
                 var buttonMatrix = selectTypeButton.worldTransform;
                 var position = new Vector3(buttonMatrix.m03, buttonMatrix.m13, buttonMatrix.m23);
                 var buttonRect = new Rect(position, selectTypeButton.contentRect.size);
@@ -240,16 +236,16 @@ namespace SerializeReferenceDropdown.Editor
                     newObject = type != null ? FormatterServices.GetUninitializedObject(type) : null;
                 }
 
-                ApplyValueToProperty(newObject, property);
+                ApplyValueToProperty(newObject);
             }
-        }
 
-        private void ApplyValueToProperty(object value, SerializedProperty property)
-        {
-            property.managedReferenceValue = value;
-            property.serializedObject.ApplyModifiedProperties();
-            property.serializedObject.Update();
-            UpdateDropdownCallback.Invoke();
+            void ApplyValueToProperty(object value)
+            {
+                property.managedReferenceValue = value;
+                property.serializedObject.ApplyModifiedProperties();
+                property.serializedObject.Update();
+                UpdateDropdownCallback?.Invoke();
+            }
         }
     }
 }
