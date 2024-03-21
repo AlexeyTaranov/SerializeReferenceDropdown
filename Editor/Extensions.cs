@@ -5,9 +5,9 @@ using UnityEditor;
 
 namespace SerializeReferenceDropdown.Editor
 {
-    public static class SerializedPropertyExtentions
+    public static class Extensions
     {
-        private static Regex ArrayIndexCapturePattern = new Regex(@"\[(\d*)\]");
+        private static readonly Regex ArrayIndexCapturePattern = new Regex(@"\[(\d*)\]");
 
         public static object GetTarget(this SerializedProperty prop)
         {

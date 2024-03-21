@@ -5,11 +5,11 @@ using UnityEngine;
 namespace SerializeReferenceDropdown.Editor
 {
     [InitializeOnLoad]
-    public class SerializeReferenceCopyPasteContextMenu
+    public class CopyPasteContextMenu
     {
-        private static (string json, Type type) _lastObject;
+        private static (string json, Type type) lastObject;
 
-        static SerializeReferenceCopyPasteContextMenu()
+        static CopyPasteContextMenu()
         {
             EditorApplication.contextualPropertyMenu += ShowSerializeReferenceCopyPasteContextMenu;
         }
@@ -36,17 +36,17 @@ namespace SerializeReferenceDropdown.Editor
         private static void CopyReferenceValue(SerializedProperty property)
         {
             var refValue = GetReferenceToValueFromSerializerPropertyReference(property);
-            _lastObject.json = JsonUtility.ToJson(refValue);
-            _lastObject.type = refValue?.GetType();
+            lastObject.json = JsonUtility.ToJson(refValue);
+            lastObject.type = refValue?.GetType();
         }
 
         private static void PasteReferenceValue(SerializedProperty property)
         {
             try
             {
-                if (_lastObject.type != null)
+                if (lastObject.type != null)
                 {
-                    var pasteObj = JsonUtility.FromJson(_lastObject.json, _lastObject.type);
+                    var pasteObj = JsonUtility.FromJson(lastObject.json, lastObject.type);
                     property.managedReferenceValue = pasteObj;
                 }
                 else
@@ -56,7 +56,7 @@ namespace SerializeReferenceDropdown.Editor
 
                 property.serializedObject.ApplyModifiedProperties();
                 property.serializedObject.Update();
-                SerializeReferenceDropdownPropertyDrawer.UpdateDropdownCallback?.Invoke();
+                PropertyDrawer.UpdateDropdownCallback?.Invoke();
             }
             catch (Exception e)
             {

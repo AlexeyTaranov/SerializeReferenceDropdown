@@ -13,7 +13,7 @@ OcclusionCullingSettings:
 --- !u!104 &2
 RenderSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 9
+  serializedVersion: 10
   m_Fog: 0
   m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   m_FogMode: 3
@@ -38,13 +38,12 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.37311953, g: 0.38074014, b: 0.3587274, a: 1}
+  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 12
-  m_GIWorkflowMode: 1
   m_GISettings:
     serializedVersion: 2
     m_BounceScale: 1
@@ -67,9 +66,6 @@ LightmapSettings:
     m_LightmapParameters: {fileID: 0}
     m_LightmapsBakeMode: 1
     m_TextureCompression: 1
-    m_FinalGather: 0
-    m_FinalGatherFiltering: 1
-    m_FinalGatherRayCount: 256
     m_ReflectionCompression: 2
     m_MixedBakeMode: 2
     m_BakeBackend: 1
@@ -104,7 +100,7 @@ NavMeshSettings:
   serializedVersion: 2
   m_ObjectHideFlags: 0
   m_BuildSettings:
-    serializedVersion: 2
+    serializedVersion: 3
     agentTypeID: 0
     agentRadius: 0.5
     agentHeight: 2
@@ -117,7 +113,7 @@ NavMeshSettings:
     cellSize: 0.16666667
     manualTileSize: 0
     tileSize: 256
-    accuratePlacement: 0
+    buildHeightMesh: 0
     maxJobWorkers: 0
     preserveTilesOutsideBounds: 0
     debug:
@@ -165,9 +161,17 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1261749239}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 0
+  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!23 &1261749242
@@ -181,11 +185,14 @@ MeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -226,12 +233,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1261749239}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -2.0029259, y: 2.550075, z: 0.6493063}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1617203130
 GameObject:
@@ -263,36 +271,42 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _singleShape:
-    id: 0
+    rid: 7290041831390183645
   _shapesArray:
-  - id: 1
-  - id: 2
-  - id: 3
-  _anyShape:
-    _isUnityObjectReference: 1
-    _unityObject: {fileID: 1261749240}
-    _nativeObject:
-      id: 4
+  - rid: 1
+  - rid: 2
+  - rid: 3
+  _intData:
+    rid: 7290041831390183644
+  _classData:
+    rid: 7290041831390183642
   references:
-    version: 1
-    00000000:
-      type: {class: Circle, ns: SRD.Sample, asm: SerializeReferenceDropdownSample}
-      data:
-        _radius: 1.69
-    00000001:
+    version: 2
+    RefIds:
+    - rid: 1
       type: {class: Circle, ns: SRD.Sample, asm: SerializeReferenceDropdownSample}
       data:
         _radius: 1.82
-    00000002:
+    - rid: 2
       type: {class: Rectangle, ns: SRD.Sample, asm: SerializeReferenceDropdownSample}
       data:
         _sideA: 1.71
         _sideB: 2.82
-    00000003:
+    - rid: 3
       type: {class: ColliderShape, ns: SRD.Sample, asm: SerializeReferenceDropdownSample}
       data:
         _collider: {fileID: 1261749241}
-    00000004:
+    - rid: 7290041831390183642
+      type: {class: 'GenericData`1[[SRD.Sample.Data, SerializeReferenceDropdownSample]]', ns: SRD.Sample.Generics, asm: SerializeReferenceDropdownSample}
+      data:
+        _data:
+          Name: Name
+          Index: 123
+    - rid: 7290041831390183644
+      type: {class: 'GenericData`1[[System.Int32, mscorlib]]', ns: SRD.Sample.Generics, asm: SerializeReferenceDropdownSample}
+      data:
+        _data: 100
+    - rid: 7290041831390183645
       type: {class: Circle, ns: SRD.Sample, asm: SerializeReferenceDropdownSample}
       data:
         _radius: 0
@@ -303,10 +317,17 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1617203130}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1660057539 &9223372036854775807
+SceneRoots:
+  m_ObjectHideFlags: 0
+  m_Roots:
+  - {fileID: 1617203132}
+  - {fileID: 1261749244}

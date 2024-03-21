@@ -4,15 +4,16 @@ using UnityEditor.IMGUI.Controls;
 
 namespace SerializeReferenceDropdown.Editor
 {
-    public class SerializeReferenceDropdownAdvancedDropdown : AdvancedDropdown
+    public class AdvancedDropdown : UnityEditor.IMGUI.Controls.AdvancedDropdown
     {
         private readonly IEnumerable<string> typeNames;
+
         private readonly Dictionary<AdvancedDropdownItem, int> itemAndIndexes =
             new Dictionary<AdvancedDropdownItem, int>();
-        
+
         private readonly Action<int> onSelectedTypeIndex;
 
-        public SerializeReferenceDropdownAdvancedDropdown(AdvancedDropdownState state, IEnumerable<string> typeNames,
+        public AdvancedDropdown(AdvancedDropdownState state, IEnumerable<string> typeNames,
             Action<int> onSelectedNewType) :
             base(state)
         {
