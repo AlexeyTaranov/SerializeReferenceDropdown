@@ -218,7 +218,7 @@ namespace SerializeReferenceDropdown.Editor
                 }
                 else
                 {
-                    GenericTypeCreateWindow.ShowCreateTypeMenu(propertyRect, newType, propertyType,
+                    GenericTypeCreateWindow.ShowCreateTypeMenu(property, propertyRect, newType,
                         CreateAndApplyNewInstanceFromType);
                 }
             }

@@ -101,5 +101,27 @@ namespace SerializeReferenceDropdown.Editor
                 return isHaveSameArgumentsCount && anyAbstract == false;
             }
         }
+
+        public static Type[] GetBuiltInUnitySerializeTypes()
+        {
+            var list = new List<Type>();
+            var types = GetDefaultTypes();
+            var arrayTypes = types.Select(t => t.MakeArrayType());
+            list.AddRange(types);
+            list.AddRange(arrayTypes);
+            return list.ToArray();
+        }
+
+        private static Type[] GetDefaultTypes()
+        {
+            return new[]
+            {
+                typeof(bool), typeof(char), typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int),
+                typeof(uint), typeof(long), typeof(ulong), typeof(float), typeof(double), typeof(string),
+
+                typeof(Color), typeof(Color32), typeof(Vector2), typeof(Vector3), typeof(Vector4), typeof(Quaternion),
+                typeof(Ray), typeof(Ray2D)
+            };
+        }
     }
 }

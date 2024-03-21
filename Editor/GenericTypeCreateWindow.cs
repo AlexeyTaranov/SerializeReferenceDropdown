@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
+using UnityEditor.Compilation;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -12,7 +14,7 @@ namespace SerializeReferenceDropdown.Editor
     {
         private const int InvalidIndex = -1;
         private Type inputGenericType;
-        private Type propertyType;
+        private SerializedProperty property;
         private Action<Type> onSelectNewGenericType;
 
         private IReadOnlyList<Type> genericParameters;
@@ -23,13 +25,15 @@ namespace SerializeReferenceDropdown.Editor
         private Button generateGenericButton;
         private IReadOnlyList<Button> typeButtons;
 
-        public static void ShowCreateTypeMenu(Rect propertyRect, Type genericType, Type propertyType,
+        private static Type[] SystemObjectTypes;
+
+        public static void ShowCreateTypeMenu(SerializedProperty property, Rect propertyRect, Type genericType,
             Action<Type> onSelectedConcreteType)
         {
             var window = GetWindow<GenericTypeCreateWindow>();
             window.titleContent = new GUIContent("SRD Generic Type Create");
             window.Show();
-            window.InitWindow(genericType, propertyType, onSelectedConcreteType);
+            window.InitWindow(property, genericType, onSelectedConcreteType);
             window.CreateElements();
 
             var currentRect = window.position;
@@ -38,11 +42,11 @@ namespace SerializeReferenceDropdown.Editor
             window.position = currentRect;
         }
 
-        private void InitWindow(Type genericType, Type propertyType, Action<Type> onSelectedConcreteType)
+        private void InitWindow(SerializedProperty property, Type genericType, Action<Type> onSelectedConcreteType)
         {
             inputGenericType = genericType;
             onSelectNewGenericType = onSelectedConcreteType;
-            this.propertyType = propertyType;
+            this.property = property;
 
             genericParameters = inputGenericType.GetGenericArguments();
             selectedIndexes = new int[genericParameters.Count];
@@ -52,18 +56,74 @@ namespace SerializeReferenceDropdown.Editor
             {
                 selectedIndexes[i] = InvalidIndex;
                 var genericParam = genericParameters[i];
+                Type[] targetTypes;
                 if (genericParam.GetInterfaces().Length == 0)
                 {
-                    genericParam = typeof(object);
+                    SystemObjectTypes ??= GetAllSystemObjectTypes();
+                    targetTypes = SystemObjectTypes;
+                }
+                else
+                {
+                    var typesCollection = TypeCache.GetTypesDerivedFrom(genericParam);
+                    targetTypes = typesCollection.Where(t => SystemObjectTypes.Contains(t)).ToArray();
                 }
 
-                var typesCollection = TypeCache.GetTypesDerivedFrom(genericParam);
-                var targetTypes = typesCollection.Where(t => t.IsSerializable && !t.IsAbstract && !t.IsInterface)
-                    .ToArray();
+
                 types.Add(targetTypes);
                 var names = targetTypes.Select(t => t.FullName).ToArray();
                 typeNames.Add(names);
             }
+
+
+            Type[] GetAllSystemObjectTypes()
+            {
+                var assemblies = CompilationPipeline.GetAssemblies();
+                var playerAssemblies = assemblies.Where(t => t.flags.HasFlag(AssemblyFlags.EditorAssembly) == false)
+                    .Select(t => t.name).ToArray();
+                var baseType = typeof(object);
+                var typesCollection = TypeCache.GetTypesDerivedFrom(baseType);
+                var customTypes = typesCollection.Where(IsValidTypeForGenericParameter).OrderBy(t => t.FullName);
+                
+                var typesList = new List<Type>();
+                typesList.AddRange(TypeUtils.GetBuiltInUnitySerializeTypes());
+                typesList.AddRange(customTypes);
+                return typesList.ToArray();
+
+
+                bool IsValidTypeForGenericParameter(Type t)
+                {
+                    var isUnityObjectType = t.IsSubclassOf(typeof(UnityEngine.Object));
+
+                    var isFinalSerializeType = !isUnityObjectType && !t.IsAbstract && !t.IsInterface &&
+                                               !t.IsGenericType &&
+                                               t.IsSerializable;
+                    var isEnum = t.IsEnum;
+                    
+                    var isTargetType = playerAssemblies.Any(asm => t.Assembly.FullName.StartsWith(asm));
+                    return isTargetType && (isFinalSerializeType || isEnum);
+                }
+            }
+        }
+
+        private void OnGUI()
+        {
+            if (IsDisposedProperty())
+            {
+                Close();
+            }
+        }
+
+        private bool IsDisposedProperty()
+        {
+            if (property == null)
+            {
+                return true;
+            }
+
+            var propertyType = property.GetType();
+            var isValidField = propertyType.GetProperty("isValid", BindingFlags.NonPublic | BindingFlags.Instance);
+            var isValidValue = isValidField?.GetValue(property);
+            return isValidValue != null && (bool)isValidValue == false;
         }
 
         private void CreateElements()
@@ -123,6 +183,7 @@ namespace SerializeReferenceDropdown.Editor
 
             var newGenericType = inputGenericType.MakeGenericType(parameterTypes);
             onSelectNewGenericType.Invoke(newGenericType);
+            Close();
         }
 
         private void ShowTypesForParamIndex(int genericParamIndex, Button selectedButton)
