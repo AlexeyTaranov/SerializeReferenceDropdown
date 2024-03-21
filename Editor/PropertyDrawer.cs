@@ -16,6 +16,7 @@ namespace SerializeReferenceDropdown.Editor
     {
         private const string NullName = "null";
         private List<Type> assignableTypes;
+        private Rect propertyRect;
 
         public static Action UpdateDropdownCallback;
 
@@ -28,6 +29,7 @@ namespace SerializeReferenceDropdown.Editor
         {
             EditorGUI.BeginProperty(rect, label, property);
 
+            propertyRect = rect;
             var indent = EditorGUI.indentLevel;
             EditorGUI.indentLevel = 0;
 
@@ -143,6 +145,14 @@ namespace SerializeReferenceDropdown.Editor
                 return dropdownNameAttribute.Name;
             }
 
+            if (type.IsGenericType)
+            {
+                var genericNames = type.GenericTypeArguments.Select(t => t.Name);
+                var genericParamNames = " [" + string.Join(",", genericNames) + "]";
+                var genericName = ObjectNames.NicifyVariableName(type.Name) + genericParamNames;
+                return genericName;
+            }
+
             return ObjectNames.NicifyVariableName(type.Name);
         }
 
@@ -206,6 +216,11 @@ namespace SerializeReferenceDropdown.Editor
                 {
                     CreateAndApplyNewInstanceFromType(concreteGenericType);
                 }
+                else
+                {
+                    GenericTypeCreateWindow.ShowCreateTypeMenu(propertyRect, newType, propertyType,
+                        CreateAndApplyNewInstanceFromType);
+                }
             }
             else
             {
@@ -234,6 +249,7 @@ namespace SerializeReferenceDropdown.Editor
             property.managedReferenceValue = value;
             property.serializedObject.ApplyModifiedProperties();
             property.serializedObject.Update();
+            UpdateDropdownCallback.Invoke();
         }
     }
 }
