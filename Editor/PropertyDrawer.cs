@@ -241,9 +241,17 @@ namespace SerializeReferenceDropdown.Editor
 
             void ApplyValueToProperty(object value)
             {
-                property.managedReferenceValue = value;
-                property.serializedObject.ApplyModifiedProperties();
-                property.serializedObject.Update();
+                var targets = property.serializedObject.targetObjects;
+                // Multiple object edit.
+                //One Serialized Object for multiple Objects work sometimes incorrectly  
+                foreach (var target in targets)
+                {
+                    using var so = new SerializedObject(target);
+                    var targetProperty = so.FindProperty(property.propertyPath);
+                    targetProperty.managedReferenceValue = value;
+                    so.ApplyModifiedProperties();
+                    so.Update();
+                }
                 UpdateDropdownCallback?.Invoke();
             }
         }
