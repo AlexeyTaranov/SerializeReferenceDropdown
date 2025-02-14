@@ -56,7 +56,6 @@ namespace SerializeReferenceDropdown.Editor
 
                 property.serializedObject.ApplyModifiedProperties();
                 property.serializedObject.Update();
-                PropertyDrawer.UpdateDropdownCallback?.Invoke();
             }
             catch (Exception e)
             {

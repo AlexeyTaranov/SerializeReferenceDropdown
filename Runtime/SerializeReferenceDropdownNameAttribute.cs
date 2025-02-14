@@ -5,10 +5,9 @@ using UnityEngine;
 public class SerializeReferenceDropdownNameAttribute : PropertyAttribute
 {
     public readonly string Name;
-    
+
     public SerializeReferenceDropdownNameAttribute(string name)
     {
         Name = name;
     }
 }
-
