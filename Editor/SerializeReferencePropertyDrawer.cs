@@ -12,13 +12,11 @@ using UnityEngine.UIElements;
 namespace SerializeReferenceDropdown.Editor
 {
     [CustomPropertyDrawer(typeof(SerializeReferenceDropdownAttribute))]
-    public class PropertyDrawer : UnityEditor.PropertyDrawer
+    public class SerializeReferencePropertyDrawer : UnityEditor.PropertyDrawer
     {
         private const string NullName = "null";
         private List<Type> assignableTypes;
         private Rect propertyRect;
-
-        public static Action UpdateDropdownCallback;
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
@@ -70,9 +68,10 @@ namespace SerializeReferenceDropdown.Editor
             var propertyField = root.Q<PropertyField>();
             var selectTypeButton = root.Q<Button>();
             selectTypeButton.clickable.clicked += ShowDropdown;
+            var propertyPath = property.propertyPath;
             assignableTypes ??= GetAssignableTypes(property);
-            UpdateDropdown();
-            UpdateDropdownCallback = UpdateDropdown;
+            root.TrackSerializedObjectValue(property.serializedObject, UpdateDropdown);
+            UpdateDropdown(property.serializedObject);
 
             void ShowDropdown()
             {
@@ -84,10 +83,11 @@ namespace SerializeReferenceDropdown.Editor
                 dropdown.Show(buttonRect);
             }
 
-            void UpdateDropdown()
+            void UpdateDropdown(SerializedObject so)
             {
-                propertyField.BindProperty(property);
-                var selectedType = TypeUtils.ExtractTypeFromString(property.managedReferenceFullTypename);
+                var prop = so.FindProperty(propertyPath);
+                propertyField.BindProperty(prop);
+                var selectedType = TypeUtils.ExtractTypeFromString(prop.managedReferenceFullTypename);
                 var selectedTypeName = GetTypeName(selectedType);
                 selectTypeButton.text = selectedTypeName;
             }
@@ -241,10 +241,17 @@ namespace SerializeReferenceDropdown.Editor
 
             void ApplyValueToProperty(object value)
             {
-                property.managedReferenceValue = value;
-                property.serializedObject.ApplyModifiedProperties();
-                property.serializedObject.Update();
-                UpdateDropdownCallback?.Invoke();
+                var targets = property.serializedObject.targetObjects;
+                // Multiple object edit.
+                //One Serialized Object for multiple Objects work sometimes incorrectly  
+                foreach (var target in targets)
+                {
+                    using var so = new SerializedObject(target);
+                    var targetProperty = so.FindProperty(property.propertyPath);
+                    targetProperty.managedReferenceValue = value;
+                    so.ApplyModifiedProperties();
+                    so.Update();
+                }
             }
         }
     }

@@ -1,0 +1,12 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:VisualElement>
+        <ui:GroupBox style="flex-direction: row; align-items: center;">
+            <uie:PropertyField name="Property" enabled="true" />
+            <ui:VisualElement style="flex-grow: 1; max-width: 8px; min-width: 12px;" />
+            <ui:Label text="RefTo:" style="-unity-font-style: bold; font-size: 14px; min-width: 8px;" />
+            <ui:Label text="Reference Name" name="RefName" style="-unity-font-style: italic;" />
+            <ui:VisualElement style="flex-grow: 1; max-width: 8px; min-width: 12px;" />
+            <uie:ObjectField name="Host" enabled="true" focusable="false" allow-scene-objects="false" language-direction="Inherit" />
+        </ui:GroupBox>
+    </ui:VisualElement>
+</ui:UXML>

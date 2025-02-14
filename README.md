@@ -113,6 +113,7 @@ public class GenericKeyValuePair<TKeyData, TValueData> : ISimpleGenericData<TKey
     public TKeyData Data => _key;
 }
 ```
+
 </details>
 
 [![](Documentation~/Generics.gif "SerializeReferenceDropdown Example")](Documentation~/SerializeReferenceDropdown.gif "SerializeReferenceDropdown Example")
@@ -120,3 +121,13 @@ public class GenericKeyValuePair<TKeyData, TValueData> : ISimpleGenericData<TKey
 ## Copy Paste context menu
 
 [![](Documentation~/CopyPaste.gif "Copy Paste Example")](Documentation~/CopyPaste.gif "Copy Paste Example")
+
+## Ref To
+
+This class support references to Serialize References! With context menu you can copy-paste serialize references into the class RefTo<TType> with limits to TType.
+
+```csharp
+[SerializeField] private RefTo<IShape> _refShape;
+```
+
+[![](Documentation~/RefTo%20Example.gif "RefTo Example")](Documentation~/RefTo%20Example.gif "RefTo Example")
