@@ -22,5 +22,16 @@ public class RefTo<TRefType, THostType>
 
         return null;
     }
+
+    public RefTo(THostType host, long referenceId)
+    {
+        _host = host;
+        _referenceId = referenceId;
+    }
+
+    public RefTo<TRefType, THostType> CopyWithNewHost(THostType host)
+    {
+        return new RefTo<TRefType, THostType>(host, _referenceId);
+    }
 }
 #endif
