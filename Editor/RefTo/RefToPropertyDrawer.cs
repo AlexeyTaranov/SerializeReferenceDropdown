@@ -1,8 +1,11 @@
+using System;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Object = UnityEngine.Object;
 
+#if UNITY_2022_3_OR_NEWER
 namespace SerializeReferenceDropdown.Editor.RefTo
 {
     [CustomPropertyDrawer(typeof(RefTo<>))]
@@ -20,15 +23,27 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             return EditorGUI.GetPropertyHeight(property, label, true);
         }
 
+        private static GUIStyle _errorStyle;
+
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             EditorGUI.BeginProperty(position, label, property);
             EditorGUI.PropertyField(position, property, label, true);
-            var (name, host) = GetInspectorValues(property);
+            var (refName, targetName, host, isSameType) = GetInspectorValues(property);
             var elementRect = position;
             elementRect.height = EditorGUIUtility.singleLineHeight;
             elementRect.position += new Vector2(EditorGUIUtility.labelWidth, 0);
-            EditorGUI.LabelField(elementRect, $"Ref to: {name}");
+            var refLabel = $"Ref to: {refName} {targetName}";
+            if (isSameType)
+            {
+                EditorGUI.LabelField(elementRect, refLabel);
+            }
+            else
+            {
+                _errorStyle ??= new GUIStyle() { normal = new GUIStyleState() { textColor = Color.red } };
+                EditorGUI.LabelField(elementRect, refLabel, _errorStyle);
+            }
+
             elementRect.position += new Vector2(120, 0);
             EditorGUI.BeginDisabledGroup(true);
             EditorGUI.ObjectField(elementRect, host, typeof(Object), true);
@@ -53,26 +68,40 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             void RefreshName(SerializedObject so)
             {
                 var localProperty = so.FindProperty(propertyPath);
-                var (name, host) = GetInspectorValues(localProperty);
+                var (refName, targetName, host, isSameType) = GetInspectorValues(localProperty);
                 objectField.value = host;
-                root.Q<Label>("RefName").text = name;
+                var label = root.Q<Label>("RefName");
+                root.Q<Label>("Target").text = targetName;
+                label.style.color = isSameType ? new StyleColor(Color.white) : new StyleColor(Color.red);
+                label.text = refName;
             }
         }
 
-        private (string name, Object host) GetInspectorValues(SerializedProperty property)
+        private (string referenceName, string targetName, Object host, bool isSameType) GetInspectorValues(
+            SerializedProperty property)
         {
-            var name = "null";
+            var refName = "null";
             var (host, id) = RefToExtensions.GetRefToFieldsFromProperty(property);
+            RefToExtensions.TryGetRefType(property, out var targetType);
+            var targetName = $"[{TypeToName(targetType)}]";
             if (host != null)
             {
                 var reference = UnityEngine.Serialization.ManagedReferenceUtility.GetManagedReference(host, id);
                 if (reference != null)
                 {
-                    name = ObjectNames.NicifyVariableName(reference.GetType().Name);
+                    refName = TypeToName(reference.GetType());
+                    var isSameType = targetType.IsAssignableFrom(reference.GetType());
+                    if (isSameType)
+                    {
+                        return (refName, targetName, host, true);
+                    }
                 }
             }
 
-            return (name, host);
+            return (refName, targetName, host, host == null);
+
+            string TypeToName(Type type) => ObjectNames.NicifyVariableName(type?.Name);
         }
     }
 }
+#endif

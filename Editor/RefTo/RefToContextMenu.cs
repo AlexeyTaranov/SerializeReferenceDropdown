@@ -3,6 +3,7 @@ using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
+#if UNITY_2022_3_OR_NEWER
 namespace SerializeReferenceDropdown.Editor.RefTo
 {
     [InitializeOnLoad]
@@ -27,16 +28,14 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             if (property.propertyType == SerializedPropertyType.Generic)
             {
                 var copy = property.Copy();
-                var toType = property.boxedValue?.GetType();
-                if (IsGenericTypeOf(toType, typeof(RefTo<>)))
+
+                if (RefToExtensions.TryGetRefType(copy, out var targetType))
                 {
                     menu.AddItem(new GUIContent("RefTo: Reset"), false,
                         (_) => { RefToExtensions.ResetRefTo(copy); },
                         null);
 
-                    var targetType = toType.GenericTypeArguments[0];
-                    var isCanWriteToRef =
-                        _copy.referenceType != null && targetType.IsAssignableFrom(_copy.referenceType);
+                    var isCanWriteToRef = _copy.referenceType != null && targetType.IsAssignableFrom(_copy.referenceType);
 
                     var typeName = _copy.referenceType == null
                         ? string.Empty
@@ -57,10 +56,6 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             }
         }
 
-        private static bool IsGenericTypeOf(Type type, Type genericTypeDefinition)
-        {
-            return type.IsGenericType && type.GetGenericTypeDefinition() == genericTypeDefinition;
-        }
 
         private static void CopyProperty(SerializedProperty property)
         {
@@ -81,3 +76,4 @@ namespace SerializeReferenceDropdown.Editor.RefTo
         }
     }
 }
+#endif

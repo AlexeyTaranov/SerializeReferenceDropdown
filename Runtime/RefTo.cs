@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
+#if UNITY_2022_3_OR_NEWER
 [Serializable]
 public class RefTo<TRefType> where TRefType : class
 {
@@ -19,3 +20,4 @@ public class RefTo<TRefType> where TRefType : class
         return null;
     }
 }
+#endif
