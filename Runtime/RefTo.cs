@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-#if UNITY_2022_3_OR_NEWER
+#if UNITY_2023_2_OR_NEWER
 [Serializable]
 public class RefTo<TRefType, THostType>
     where TRefType : class
