@@ -2,6 +2,12 @@
 
 ## (Unity) Editor dropdown for [SerializeReference](https://docs.unity3d.com/ScriptReference/SerializeReference.html "SerializeReference") Attribute.
 
+### Features:
+
+- Copy/Paste context menu
+- Generic Serialize References (Unity 2023.2+)
+- RefTo type: References to Serialize Reference (Unity 2022.3+)
+
 ### Requirements:
 
 Unity 2019.3.0 and higher.
@@ -77,9 +83,9 @@ public class Rectangle : IShape
 
 [![](Documentation~/SerializeReferenceDropdown.gif "SerializeReferenceDropdown Example")](Documentation~/SerializeReferenceDropdown.gif "SerializeReferenceDropdown Example")
 
-### Generics
+## Generics (Unity 2023.2+)
 
-You can use generics (Unity 2023.2+). Unspecified arguments need select in additional window.
+You can use generics . Unspecified arguments need select in additional window.
 
 
 <details>
@@ -122,12 +128,17 @@ public class GenericKeyValuePair<TKeyData, TValueData> : ISimpleGenericData<TKey
 
 [![](Documentation~/CopyPaste.gif "Copy Paste Example")](Documentation~/CopyPaste.gif "Copy Paste Example")
 
-## Ref To
+## RefTo (Unity 2022.3+)
 
 This class support references to Serialize References! With context menu you can copy-paste serialize references into the class RefTo<TType> with limits to TType.
 
 ```csharp
 [SerializeField] private RefTo<IShape> _refShape;
+
+public void Execute()
+{
+    var sampleString = _refShape.Get()?.ToString();
+}    
 ```
 
 [![](Documentation~/RefTo%20Example.gif "RefTo Example")](Documentation~/RefTo%20Example.gif "RefTo Example")
