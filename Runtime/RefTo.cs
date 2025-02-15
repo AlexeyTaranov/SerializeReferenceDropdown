@@ -1,13 +1,16 @@
 using System;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 #if UNITY_2022_3_OR_NEWER
 [Serializable]
-public class RefTo<TRefType> where TRefType : class
+public class RefTo<TRefType, THostType>
+    where TRefType : class
+    where THostType : UnityEngine.Object
 {
-    [SerializeField] private Object _host;
+    [SerializeField] private THostType _host;
     [SerializeField] private long _referenceId;
+
+    public THostType Host => _host;
 
     public TRefType Get()
     {

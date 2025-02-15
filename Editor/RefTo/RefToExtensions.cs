@@ -1,9 +1,9 @@
+#if UNITY_2022_3_OR_NEWER
 using System;
 using System.Reflection;
 using UnityEditor;
 using Object = UnityEngine.Object;
 
-#if UNITY_2022_3_OR_NEWER
 namespace SerializeReferenceDropdown.Editor.RefTo
 {
     public static class RefToExtensions
@@ -15,7 +15,7 @@ namespace SerializeReferenceDropdown.Editor.RefTo
         {
             var toType = property.boxedValue?.GetType();
             refToType = null;
-            if (IsGenericTypeOf(toType, typeof(RefTo<>)))
+            if (IsGenericTypeOf(toType, typeof(RefTo<,>)))
             {
                 refToType = toType.GenericTypeArguments[0];
                 return true;
