@@ -1,9 +1,9 @@
+#if UNITY_2022_3_OR_NEWER
 using System;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-#if UNITY_2022_3_OR_NEWER
 namespace SerializeReferenceDropdown.Editor.RefTo
 {
     [InitializeOnLoad]
@@ -35,7 +35,8 @@ namespace SerializeReferenceDropdown.Editor.RefTo
                         (_) => { RefToExtensions.ResetRefTo(copy); },
                         null);
 
-                    var isCanWriteToRef = _copy.referenceType != null && targetType.IsAssignableFrom(_copy.referenceType);
+                    var isCanWriteToRef =
+                        _copy.referenceType != null && targetType.IsAssignableFrom(_copy.referenceType);
 
                     var typeName = _copy.referenceType == null
                         ? string.Empty

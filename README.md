@@ -133,7 +133,7 @@ public class GenericKeyValuePair<TKeyData, TValueData> : ISimpleGenericData<TKey
 This class support references to Serialize References! With context menu you can copy-paste serialize references into the class RefTo<TType> with limits to TType.
 
 ```csharp
-[SerializeField] private RefTo<IShape> _refShape;
+[SerializeField] private RefTo<IShape,MonoBehaviour> _refShape;
 
 public void Execute()
 {
