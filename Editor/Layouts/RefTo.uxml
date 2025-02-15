@@ -5,6 +5,7 @@
             <ui:VisualElement style="flex-grow: 1; max-width: 8px; min-width: 12px;" />
             <ui:Label text="RefTo:" style="-unity-font-style: bold; font-size: 14px; min-width: 8px;" />
             <ui:Label text="Reference Name" name="RefName" style="-unity-font-style: italic;" />
+            <ui:Label text="Target Type" name="Target" style="-unity-font-style: bold;" />
             <ui:VisualElement style="flex-grow: 1; max-width: 8px; min-width: 12px;" />
             <uie:ObjectField name="Host" enabled="true" focusable="false" allow-scene-objects="false" language-direction="Inherit" />
         </ui:GroupBox>

@@ -1,7 +1,9 @@
+using System;
 using System.Reflection;
 using UnityEditor;
-using UnityEngine;
+using Object = UnityEngine.Object;
 
+#if UNITY_2022_3_OR_NEWER
 namespace SerializeReferenceDropdown.Editor.RefTo
 {
     public static class RefToExtensions
@@ -9,12 +11,30 @@ namespace SerializeReferenceDropdown.Editor.RefTo
         private const string HostPropertyName = "_host";
         private const string ReferenceIdName = "_referenceId";
 
+        public static bool TryGetRefType(SerializedProperty property, out Type refToType)
+        {
+            var toType = property.boxedValue?.GetType();
+            refToType = null;
+            if (IsGenericTypeOf(toType, typeof(RefTo<>)))
+            {
+                refToType = toType.GenericTypeArguments[0];
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool IsGenericTypeOf(Type type, Type genericTypeDefinition)
+        {
+            return type.IsGenericType && type.GetGenericTypeDefinition() == genericTypeDefinition;
+        }
+
         public static void WriteRefToFromPropertyToProperty(SerializedProperty fromProperty,
             SerializedProperty toProperty)
         {
             var targetObject = toProperty.boxedValue;
-            WriteTo(targetObject, HostPropertyName, fromProperty.serializedObject.targetObject);
-            WriteTo(targetObject, ReferenceIdName, fromProperty.managedReferenceId);
+            SetValue(targetObject, HostPropertyName, fromProperty.serializedObject.targetObject);
+            SetValue(targetObject, ReferenceIdName, fromProperty.managedReferenceId);
             toProperty.boxedValue = targetObject;
             toProperty.serializedObject.ApplyModifiedProperties();
             toProperty.serializedObject.Update();
@@ -36,14 +56,14 @@ namespace SerializeReferenceDropdown.Editor.RefTo
         public static void ResetRefTo(SerializedProperty property)
         {
             var targetObject = property.boxedValue;
-            WriteTo(targetObject, HostPropertyName, null);
-            WriteTo(targetObject, ReferenceIdName, 0);
+            SetValue(targetObject, HostPropertyName, null);
+            SetValue(targetObject, ReferenceIdName, 0);
             property.boxedValue = targetObject;
             property.serializedObject.ApplyModifiedProperties();
             property.serializedObject.Update();
         }
 
-        private static void WriteTo(object target, string fieldName, object value)
+        private static void SetValue(object target, string fieldName, object value)
         {
             var type = target.GetType();
             var field = type.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
@@ -54,7 +74,8 @@ namespace SerializeReferenceDropdown.Editor.RefTo
         {
             var type = target.GetType();
             var field = type.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
-            return field.GetValue(target);
+            return field?.GetValue(target);
         }
     }
 }
+#endif
