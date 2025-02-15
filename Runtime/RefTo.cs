@@ -11,6 +11,7 @@ public class RefTo<TRefType, THostType>
     [SerializeField] private long _referenceId;
 
     public THostType Host => _host;
+    public long ReferenceId => _referenceId;
 
     public TRefType Get()
     {
