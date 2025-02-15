@@ -128,7 +128,7 @@ public class GenericKeyValuePair<TKeyData, TValueData> : ISimpleGenericData<TKey
 
 [![](Documentation~/CopyPaste.gif "Copy Paste Example")](Documentation~/CopyPaste.gif "Copy Paste Example")
 
-## RefTo (Unity 2022.3+)
+## RefTo (Unity 2023.2+)
 
 This class support references to Serialize References! With context menu you can copy-paste serialize references into the class RefTo<TType> with limits to TType.
 

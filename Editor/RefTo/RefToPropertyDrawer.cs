@@ -1,4 +1,4 @@
-#if UNITY_2022_3_OR_NEWER
+#if UNITY_2023_2_OR_NEWER
 using System;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -20,33 +20,38 @@ namespace SerializeReferenceDropdown.Editor.RefTo
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            return EditorGUI.GetPropertyHeight(property, label, true);
+            return EditorGUI.GetPropertyHeight(property, label, false);
         }
 
-        private static GUIStyle _errorStyle;
+        private static readonly GUIStyle ErrorStyle = new GUIStyle(EditorStyles.boldLabel)
+            { normal = new GUIStyleState() { textColor = Color.red } };
 
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
         {
-            EditorGUI.BeginProperty(position, label, property);
-            EditorGUI.PropertyField(position, property, label, true);
-            var (refName, targetName, host, isSameType) = GetInspectorValues(property);
-            var elementRect = position;
-            elementRect.height = EditorGUIUtility.singleLineHeight;
-            elementRect.position += new Vector2(EditorGUIUtility.labelWidth, 0);
-            var refLabel = $"Ref to: {refName} {targetName}";
-            if (isSameType)
-            {
-                EditorGUI.LabelField(elementRect, refLabel);
-            }
-            else
-            {
-                _errorStyle ??= new GUIStyle() { normal = new GUIStyleState() { textColor = Color.red } };
-                EditorGUI.LabelField(elementRect, refLabel, _errorStyle);
-            }
+            var propertyRect = rect;
+            var (refType, targetType, host, isSameType) = GetInspectorValues(property);
+            var tooltip = $"Reference type: {TypeToName(refType)} \nRefTo Type: {TypeToName(targetType)}";
+            label.tooltip = tooltip;
+            EditorGUI.BeginProperty(rect, label, property);
+            var labelWidth = EditorGUIUtility.labelWidth > 90 ? 90 : EditorGUIUtility.labelWidth;
+            propertyRect.width = labelWidth;
+            EditorGUI.LabelField(propertyRect, label);
 
-            elementRect.position += new Vector2(120, 0);
+
+            var height = EditorGUIUtility.singleLineHeight;
+
+            var fieldSize = (rect.width - labelWidth) * 0.3f;
+            var labelRect = new Rect(rect.position + new Vector2(labelWidth, 0),
+                new Vector2(rect.width - fieldSize - labelWidth, height));
+            var fieldRect = new Rect(labelRect.position + new Vector2(labelRect.width, 0),
+                new Vector2(fieldSize, height));
+
+            var style = isSameType ? EditorStyles.boldLabel : ErrorStyle;
+            var refLabel = $"RefTo: {TypeToName(refType)} [{TypeToName(targetType)}]";
+            EditorGUI.LabelField(labelRect, new GUIContent(refLabel), style);
+
             EditorGUI.BeginDisabledGroup(true);
-            EditorGUI.ObjectField(elementRect, host, typeof(Object), true);
+            EditorGUI.ObjectField(fieldRect, host, typeof(UnityEngine.Object), true);
             EditorGUI.EndDisabledGroup();
             EditorGUI.EndProperty();
         }
@@ -56,52 +61,55 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             var uiToolkitLayoutPath = "Packages/com.alexeytaranov.serializereferencedropdown/Editor/Layouts/RefTo.uxml";
             var visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(uiToolkitLayoutPath);
             root.Add(visualTreeAsset.Instantiate());
+            
+            var propertyField = root.Q<PropertyField>();
+            propertyField.BindProperty(property);
+            var (_, targetType, _, _) = GetInspectorValues(property);
 
-            var objectField = root.Q<ObjectField>();
-            root.Q<PropertyField>().BindProperty(property);
+            propertyField.tooltip = $"Field: {property.name} \nTarget Type: {targetType.Name} \nNamespace: {targetType.Namespace}";
+            
             var propertyPath = property.propertyPath;
+            root.TrackSerializedObjectValue(property.serializedObject, RefreshDynamic);
+            RefreshDynamic(property.serializedObject);
 
-            root.TrackSerializedObjectValue(property.serializedObject, RefreshName);
-            RefreshName(property.serializedObject);
-
-
-            void RefreshName(SerializedObject so)
+            void RefreshDynamic(SerializedObject so)
             {
-                var localProperty = so.FindProperty(propertyPath);
-                var (refName, targetName, host, isSameType) = GetInspectorValues(localProperty);
-                objectField.value = host;
-                var label = root.Q<Label>("RefName");
-                root.Q<Label>("Target").text = targetName;
-                label.style.color = isSameType ? new StyleColor(Color.white) : new StyleColor(Color.red);
-                label.text = refName;
+                using var localProperty = so.FindProperty(propertyPath);
+                var (refType, _, host, isSameType) = GetInspectorValues(localProperty);
+                var refLabel = root.Q<Label>("RefName");
+                var refTypeName = refType == null ? "null" : refType.Name;
+                refLabel.text = $"R:{refTypeName}";
+                refLabel.tooltip = $"Reference \nType: {refType?.Name} \nNamespace: {refType?.Namespace}";
+                refLabel.style.color = isSameType ? new StyleColor(Color.white) : new StyleColor(Color.red);
+                root.Q<ObjectField>().value = host;
             }
         }
 
-        private (string referenceName, string targetName, Object host, bool isSameType) GetInspectorValues(
+        private (Type refType, Type targetType, Object host, bool isSameType) GetInspectorValues(
             SerializedProperty property)
         {
-            var refName = "null";
             var (host, id) = RefToExtensions.GetRefToFieldsFromProperty(property);
             RefToExtensions.TryGetRefType(property, out var targetType);
-            var targetName = $"[{TypeToName(targetType)}]";
+            var isSameType = false;
+            Type refType = null;
             if (host != null)
             {
                 var reference = UnityEngine.Serialization.ManagedReferenceUtility.GetManagedReference(host, id);
                 if (reference != null)
                 {
-                    refName = TypeToName(reference.GetType());
-                    var isSameType = targetType.IsAssignableFrom(reference.GetType());
-                    if (isSameType)
-                    {
-                        return (refName, targetName, host, true);
-                    }
+                    refType = reference.GetType();
+                    isSameType = targetType.IsAssignableFrom(refType);
                 }
             }
+            else
+            {
+                isSameType = true;
+            }
 
-            return (refName, targetName, host, host == null);
-
-            string TypeToName(Type type) => ObjectNames.NicifyVariableName(type?.Name);
+            return (refType, targetType, host, isSameType);
         }
+
+        string TypeToName(Type type) => ObjectNames.NicifyVariableName(type?.Name);
     }
 }
 #endif

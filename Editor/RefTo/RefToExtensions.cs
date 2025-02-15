@@ -1,4 +1,4 @@
-#if UNITY_2022_3_OR_NEWER
+#if UNITY_2023_2_OR_NEWER
 using System;
 using System.Reflection;
 using UnityEditor;
