@@ -131,6 +131,7 @@ public class GenericKeyValuePair<TKeyData, TValueData> : ISimpleGenericData<TKey
 ## RefTo (Unity 2023.2+)
 
 This class support references to Serialize References! With context menu you can copy-paste serialize references into the class RefTo<TType> with limits to TType.
+You can assign RefTo with Drag and Drop or with context menu.
 
 ```csharp
 [SerializeField] private RefTo<IShape,MonoBehaviour> _refShape;
@@ -142,3 +143,4 @@ public void Execute()
 ```
 
 [![](Documentation~/RefTo%20Example%202.gif "RefTo Example")](Documentation~/RefTo%20Example%202.gif "RefTo Example")
+[![](Documentation~/RefTo%20Example%203.gif "RefTo Example")](Documentation~/RefTo%20Example%203.gif "RefTo Example")
