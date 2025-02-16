@@ -1,6 +1,6 @@
 # SerializeReferenceDropdown
 
-## (Unity) Editor dropdown for [SerializeReference](https://docs.unity3d.com/ScriptReference/SerializeReference.html "SerializeReference") Attribute.
+## (Unity) Editor dropdown for [SerializeReference](https://docs.unity3d.com/ScriptReference/SerializeReference.html "SerializeReference") Attribute. RefTo (Reference to SerializeReference).
 
 ### Features:
 
@@ -128,10 +128,12 @@ public class GenericKeyValuePair<TKeyData, TValueData> : ISimpleGenericData<TKey
 
 [![](Documentation~/CopyPaste.gif "Copy Paste Example")](Documentation~/CopyPaste.gif "Copy Paste Example")
 
-## RefTo (Unity 2023.2+)
+# RefTo (Unity 2023.2+) (Reference to SerializeReference)
 
-This class support references to Serialize References! With context menu you can copy-paste serialize references into the class RefTo<TType> with limits to TType.
+This class support references to Serialize References!
 You can assign RefTo with Drag and Drop or with context menu.
+
+Inspector will help avoid not to assign wrong object types, runtime type checks - "as operator" cast.
 
 ```csharp
 [SerializeField] private RefTo<IShape,MonoBehaviour> _refShape;
