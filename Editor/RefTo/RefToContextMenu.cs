@@ -29,20 +29,16 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             {
                 var copy = property.Copy();
 
-                if (RefToExtensions.TryGetRefType(copy, out var targetType))
+                if (property.isArray == false && RefToExtensions.TryGetRefType(copy, out var targetType, out _))
                 {
                     menu.AddItem(new GUIContent("RefTo: Reset"), false,
                         (_) => { RefToExtensions.ResetRefTo(copy); },
                         null);
 
-                    var isCanWriteToRef =
-                        _copy.referenceType != null && targetType.IsAssignableFrom(_copy.referenceType);
+                    var isSameType = _copy.referenceType != null && targetType.IsAssignableFrom(_copy.referenceType);
+                    var typeName = _copy.referenceType?.Name;
 
-                    var typeName = _copy.referenceType == null
-                        ? string.Empty
-                        : ObjectNames.NicifyVariableName(_copy.referenceType.Name);
-
-                    if (isCanWriteToRef)
+                    if (isSameType)
                     {
                         menu.AddItem(new GUIContent($"RefTo: Paste Serialize Reference: {typeName}"), false,
                             (_) => { PasteToProperty(copy); },

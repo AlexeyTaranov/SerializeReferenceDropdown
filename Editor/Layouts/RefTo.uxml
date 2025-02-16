@@ -7,7 +7,7 @@
             <ui:Label text="Label" name="RefName" style="-unity-font-style: bold; color: rgb(255, 255, 255); background-color: rgb(88, 88, 88); padding-right: 6px; padding-left: 6px;" />
             <ui:VisualElement style="flex-grow: 1; max-width: 8px;" />
             <ui:Label text="Host:" style="max-width: 120px; color: rgb(196, 196, 196);" />
-            <uie:ObjectField name="Host" enabled="false" style="color: rgb(196, 196, 196);" />
+            <uie:ObjectField name="Host" enabled="true" style="color: rgb(196, 196, 196);" />
         </ui:GroupBox>
     </ui:VisualElement>
 </ui:UXML>

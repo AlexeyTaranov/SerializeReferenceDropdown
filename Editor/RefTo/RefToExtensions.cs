@@ -11,13 +11,15 @@ namespace SerializeReferenceDropdown.Editor.RefTo
         private const string HostPropertyName = "_host";
         private const string ReferenceIdName = "_referenceId";
 
-        public static bool TryGetRefType(SerializedProperty property, out Type refToType)
+        public static bool TryGetRefType(SerializedProperty property, out Type refToType, out Type hostType)
         {
             var toType = property.boxedValue?.GetType();
             refToType = null;
+            hostType = null;
             if (IsGenericTypeOf(toType, typeof(RefTo<,>)))
             {
                 refToType = toType.GenericTypeArguments[0];
+                hostType = toType.GenericTypeArguments[1];
                 return true;
             }
 
@@ -40,7 +42,7 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             toProperty.serializedObject.Update();
         }
 
-        public static (Object host, long id) GetRefToFieldsFromProperty(SerializedProperty property)
+        private static (Object host, long id) GetRefToFieldsFromProperty(SerializedProperty property)
         {
             var targetObject = property.boxedValue;
             if (targetObject != null)
@@ -75,6 +77,73 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             var type = target.GetType();
             var field = type.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
             return field?.GetValue(target);
+        }
+
+        public static bool TraverseProperty(SerializedProperty inProperty, string path,
+            Func<SerializedProperty, bool> isCompleteFunc)
+        {
+            using var currentProperty = inProperty.Copy();
+
+            do
+            {
+                var propertyPath = string.IsNullOrEmpty(path) ? currentProperty.name : $"{path}.{currentProperty.name}";
+
+                if (currentProperty.isArray && currentProperty.propertyType != SerializedPropertyType.String)
+                {
+                    for (int i = 0; i < currentProperty.arraySize; i++)
+                    {
+                        var element = currentProperty.GetArrayElementAtIndex(i);
+                        if (TraverseProperty(element, $"{propertyPath}[{i}]", isCompleteFunc))
+                        {
+                            return true;
+                        }
+                    }
+                }
+                else if (currentProperty.hasVisibleChildren && currentProperty.propertyType == SerializedPropertyType.Generic)
+                {
+                    if (TraverseProperty(currentProperty, propertyPath, isCompleteFunc))
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    if (currentProperty.propertyType == SerializedPropertyType.ManagedReference)
+                    {
+                        if (isCompleteFunc.Invoke(currentProperty))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            while (currentProperty.NextVisible(false));
+
+            return false;
+        }
+
+        public static (Type refType, Type targetType, Type hostType, Object host, bool isSameType) GetInspectorValues(
+            SerializedProperty property)
+        {
+            var (host, id) = GetRefToFieldsFromProperty(property);
+            TryGetRefType(property, out var targetType, out var hostType);
+            var isSameType = false;
+            Type refType = null;
+            if (host != null)
+            {
+                var reference = UnityEngine.Serialization.ManagedReferenceUtility.GetManagedReference(host, id);
+                if (reference != null)
+                {
+                    refType = reference.GetType();
+                    isSameType = targetType.IsAssignableFrom(refType);
+                }
+            }
+            else
+            {
+                isSameType = true;
+            }
+
+            return (refType, targetType, hostType, host, isSameType);
         }
     }
 }
