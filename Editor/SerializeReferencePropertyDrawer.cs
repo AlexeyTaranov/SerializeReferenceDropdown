@@ -28,8 +28,6 @@ namespace SerializeReferenceDropdown.Editor
             EditorGUI.BeginProperty(rect, label, property);
 
             propertyRect = rect;
-            var indent = EditorGUI.indentLevel;
-            EditorGUI.indentLevel = 0;
 
             if (property.propertyType == SerializedPropertyType.ManagedReference)
             {
@@ -40,7 +38,6 @@ namespace SerializeReferenceDropdown.Editor
                 EditorGUI.PropertyField(rect, property, label, true);
             }
 
-            EditorGUI.indentLevel = indent;
             EditorGUI.EndProperty();
         }
 
@@ -113,7 +110,9 @@ namespace SerializeReferenceDropdown.Editor
                 dropdown.Show(dropdownRect);
             }
 
+            EditorGUI.indentLevel++;
             EditorGUI.PropertyField(rect, property, label, true);
+            EditorGUI.indentLevel--;
 
             Rect GetDropdownIMGUIRect(Rect mainRect)
             {
