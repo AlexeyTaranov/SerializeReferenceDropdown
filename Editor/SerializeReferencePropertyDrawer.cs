@@ -110,9 +110,7 @@ namespace SerializeReferenceDropdown.Editor
                 dropdown.Show(dropdownRect);
             }
 
-            EditorGUI.indentLevel++;
             EditorGUI.PropertyField(rect, property, label, true);
-            EditorGUI.indentLevel--;
 
             Rect GetDropdownIMGUIRect(Rect mainRect)
             {
