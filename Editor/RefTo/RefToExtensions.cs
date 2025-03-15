@@ -79,49 +79,6 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             return field?.GetValue(target);
         }
 
-        public static bool TraverseProperty(SerializedProperty inProperty, string path,
-            Func<SerializedProperty, bool> isCompleteFunc)
-        {
-            using var currentProperty = inProperty.Copy();
-
-            do
-            {
-                var propertyPath = string.IsNullOrEmpty(path) ? currentProperty.name : $"{path}.{currentProperty.name}";
-
-                if (currentProperty.isArray && currentProperty.propertyType != SerializedPropertyType.String)
-                {
-                    for (int i = 0; i < currentProperty.arraySize; i++)
-                    {
-                        var element = currentProperty.GetArrayElementAtIndex(i);
-                        if (TraverseProperty(element, $"{propertyPath}[{i}]", isCompleteFunc))
-                        {
-                            return true;
-                        }
-                    }
-                }
-                else if (currentProperty.hasVisibleChildren && currentProperty.propertyType == SerializedPropertyType.Generic)
-                {
-                    if (TraverseProperty(currentProperty, propertyPath, isCompleteFunc))
-                    {
-                        return true;
-                    }
-                }
-                else
-                {
-                    if (currentProperty.propertyType == SerializedPropertyType.ManagedReference)
-                    {
-                        if (isCompleteFunc.Invoke(currentProperty))
-                        {
-                            return true;
-                        }
-                    }
-                }
-            }
-            while (currentProperty.NextVisible(false));
-
-            return false;
-        }
-
         public static (Type refType, Type targetType, Type hostType, Object host, bool isSameType) GetInspectorValues(
             SerializedProperty property)
         {
