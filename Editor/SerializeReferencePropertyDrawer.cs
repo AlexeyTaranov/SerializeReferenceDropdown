@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.UIElements;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UIElements;
 
 namespace SerializeReferenceDropdown.Editor
@@ -17,6 +18,17 @@ namespace SerializeReferenceDropdown.Editor
         private const string NullName = "null";
         private List<Type> assignableTypes;
         private Rect propertyRect;
+
+        //TODO Make better unique colors for equal references
+        private static Color GetColorForEqualSerializedReference(SerializedProperty property)
+        {
+            var refId = ManagedReferenceUtility.GetManagedReferenceIdForObject(property.serializedObject.targetObject,
+                property.managedReferenceValue);
+            var refsArray = ManagedReferenceUtility.GetManagedReferenceIds(property.serializedObject.targetObject);
+            var index = Array.FindIndex(refsArray, t => t == refId);
+            var hue = (float)index / refsArray.Length;
+            return Color.HSVToRGB(hue, 0.8f, 0.8f);
+        }
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
@@ -63,8 +75,12 @@ namespace SerializeReferenceDropdown.Editor
             var visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(uiToolkitLayoutPath);
             root.Add(visualTreeAsset.Instantiate());
             var propertyField = root.Q<PropertyField>();
-            var selectTypeButton = root.Q<Button>();
+
+            var selectTypeButton = root.Q<Button>("typeSelect");
             selectTypeButton.clickable.clicked += ShowDropdown;
+            var fixCrossRefButton = root.Q<Button>("fixCrossReferences");
+            fixCrossRefButton.clickable.clicked += () => FixCrossReference(property);
+
             var propertyPath = property.propertyPath;
             assignableTypes ??= GetAssignableTypes(property);
             root.TrackSerializedObjectValue(property.serializedObject, UpdateDropdown);
@@ -87,12 +103,22 @@ namespace SerializeReferenceDropdown.Editor
                 var selectedType = TypeUtils.ExtractTypeFromString(prop.managedReferenceFullTypename);
                 var selectedTypeName = GetTypeName(selectedType);
                 selectTypeButton.text = selectedTypeName;
+                selectTypeButton.style.color = new StyleColor(Color.white);
+                fixCrossRefButton.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
+                if (IsHaveSameOtherSerializeReference(property))
+                {
+                    fixCrossRefButton.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.Flex);
+                    var color = GetColorForEqualSerializedReference(property);
+                    selectTypeButton.style.color = color;
+                }
             }
         }
 
         private void DrawIMGUITypeDropdown(Rect rect, SerializedProperty property, GUIContent label)
         {
+            const float FixButtonWidth = 40f;
             assignableTypes ??= GetAssignableTypes(property);
+            var isHaveOtherReference = IsHaveSameOtherSerializeReference(property);
             var referenceType = TypeUtils.ExtractTypeFromString(property.managedReferenceFullTypename);
 
             var dropdownRect = GetDropdownIMGUIRect(rect);
@@ -102,7 +128,16 @@ namespace SerializeReferenceDropdown.Editor
             var dropdownTypeContent = new GUIContent(
                 text: GetTypeName(referenceType),
                 tooltip: GetTypeTooltip(referenceType));
-            if (EditorGUI.DropdownButton(dropdownRect, dropdownTypeContent, FocusType.Keyboard))
+
+            var style = EditorStyles.miniPullDown;
+            if (isHaveOtherReference)
+            {
+                var uniqueColor = GetColorForEqualSerializedReference(property);
+                style = new GUIStyle(EditorStyles.miniPullDown)
+                    { normal = new GUIStyleState() { textColor = uniqueColor } };
+            }
+
+            if (EditorGUI.DropdownButton(dropdownRect, dropdownTypeContent, FocusType.Keyboard, style))
             {
                 var dropdown = new AdvancedDropdown(new AdvancedDropdownState(),
                     assignableTypes.Select(GetTypeName),
@@ -110,7 +145,16 @@ namespace SerializeReferenceDropdown.Editor
                 dropdown.Show(dropdownRect);
             }
 
+            if (isHaveOtherReference)
+            {
+                if (GUI.Button(GetFixCrossReferencesRect(dropdownRect), "Fix"))
+                {
+                    FixCrossReference(property);
+                }
+            }
+
             EditorGUI.PropertyField(rect, property, label, true);
+
 
             Rect GetDropdownIMGUIRect(Rect mainRect)
             {
@@ -119,9 +163,67 @@ namespace SerializeReferenceDropdown.Editor
                 rect.width -= dropdownOffset;
                 rect.x += dropdownOffset;
                 rect.height = EditorGUIUtility.singleLineHeight;
+                if (isHaveOtherReference)
+                {
+                    rect.width -= FixButtonWidth;
+                }
 
                 return rect;
             }
+
+            Rect GetFixCrossReferencesRect(Rect rectIn)
+            {
+                var newRect = rectIn;
+                newRect.x += rectIn.width + EditorGUIUtility.standardVerticalSpacing;
+                newRect.width = FixButtonWidth - EditorGUIUtility.standardVerticalSpacing;
+                return newRect;
+            }
+        }
+
+        private bool IsHaveSameOtherSerializeReference(SerializedProperty property)
+        {
+            if (property.managedReferenceValue == null)
+            {
+                return false;
+            }
+
+            var refId = ManagedReferenceUtility.GetManagedReferenceIdForObject(property.serializedObject.targetObject,
+                property.managedReferenceValue);
+            var iterator = property.serializedObject.GetIterator();
+            iterator.NextVisible(true);
+            bool isHaveSameReference = false;
+            PropertyUtils.TraverseProperty(iterator, string.Empty, IsHaveSameOtherReference);
+            return isHaveSameReference;
+
+            bool IsHaveSameOtherReference(SerializedProperty checkProperty)
+            {
+                if (checkProperty.propertyPath == property.propertyPath)
+                {
+                    return false;
+                }
+
+                var otherRefId =
+                    ManagedReferenceUtility.GetManagedReferenceIdForObject(property.serializedObject.targetObject,
+                        checkProperty.managedReferenceValue);
+                if (otherRefId == refId)
+                {
+                    isHaveSameReference = true;
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+        private void FixCrossReference(SerializedProperty property)
+        {
+            var json = JsonUtility.ToJson(property.managedReferenceValue);
+            CreateAndApplyNewInstanceFromType(property.managedReferenceValue.GetType(), property);
+            property.serializedObject.ApplyModifiedProperties();
+            property.serializedObject.Update();
+            JsonUtility.FromJsonOverwrite(json, property.managedReferenceValue);
+            property.serializedObject.ApplyModifiedProperties();
+            property.serializedObject.Update();
         }
 
         private string GetTypeName(Type type)
@@ -207,34 +309,33 @@ namespace SerializeReferenceDropdown.Editor
                 var concreteGenericType = TypeUtils.GetConcreteGenericType(propertyType, newType);
                 if (concreteGenericType != null)
                 {
-                    CreateAndApplyNewInstanceFromType(concreteGenericType);
+                    CreateAndApplyNewInstanceFromType(concreteGenericType, property);
                 }
                 else
                 {
                     GenericTypeCreateWindow.ShowCreateTypeMenu(property, propertyRect, newType,
-                        CreateAndApplyNewInstanceFromType);
+                        (type) => CreateAndApplyNewInstanceFromType(type, property));
                 }
             }
             else
             {
-                CreateAndApplyNewInstanceFromType(newType);
+                CreateAndApplyNewInstanceFromType(newType, property);
             }
+        }
 
-
-            void CreateAndApplyNewInstanceFromType(Type type)
+        private void CreateAndApplyNewInstanceFromType(Type type, SerializedProperty property)
+        {
+            object newObject;
+            if (type?.GetConstructor(Type.EmptyTypes) != null)
             {
-                object newObject;
-                if (type?.GetConstructor(Type.EmptyTypes) != null)
-                {
-                    newObject = Activator.CreateInstance(type);
-                }
-                else
-                {
-                    newObject = type != null ? FormatterServices.GetUninitializedObject(type) : null;
-                }
-
-                ApplyValueToProperty(newObject);
+                newObject = Activator.CreateInstance(type);
             }
+            else
+            {
+                newObject = type != null ? FormatterServices.GetUninitializedObject(type) : null;
+            }
+
+            ApplyValueToProperty(newObject);
 
             void ApplyValueToProperty(object value)
             {

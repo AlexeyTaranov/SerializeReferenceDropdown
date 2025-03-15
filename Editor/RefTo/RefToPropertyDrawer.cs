@@ -118,7 +118,7 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             using var newValueSo = new SerializedObject(newValue);
             using var newValueIteratorProperty = newValueSo.GetIterator();
             newValueIteratorProperty.NextVisible(true);
-            return RefToExtensions.TraverseProperty(newValueIteratorProperty, string.Empty, TryWriteToRefTo);
+            return PropertyUtils.TraverseProperty(newValueIteratorProperty, string.Empty, TryWriteToRefTo);
 
 
             bool TryWriteToRefTo(SerializedProperty refProperty)
