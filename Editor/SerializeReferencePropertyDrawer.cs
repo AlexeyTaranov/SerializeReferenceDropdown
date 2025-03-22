@@ -118,7 +118,11 @@ namespace SerializeReferenceDropdown.Editor
         {
             const float FixButtonWidth = 40f;
             assignableTypes ??= GetAssignableTypes(property);
-            var isHaveOtherReference = IsHaveSameOtherSerializeReference(property);
+
+            //TODO: need to cache for better imgui perfomance
+            var isHaveOtherReference = false;
+            // var isHaveOtherReference = IsHaveSameOtherSerializeReference(property);
+
             var referenceType = TypeUtils.ExtractTypeFromString(property.managedReferenceFullTypename);
 
             var dropdownRect = GetDropdownIMGUIRect(rect);
