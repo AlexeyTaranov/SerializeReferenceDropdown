@@ -5,14 +5,25 @@ namespace SerializeReferenceDropdown.Editor
 {
     public static class PropertyUtils
     {
-        public static bool TraverseProperty(SerializedProperty inProperty, string path,
+        //TODO Need make better
+        public static bool TraverseProperty(SerializedProperty property, string path,
             Func<SerializedProperty, bool> isCompleteFunc)
         {
-            using var currentProperty = inProperty.Copy();
+            var currentProperty = property.Copy();
+            int startDepth = currentProperty.depth;
 
-            while (true)
+            do
             {
-                var propertyPath = string.IsNullOrEmpty(path) ? currentProperty.name : $"{path}.{currentProperty.name}";
+                string propertyPath =
+                    string.IsNullOrEmpty(path) ? currentProperty.name : $"{path}.{currentProperty.name}";
+
+                if (currentProperty.propertyType == SerializedPropertyType.ManagedReference)
+                {
+                    if (isCompleteFunc.Invoke(currentProperty))
+                    {
+                        return true;
+                    }
+                }
 
                 if (currentProperty.isArray && currentProperty.propertyType != SerializedPropertyType.String)
                 {
@@ -25,33 +36,23 @@ namespace SerializeReferenceDropdown.Editor
                         }
                     }
                 }
-                else if (currentProperty.hasVisibleChildren &&
-                         currentProperty.propertyType == SerializedPropertyType.Generic)
-                {
-                    if (currentProperty.NextVisible(true))
-                    {
-                        if (TraverseProperty(currentProperty, propertyPath, isCompleteFunc))
-                        {
-                            return true;
-                        }
-                    }
-                }
-                else
-                {
-                    if (currentProperty.propertyType == SerializedPropertyType.ManagedReference)
-                    {
-                        if (isCompleteFunc.Invoke(currentProperty))
-                        {
-                            return true;
-                        }
-                    }
-                }
 
-                if (currentProperty.NextVisible(false) == false)
+                if (currentProperty.hasVisibleChildren &&
+                    currentProperty.propertyType == SerializedPropertyType.Generic)
                 {
-                    break;
+                    var childProperty = currentProperty.Copy();
+                    if (childProperty.Next(true))
+                    {
+                        do
+                        {
+                            if (TraverseProperty(childProperty, propertyPath, isCompleteFunc))
+                            {
+                                return true;
+                            }
+                        } while (childProperty.Next(false) && childProperty.depth > startDepth);
+                    }
                 }
-            }
+            } while (currentProperty.Next(false) && currentProperty.depth >= startDepth);
 
             return false;
         }
