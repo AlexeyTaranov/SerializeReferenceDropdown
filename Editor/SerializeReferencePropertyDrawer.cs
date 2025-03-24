@@ -19,6 +19,9 @@ namespace SerializeReferenceDropdown.Editor
         private List<Type> assignableTypes;
         private Rect propertyRect;
 
+        //TODO Need find better solution for check ui update and traverse all serialized properties
+        private static bool _isDirtyUIToolkit;
+
         //TODO Make better unique colors for equal references
         private static Color GetColorForEqualSerializedReference(SerializedProperty property)
         {
@@ -70,6 +73,7 @@ namespace SerializeReferenceDropdown.Editor
 
         private void DrawUIToolkitTypeDropdown(VisualElement root, SerializedProperty property)
         {
+            bool isNew = true;
             var uiToolkitLayoutPath =
                 "Packages/com.alexeytaranov.serializereferencedropdown/Editor/Layouts/SerializeReferenceDropdown.uxml";
             var visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(uiToolkitLayoutPath);
@@ -79,17 +83,26 @@ namespace SerializeReferenceDropdown.Editor
             var selectTypeButton = root.Q<Button>("typeSelect");
             selectTypeButton.clickable.clicked += ShowDropdown;
             var fixCrossRefButton = root.Q<Button>("fixCrossReferences");
-            fixCrossRefButton.clickable.clicked += () => FixCrossReference(property);
+            fixCrossRefButton.clickable.clicked += () =>
+            {
+                MakeDirtyUIToolkit();
+                FixCrossReference(property);
+            };
 
             var propertyPath = property.propertyPath;
             assignableTypes ??= GetAssignableTypes(property);
             root.TrackSerializedObjectValue(property.serializedObject, UpdateDropdown);
             UpdateDropdown(property.serializedObject);
+            isNew = false;
 
             void ShowDropdown()
             {
                 var dropdown = new AdvancedDropdown(new AdvancedDropdownState(),
-                    assignableTypes.Select(GetTypeName), index => { WriteNewInstanceByIndexType(index, property); });
+                    assignableTypes.Select(GetTypeName), index =>
+                    {
+                        MakeDirtyUIToolkit();
+                        WriteNewInstanceByIndexType(index, property);
+                    });
                 var buttonMatrix = selectTypeButton.worldTransform;
                 var position = new Vector3(buttonMatrix.m03, buttonMatrix.m13, buttonMatrix.m23);
                 var buttonRect = new Rect(position, selectTypeButton.contentRect.size);
@@ -103,14 +116,28 @@ namespace SerializeReferenceDropdown.Editor
                 var selectedType = TypeUtils.ExtractTypeFromString(prop.managedReferenceFullTypename);
                 var selectedTypeName = GetTypeName(selectedType);
                 selectTypeButton.text = selectedTypeName;
+                if (isNew == false && _isDirtyUIToolkit == false)
+                {
+                    return;
+                }
                 selectTypeButton.style.color = new StyleColor(Color.white);
                 fixCrossRefButton.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
+
                 if (IsHaveSameOtherSerializeReference(property))
                 {
                     fixCrossRefButton.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.Flex);
                     var color = GetColorForEqualSerializedReference(property);
                     selectTypeButton.style.color = color;
                 }
+            }
+
+            void MakeDirtyUIToolkit()
+            {
+                _isDirtyUIToolkit = true;
+                EditorApplication.delayCall += () =>
+                {
+                    _isDirtyUIToolkit = false;
+                };
             }
         }
 
