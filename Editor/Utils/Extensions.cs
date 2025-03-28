@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEditor;
 
-namespace SerializeReferenceDropdown.Editor
+namespace SerializeReferenceDropdown.Editor.Utils
 {
     public static class Extensions
     {

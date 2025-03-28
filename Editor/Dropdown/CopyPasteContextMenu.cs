@@ -1,8 +1,9 @@
 using System;
+using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
 using UnityEngine;
 
-namespace SerializeReferenceDropdown.Editor
+namespace SerializeReferenceDropdown.Editor.Dropdown
 {
     [InitializeOnLoad]
     public class CopyPasteContextMenu

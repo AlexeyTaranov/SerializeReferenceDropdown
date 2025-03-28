@@ -1,7 +1,7 @@
 using System;
 using UnityEditor;
 
-namespace SerializeReferenceDropdown.Editor
+namespace SerializeReferenceDropdown.Editor.Utils
 {
     public static class PropertyUtils
     {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
+using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.UIElements;
@@ -11,7 +12,7 @@ using UnityEngine.Serialization;
 using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
 
-namespace SerializeReferenceDropdown.Editor
+namespace SerializeReferenceDropdown.Editor.Dropdown
 {
     [CustomPropertyDrawer(typeof(SerializeReferenceDropdownAttribute))]
     public class SerializeReferencePropertyDrawer : UnityEditor.PropertyDrawer
@@ -102,7 +103,7 @@ namespace SerializeReferenceDropdown.Editor
 
             void ShowDropdown()
             {
-                var dropdown = new AdvancedDropdown(new AdvancedDropdownState(),
+                var dropdown = new SerializeReferenceAdvancedDropdown(new AdvancedDropdownState(),
                     assignableTypes.Select(GetTypeName), index =>
                     {
                         MakeDirtyUIToolkit();
@@ -173,7 +174,7 @@ namespace SerializeReferenceDropdown.Editor
 
             if (EditorGUI.DropdownButton(dropdownRect, dropdownTypeContent, FocusType.Keyboard, style))
             {
-                var dropdown = new AdvancedDropdown(new AdvancedDropdownState(),
+                var dropdown = new SerializeReferenceAdvancedDropdown(new AdvancedDropdownState(),
                     assignableTypes.Select(GetTypeName),
                     index => WriteNewInstanceByIndexType(index, property));
                 dropdown.Show(dropdownRect);

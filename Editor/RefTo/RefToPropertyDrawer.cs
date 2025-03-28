@@ -1,5 +1,6 @@
 #if UNITY_2023_2_OR_NEWER
 using System;
+using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;

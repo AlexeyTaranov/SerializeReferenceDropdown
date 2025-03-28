@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace SerializeReferenceDropdown.Editor
+namespace SerializeReferenceDropdown.Editor.Dropdown
 {
     public class GenericTypeCreateWindow : EditorWindow
     {
@@ -238,7 +239,7 @@ namespace SerializeReferenceDropdown.Editor
         {
             var currentTypeNames = typeNamesForParameters[genericParamIndex];
 
-            var dropdown = new AdvancedDropdown(new AdvancedDropdownState(), currentTypeNames,
+            var dropdown = new SerializeReferenceAdvancedDropdown(new AdvancedDropdownState(), currentTypeNames,
                 ApplySelectedTypeIndex);
 
             var buttonRect = new Rect(selectedButton.transform.position, selectedButton.transform.scale);
