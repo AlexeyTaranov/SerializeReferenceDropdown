@@ -51,6 +51,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
             var genericParams = inputGenericType.GetGenericArguments();
             selectedIndexes = new int[genericParams.Length];
+            
             FillTypesAndNames();
             FillSpecifiedTypesFromProperty();
         }
@@ -168,9 +169,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
                 button.clickable.clicked += () => ShowTypesForParamIndex(index, button);
 
-                var parameterTypeLabel = new TextElement();
-                parameterTypeLabel.text = paramName;
-
+                var parameterTypeLabel = new TextElement { text = paramName };
                 var makeArrayToggle = new Toggle("Make Array Type");
 
                 var group = new Box();
@@ -191,8 +190,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
         private void CreateGenerateGenericTypeButton()
         {
-            generateGenericTypeButton = new Button();
-            generateGenericTypeButton.text = "Generate";
+            generateGenericTypeButton = new Button { text = "Generate" };
             generateGenericTypeButton.clickable.clicked += GenerateGenericType;
             rootVisualElement.Add(generateGenericTypeButton);
 

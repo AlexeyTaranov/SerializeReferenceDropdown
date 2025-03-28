@@ -22,15 +22,9 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 var copyProperty = property.Copy();
                 menu.AddItem(new GUIContent("Copy Serialize Reference"), false,
                     (_) => { CopyReferenceValue(copyProperty); }, null);
-                var pasteContent = new GUIContent("Paste Serialize Reference");
-                menu.AddItem(pasteContent, false, (_) => PasteReferenceValue(copyProperty),
+                var pasteAsValueContent = new GUIContent("Paste Serialize Reference as Value");
+                menu.AddItem(pasteAsValueContent, false, (_) => PasteAsValue(copyProperty),
                     null);
-                if (property.IsArrayElement())
-                {
-                    var duplicateContent = new GUIContent("Duplicate Serialize Reference Array Element");
-                    menu.AddItem(duplicateContent, false, (_) => DuplicateSerializeReferenceArrayElement(copyProperty),
-                        null);
-                }
             }
         }
 
@@ -41,7 +35,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             lastObject.type = refValue?.GetType();
         }
 
-        private static void PasteReferenceValue(SerializedProperty property)
+        private static void PasteAsValue(SerializedProperty property)
         {
             try
             {

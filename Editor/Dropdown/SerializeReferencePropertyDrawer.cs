@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
+using SerializeReferenceDropdown.Editor.Preferences;
 using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
@@ -22,10 +23,10 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
         private Rect propertyRect;
 
         //TODO Need find better solution for check ui update and traverse all serialized properties
-        private static bool _isDirtyUIToolkit;
+        private static bool isDirtyUIToolkit;
 
         //TODO: need to find better solution
-        private static Dictionary<Object, HashSet<string>> _targetObjectAndSerializeReferences =
+        private static Dictionary<Object, HashSet<string>> targetObjectAndSerializeReferences =
             new Dictionary<Object, HashSet<string>>();
 
         //TODO Make better unique colors for equal references
@@ -122,10 +123,11 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 var selectedType = TypeUtils.ExtractTypeFromString(prop.managedReferenceFullTypename);
                 var selectedTypeName = GetTypeName(selectedType);
                 selectTypeButton.text = selectedTypeName;
-                if (isNew == false && _isDirtyUIToolkit == false)
+                if (isNew == false && isDirtyUIToolkit == false)
                 {
                     return;
                 }
+
                 selectTypeButton.style.color = new StyleColor(Color.white);
                 fixCrossRefButton.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
 
@@ -139,17 +141,14 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
             void MakeDirtyUIToolkit()
             {
-                _isDirtyUIToolkit = true;
-                EditorApplication.delayCall += () =>
-                {
-                    _isDirtyUIToolkit = false;
-                };
+                isDirtyUIToolkit = true;
+                EditorApplication.delayCall += () => { isDirtyUIToolkit = false; };
             }
         }
 
         private void DrawIMGUITypeDropdown(Rect rect, SerializedProperty property, GUIContent label)
         {
-            const float FixButtonWidth = 40f;
+            const float fixButtonWidth = 40f;
             assignableTypes ??= GetAssignableTypes(property);
 
             var isHaveOtherReference = IsHaveSameOtherSerializeReference(property);
@@ -200,7 +199,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 rect.height = EditorGUIUtility.singleLineHeight;
                 if (isHaveOtherReference)
                 {
-                    rect.width -= FixButtonWidth;
+                    rect.width -= fixButtonWidth;
                 }
 
                 return rect;
@@ -210,23 +209,28 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             {
                 var newRect = rectIn;
                 newRect.x += rectIn.width + EditorGUIUtility.standardVerticalSpacing;
-                newRect.width = FixButtonWidth - EditorGUIUtility.standardVerticalSpacing;
+                newRect.width = fixButtonWidth - EditorGUIUtility.standardVerticalSpacing;
                 return newRect;
             }
         }
 
         private bool IsHaveSameOtherSerializeReference(SerializedProperty property)
         {
+            if (SerializeReferenceToolsUserPreferences.GetOrLoadSettings().DisableCrossReferencesCheck)
+            {
+                return false;
+            }
+
             if (property.managedReferenceValue == null)
             {
                 return false;
             }
 
             var target = property.serializedObject.targetObject;
-            if (_targetObjectAndSerializeReferences.TryGetValue(target, out var serializeReferencePaths) == false)
+            if (targetObjectAndSerializeReferences.TryGetValue(target, out var serializeReferencePaths) == false)
             {
                 serializeReferencePaths = new HashSet<string>();
-                _targetObjectAndSerializeReferences.Add(target, serializeReferencePaths);
+                targetObjectAndSerializeReferences.Add(target, serializeReferencePaths);
             }
 
             // Can't find this path in serialized object. Example - new element in array
