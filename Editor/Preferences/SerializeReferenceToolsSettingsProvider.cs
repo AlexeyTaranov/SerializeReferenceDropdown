@@ -15,7 +15,7 @@ namespace SerializeReferenceDropdown.Editor.Preferences
         public SerializeReferenceToolsSettingsProvider(string path, SettingsScope scopes,
             IEnumerable<string> keywords = null) : base(path, scopes, keywords)
         {
-            label = "Serialize Reference Tool";
+            label = "Serialize Reference Tools";
             preferences = SerializeReferenceToolsUserPreferences.GetOrLoadSettings();
         }
 
