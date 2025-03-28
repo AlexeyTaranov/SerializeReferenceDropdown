@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
+using SerializeReferenceDropdown.Editor.Analyzer;
 using SerializeReferenceDropdown.Editor.Preferences;
 using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
@@ -16,7 +17,7 @@ using Object = UnityEngine.Object;
 namespace SerializeReferenceDropdown.Editor.Dropdown
 {
     [CustomPropertyDrawer(typeof(SerializeReferenceDropdownAttribute))]
-    public class SerializeReferencePropertyDrawer : UnityEditor.PropertyDrawer
+    public class SerializeReferencePropertyDrawer : PropertyDrawer
     {
         private const string NullName = "null";
         private List<Type> assignableTypes;
@@ -26,7 +27,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
         private static bool isDirtyUIToolkit;
 
         //TODO: need to find better solution
-        private static Dictionary<Object, HashSet<string>> targetObjectAndSerializeReferences =
+        private static readonly Dictionary<Object, HashSet<string>> targetObjectAndSerializeReferences =
             new Dictionary<Object, HashSet<string>>();
 
         //TODO Make better unique colors for equal references
@@ -80,6 +81,8 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
         private void DrawUIToolkitTypeDropdown(VisualElement root, SerializedProperty property)
         {
+            var hideStyle = new StyleEnum<DisplayStyle>(DisplayStyle.None);
+            var flexStyle = new StyleEnum<DisplayStyle>(DisplayStyle.Flex);
             bool isNew = true;
             var uiToolkitLayoutPath =
                 "Packages/com.alexeytaranov.serializereferencedropdown/Editor/Layouts/SerializeReferenceDropdown.uxml";
@@ -95,6 +98,13 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 MakeDirtyUIToolkit();
                 FixCrossReference(property);
             };
+            var openSourceFIleButton = root.Q<Button>("openSourceFile");
+            openSourceFIleButton.style.display = hideStyle;
+            openSourceFIleButton.clicked += () => { OpenSourceFile(property.managedReferenceValue.GetType()); };
+            if (SerializeReferenceToolsUserPreferences.GetOrLoadSettings().ShowOpenSourceFile)
+            {
+                openSourceFIleButton.style.display = property.managedReferenceValue == null ? hideStyle : flexStyle;
+            }
 
             var propertyPath = property.propertyPath;
             assignableTypes ??= GetAssignableTypes(property);
@@ -129,11 +139,11 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 }
 
                 selectTypeButton.style.color = new StyleColor(Color.white);
-                fixCrossRefButton.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
+                fixCrossRefButton.style.display = hideStyle;
 
                 if (IsHaveSameOtherSerializeReference(property))
                 {
-                    fixCrossRefButton.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.Flex);
+                    fixCrossRefButton.style.display = flexStyle;
                     var color = GetColorForEqualSerializedReference(property);
                     selectTypeButton.style.color = color;
                 }
@@ -292,6 +302,17 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             JsonUtility.FromJsonOverwrite(json, property.managedReferenceValue);
             property.serializedObject.ApplyModifiedProperties();
             property.serializedObject.Update();
+        }
+
+        private void OpenSourceFile(Type type)
+        {
+            var (filePath, lineNumber, columnNumber) = CodeAnalysis.GetSourceFileLocation(type);
+
+            if (string.IsNullOrEmpty(filePath) == false)
+            {
+                var asset = AssetDatabase.LoadMainAssetAtPath(filePath);
+                AssetDatabase.OpenAsset(asset, lineNumber, columnNumber);
+            }
         }
 
         private string GetTypeName(Type type)
