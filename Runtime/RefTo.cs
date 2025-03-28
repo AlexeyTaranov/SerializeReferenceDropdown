@@ -10,6 +10,9 @@ public class RefTo<TRefType, THostType>
     [SerializeField] private THostType _host;
     [SerializeField] private long _referenceId;
 
+    private TRefType _cache;
+    private bool _isCached;
+
     public THostType Host => _host;
     public long ReferenceId => _referenceId;
 
@@ -17,7 +20,16 @@ public class RefTo<TRefType, THostType>
     {
         if (_host != null)
         {
+#if!DISABLE_REFTO_CACHE
+            if (_isCached)
+            {
+                return _cache;
+            }
+#endif
             var value = UnityEngine.Serialization.ManagedReferenceUtility.GetManagedReference(_host, _referenceId);
+            var castObject = value as TRefType;
+            _cache = castObject;
+            _isCached = true;
             return value as TRefType;
         }
 
