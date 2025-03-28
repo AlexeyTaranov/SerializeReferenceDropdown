@@ -27,7 +27,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
         private static bool isDirtyUIToolkit;
 
         //TODO: need to find better solution
-        private static readonly Dictionary<Object, HashSet<string>> targetObjectAndSerializeReferences =
+        private static readonly Dictionary<Object, HashSet<string>> targetObjectAndSerializeReferencePaths =
             new Dictionary<Object, HashSet<string>>();
 
         //TODO Make better unique colors for equal references
@@ -92,7 +92,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
             var selectTypeButton = root.Q<Button>("typeSelect");
             selectTypeButton.clickable.clicked += ShowDropdown;
-            
+
             var fixCrossRefButton = root.Q<Button>("fixCrossReferences");
             fixCrossRefButton.clickable.clicked += () =>
             {
@@ -239,10 +239,10 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             }
 
             var target = property.serializedObject.targetObject;
-            if (targetObjectAndSerializeReferences.TryGetValue(target, out var serializeReferencePaths) == false)
+            if (targetObjectAndSerializeReferencePaths.TryGetValue(target, out var serializeReferencePaths) == false)
             {
                 serializeReferencePaths = new HashSet<string>();
-                targetObjectAndSerializeReferences.Add(target, serializeReferencePaths);
+                targetObjectAndSerializeReferencePaths.Add(target, serializeReferencePaths);
             }
 
             // Can't find this path in serialized object. Example - new element in array
@@ -430,6 +430,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
             void ApplyValueToProperty(object value)
             {
+                var needSaveData = SerializeReferenceToolsUserPreferences.GetOrLoadSettings().CopyDataWithNewType;
                 var targets = property.serializedObject.targetObjects;
                 // Multiple object edit.
                 //One Serialized Object for multiple Objects work sometimes incorrectly  
@@ -437,7 +438,20 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 {
                     using var so = new SerializedObject(target);
                     var targetProperty = so.FindProperty(property.propertyPath);
+                    var previousJsonData = string.Empty;
+                    if (needSaveData && targetProperty.managedReferenceValue != null)
+                    {
+                        previousJsonData = JsonUtility.ToJson(targetProperty.managedReferenceValue);
+                    }
+                    
+                    if (needSaveData)
+                    {
+                        JsonUtility.FromJsonOverwrite(previousJsonData, value);
+                    }
+
                     targetProperty.managedReferenceValue = value;
+
+
                     so.ApplyModifiedProperties();
                     so.Update();
                 }

@@ -9,9 +9,9 @@ namespace SerializeReferenceDropdown.Editor.Preferences
 
         private const string UserPreferencesPrefKey = "SerializeReferenceDropdown.Editor.UserPreferences";
 
-        [SerializeField] private bool showPasteAsReferenceInCopyContextMenu;
         [SerializeField] private bool disableCrossReferencesCheck;
         [SerializeField] private bool disableOpenSourceFile;
+        [SerializeField] private bool copyDataWhenAssignNewType;
 
         public bool DisableCrossReferencesCheck
         {
@@ -23,6 +23,12 @@ namespace SerializeReferenceDropdown.Editor.Preferences
         {
             get => disableOpenSourceFile;
             set => disableOpenSourceFile = value;
+        }
+
+        public bool CopyDataWithNewType
+        {
+            get => copyDataWhenAssignNewType;
+            set => copyDataWhenAssignNewType = value;
         }
 
         public static SerializeReferenceToolsUserPreferences GetOrLoadSettings()

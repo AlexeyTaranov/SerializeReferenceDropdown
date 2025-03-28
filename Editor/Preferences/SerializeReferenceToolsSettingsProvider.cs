@@ -32,6 +32,8 @@ namespace SerializeReferenceDropdown.Editor.Preferences
             preferences.DisableCrossReferencesCheck = GUILayout.Toggle(preferences.DisableCrossReferencesCheck,
                 "Disable Cross References Check");
             preferences.DisableOpenSourceFile = GUILayout.Toggle(preferences.DisableOpenSourceFile, "Disable Open Source File");
+            preferences.CopyDataWithNewType =
+                GUILayout.Toggle(preferences.CopyDataWithNewType, "Copy Data With New Type");
 
             if (EditorGUI.EndChangeCheck())
             {
