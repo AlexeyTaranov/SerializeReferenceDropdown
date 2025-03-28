@@ -3,7 +3,7 @@ using UnityEngine;
 
 #if UNITY_2023_2_OR_NEWER
 [Serializable]
-public class RefTo<TRefType, THostType>
+public sealed class RefTo<TRefType, THostType>
     where TRefType : class
     where THostType : UnityEngine.Object
 {

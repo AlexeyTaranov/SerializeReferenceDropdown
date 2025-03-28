@@ -5,8 +5,8 @@
             <ui:VisualElement style="flex-grow: 1;">
                 <ui:Button tabindex="-1" name="typeSelect" display-tooltip-when-elided="false" style="padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0;" />
             </ui:VisualElement>
-            <ui:Button text="Fix" name="fixCrossReferences" enabled="true" />
-            <ui:Button text="#" name="openSourceFile" />
+            <ui:Button text="Fix" name="fixCrossReferences" enabled="true" tooltip="Fix Cross References" />
+            <ui:Button text="#" name="openSourceFile" tooltip="Open Source File" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

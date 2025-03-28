@@ -11,7 +11,7 @@ namespace SerializeReferenceDropdown.Editor.Preferences
 
         [SerializeField] private bool showPasteAsReferenceInCopyContextMenu;
         [SerializeField] private bool disableCrossReferencesCheck;
-        [SerializeField] private bool showOpenSourceFile;
+        [SerializeField] private bool disableOpenSourceFile;
 
         public bool DisableCrossReferencesCheck
         {
@@ -19,10 +19,10 @@ namespace SerializeReferenceDropdown.Editor.Preferences
             set => disableCrossReferencesCheck = value;
         }
 
-        public bool ShowOpenSourceFile
+        public bool DisableOpenSourceFile
         {
-            get => showOpenSourceFile;
-            set => showOpenSourceFile = value;
+            get => disableOpenSourceFile;
+            set => disableOpenSourceFile = value;
         }
 
         public static SerializeReferenceToolsUserPreferences GetOrLoadSettings()

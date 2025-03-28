@@ -92,6 +92,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
             var selectTypeButton = root.Q<Button>("typeSelect");
             selectTypeButton.clickable.clicked += ShowDropdown;
+            
             var fixCrossRefButton = root.Q<Button>("fixCrossReferences");
             fixCrossRefButton.clickable.clicked += () =>
             {
@@ -101,7 +102,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             var openSourceFIleButton = root.Q<Button>("openSourceFile");
             openSourceFIleButton.style.display = hideStyle;
             openSourceFIleButton.clicked += () => { OpenSourceFile(property.managedReferenceValue.GetType()); };
-            if (SerializeReferenceToolsUserPreferences.GetOrLoadSettings().ShowOpenSourceFile)
+            if (SerializeReferenceToolsUserPreferences.GetOrLoadSettings().DisableOpenSourceFile == false)
             {
                 openSourceFIleButton.style.display = property.managedReferenceValue == null ? hideStyle : flexStyle;
             }
@@ -133,6 +134,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 var selectedType = TypeUtils.ExtractTypeFromString(prop.managedReferenceFullTypename);
                 var selectedTypeName = GetTypeName(selectedType);
                 selectTypeButton.text = selectedTypeName;
+                selectTypeButton.tooltip = $"Class: {selectedType?.Name}\nNamespace: {selectedType?.Namespace}";
                 if (isNew == false && isDirtyUIToolkit == false)
                 {
                     return;
