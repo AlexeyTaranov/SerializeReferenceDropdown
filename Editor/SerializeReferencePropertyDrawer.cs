@@ -9,6 +9,7 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UIElements;
+using Object = UnityEngine.Object;
 
 namespace SerializeReferenceDropdown.Editor
 {
@@ -21,6 +22,10 @@ namespace SerializeReferenceDropdown.Editor
 
         //TODO Need find better solution for check ui update and traverse all serialized properties
         private static bool _isDirtyUIToolkit;
+
+        //TODO: need to find better solution
+        private static Dictionary<Object, HashSet<string>> _targetObjectAndSerializeReferences =
+            new Dictionary<Object, HashSet<string>>();
 
         //TODO Make better unique colors for equal references
         private static Color GetColorForEqualSerializedReference(SerializedProperty property)
@@ -146,9 +151,7 @@ namespace SerializeReferenceDropdown.Editor
             const float FixButtonWidth = 40f;
             assignableTypes ??= GetAssignableTypes(property);
 
-            //TODO: need to cache for better imgui perfomance
-            var isHaveOtherReference = false;
-            // var isHaveOtherReference = IsHaveSameOtherSerializeReference(property);
+            var isHaveOtherReference = IsHaveSameOtherSerializeReference(property);
 
             var referenceType = TypeUtils.ExtractTypeFromString(property.managedReferenceFullTypename);
 
@@ -218,30 +221,59 @@ namespace SerializeReferenceDropdown.Editor
                 return false;
             }
 
-            var refId = ManagedReferenceUtility.GetManagedReferenceIdForObject(property.serializedObject.targetObject,
-                property.managedReferenceValue);
-            var iterator = property.serializedObject.GetIterator();
-            iterator.NextVisible(true);
-            bool isHaveSameReference = false;
-            PropertyUtils.TraverseProperty(iterator, string.Empty, IsHaveSameOtherReference);
-            return isHaveSameReference;
-
-            bool IsHaveSameOtherReference(SerializedProperty checkProperty)
+            var target = property.serializedObject.targetObject;
+            if (_targetObjectAndSerializeReferences.TryGetValue(target, out var serializeReferencePaths) == false)
             {
-                if (checkProperty.propertyPath == property.propertyPath)
+                serializeReferencePaths = new HashSet<string>();
+                _targetObjectAndSerializeReferences.Add(target, serializeReferencePaths);
+            }
+
+            // Can't find this path in serialized object. Example - new element in array
+            if (serializeReferencePaths.Contains(property.propertyPath) == false)
+            {
+                var paths = FindAllSerializeReferencePathsInTargetObject(property);
+                serializeReferencePaths.Clear();
+                foreach (var path in paths)
                 {
-                    return false;
+                    serializeReferencePaths.Add(path);
+                }
+            }
+
+            foreach (var referencePath in serializeReferencePaths)
+            {
+                if (property.propertyPath == referencePath)
+                {
+                    continue;
                 }
 
-                var otherRefId =
-                    ManagedReferenceUtility.GetManagedReferenceIdForObject(property.serializedObject.targetObject,
-                        checkProperty.managedReferenceValue);
-                if (otherRefId == refId)
+                using var otherProperty = property.serializedObject.FindProperty(referencePath);
+                if (otherProperty != null)
                 {
-                    isHaveSameReference = true;
-                    return true;
+                    if (otherProperty.managedReferenceId == property.managedReferenceId)
+                    {
+                        return true;
+                    }
                 }
+                else
+                {
+                    //TODO null property???
+                }
+            }
 
+            return false;
+        }
+
+        private HashSet<string> FindAllSerializeReferencePathsInTargetObject(SerializedProperty property)
+        {
+            using var iterator = property.serializedObject.GetIterator();
+            iterator.NextVisible(true);
+            var paths = new HashSet<string>();
+            PropertyUtils.TraverseProperty(iterator, string.Empty, FillAllPaths);
+            return paths;
+
+            bool FillAllPaths(SerializedProperty serializeReferenceProperty)
+            {
+                paths.Add(serializeReferenceProperty.propertyPath);
                 return false;
             }
         }
