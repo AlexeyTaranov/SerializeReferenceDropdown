@@ -5,7 +5,7 @@ using UnityEditor;
 
 namespace SerializeReferenceDropdown.Editor.Utils
 {
-    public static class Extensions
+    public static class ReflectionUtils
     {
         private static readonly Regex ArrayIndexCapturePattern = new Regex(@"\[(\d*)\]");
 

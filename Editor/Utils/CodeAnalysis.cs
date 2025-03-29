@@ -3,7 +3,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
-namespace SerializeReferenceDropdown.Editor.Analyzer
+namespace SerializeReferenceDropdown.Editor.Utils
 {
     public static class CodeAnalysis
     {

@@ -6,11 +6,11 @@ using UnityEngine;
 namespace SerializeReferenceDropdown.Editor.Dropdown
 {
     [InitializeOnLoad]
-    public class CopyPasteContextMenu
+    public class DropdownCopyPasteContextMenu
     {
         private static (string json, Type type) lastObject;
 
-        static CopyPasteContextMenu()
+        static DropdownCopyPasteContextMenu()
         {
             EditorApplication.contextualPropertyMenu += ShowSerializeReferenceCopyPasteContextMenu;
         }
