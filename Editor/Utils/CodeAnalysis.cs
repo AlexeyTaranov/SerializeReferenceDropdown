@@ -9,11 +9,24 @@ namespace SerializeReferenceDropdown.Editor.Utils
     {
         public static (string filePath, int lineNumber, int columnNumber) GetSourceFileLocation(Type targetType)
         {
-            var files = Directory.GetFiles(Application.dataPath, "*.cs", SearchOption.AllDirectories);
-
-            foreach (var file in files)
+            var iterator = new FileIterator(AnalyseSourceFile)
             {
-                using var reader = new StreamReader(file);
+                ProgressBarLabel = "Open Source File",
+                FileNameExtension = "cs",
+                ProgressBarInfoPrefix = "Analyze source file data"
+            };
+            
+            var filePath = string.Empty;
+            var lineNumber = -1;
+            var columnNumber = -1;
+
+            iterator.IterateOnUnityProjectFiles();
+
+            return (filePath, lineNumber, columnNumber);
+
+            bool AnalyseSourceFile(string fullFilePath)
+            {
+                using var reader = new StreamReader(fullFilePath);
                 var currentLine = 0;
 
                 var foundNamespace = String.Empty;
@@ -29,18 +42,19 @@ namespace SerializeReferenceDropdown.Editor.Utils
 
                     var className = targetType.Name;
                     var classMatch = Regex.Match(line, @"\bclass\s+" + className + @"\b");
-                    
+
                     if (classMatch.Success && targetType.Namespace == foundNamespace)
                     {
-                        var columnNumber = classMatch.Index + 1;
-                        var relativePath = file.Replace(Application.dataPath, "");
-                        relativePath = $"Assets{relativePath}";
-                        return (relativePath, currentLine, columnNumber);
+                        columnNumber = classMatch.Index + 1;
+                        filePath = fullFilePath.Replace(Application.dataPath, "");
+                        filePath = $"Assets{filePath}";
+                        lineNumber = currentLine;
+                        return true;
                     }
                 }
-            }
 
-            return default;
+                return false;
+            }
         }
     }
 }
