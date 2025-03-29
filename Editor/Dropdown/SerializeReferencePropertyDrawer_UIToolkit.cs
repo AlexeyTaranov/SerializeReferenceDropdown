@@ -33,7 +33,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
         private void DrawUIToolkitTypeDropdown(VisualElement root, SerializedProperty property)
         {
             var hideStyle = new StyleEnum<DisplayStyle>(DisplayStyle.None);
-            var flexStyle = new StyleEnum<DisplayStyle>(DisplayStyle.Flex);
+            var showFlexStyle = new StyleEnum<DisplayStyle>(DisplayStyle.Flex);
             bool isNew = true;
             var uiToolkitLayoutPath =
                 "Packages/com.alexeytaranov.serializereferencedropdown/Editor/Layouts/SerializeReferenceDropdown.uxml";
@@ -53,10 +53,14 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             var openSourceFIleButton = root.Q<Button>("openSourceFile");
             openSourceFIleButton.style.display = hideStyle;
             openSourceFIleButton.clicked += () => { OpenSourceFile(property.managedReferenceValue.GetType()); };
-            if (SerializeReferenceToolsUserPreferences.GetOrLoadSettings().DisableOpenSourceFile == false)
+
+            var showSearchToolButton = root.Q<Button>("showSearchTool");
+            showSearchToolButton.style.display = hideStyle;
+            showSearchToolButton.clicked += () =>
             {
-                openSourceFIleButton.style.display = property.managedReferenceValue == null ? hideStyle : flexStyle;
-            }
+                var type = TypeUtils.ExtractTypeFromString(property.managedReferenceFullTypename);
+                ShowSearchTool(type);
+            };
 
             var propertyPath = property.propertyPath;
             assignableTypes ??= GetAssignableTypes(property);
@@ -85,8 +89,16 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 var selectedType = TypeUtils.ExtractTypeFromString(prop.managedReferenceFullTypename);
                 var selectedTypeName = GetTypeName(selectedType);
                 selectTypeButton.text = selectedTypeName;
-                selectTypeButton.tooltip = $"Class: {selectedType?.Name}\n" +
-                                           $"Namespace: {selectedType?.Namespace}";
+                selectTypeButton.tooltip = $"Type Full Name: {selectedType?.FullName}";
+
+                if (SerializeReferenceToolsUserPreferences.GetOrLoadSettings().DisableOpenSourceFile == false)
+                {
+                    openSourceFIleButton.style.display =
+                        property.managedReferenceValue == null ? hideStyle : showFlexStyle;
+                }
+
+                showSearchToolButton.style.display = selectedType != null ? showFlexStyle : hideStyle;
+
                 if (isNew == false && isDirtyUIToolkit == false)
                 {
                     return;
@@ -97,7 +109,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
                 if (IsHaveSameOtherSerializeReference(property))
                 {
-                    fixCrossRefButton.style.display = flexStyle;
+                    fixCrossRefButton.style.display = showFlexStyle;
                     var color = GetColorForEqualSerializedReference(property);
                     selectTypeButton.style.color = color;
                 }

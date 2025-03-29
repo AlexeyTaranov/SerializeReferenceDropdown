@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using SerializeReferenceDropdown.Editor.Preferences;
+using SerializeReferenceDropdown.Editor.SearchTool;
 using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
 using UnityEngine;
@@ -279,6 +280,17 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 var asset = AssetDatabase.LoadMainAssetAtPath(filePath);
                 AssetDatabase.OpenAsset(asset, lineNumber, columnNumber);
             }
+        }
+
+        #endregion
+
+
+
+        #region SearchTool
+
+        private void ShowSearchTool(Type type)
+        {
+            SearchToolWindow.ShowSearchTypeWindow(type);
         }
 
         #endregion
