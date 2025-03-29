@@ -19,111 +19,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
         private List<Type> assignableTypes;
         private Rect propertyRect;
 
-        //TODO: need to find better solution
-        private static readonly Dictionary<Object, HashSet<string>> targetObjectAndSerializeReferencePaths =
-            new Dictionary<Object, HashSet<string>>();
-
-        //TODO Make better unique colors for equal references
-        private static Color GetColorForEqualSerializedReference(SerializedProperty property)
-        {
-            var refId = ManagedReferenceUtility.GetManagedReferenceIdForObject(property.serializedObject.targetObject,
-                property.managedReferenceValue);
-            var refsArray = ManagedReferenceUtility.GetManagedReferenceIds(property.serializedObject.targetObject);
-            var index = Array.FindIndex(refsArray, t => t == refId);
-            var hue = (float)index / refsArray.Length;
-            return Color.HSVToRGB(hue, 0.8f, 0.8f);
-        }
-
-        private bool IsHaveSameOtherSerializeReference(SerializedProperty property)
-        {
-            if (SerializeReferenceToolsUserPreferences.GetOrLoadSettings().DisableCrossReferencesCheck)
-            {
-                return false;
-            }
-
-            if (property.managedReferenceValue == null)
-            {
-                return false;
-            }
-
-            var target = property.serializedObject.targetObject;
-            if (targetObjectAndSerializeReferencePaths.TryGetValue(target, out var serializeReferencePaths) == false)
-            {
-                serializeReferencePaths = new HashSet<string>();
-                targetObjectAndSerializeReferencePaths.Add(target, serializeReferencePaths);
-            }
-
-            // Can't find this path in serialized object. Example - new element in array
-            if (serializeReferencePaths.Contains(property.propertyPath) == false)
-            {
-                var paths = FindAllSerializeReferencePathsInTargetObject(property);
-                serializeReferencePaths.Clear();
-                foreach (var path in paths)
-                {
-                    serializeReferencePaths.Add(path);
-                }
-            }
-
-            foreach (var referencePath in serializeReferencePaths)
-            {
-                if (property.propertyPath == referencePath)
-                {
-                    continue;
-                }
-
-                using var otherProperty = property.serializedObject.FindProperty(referencePath);
-                if (otherProperty != null)
-                {
-                    if (otherProperty.managedReferenceId == property.managedReferenceId)
-                    {
-                        return true;
-                    }
-                }
-                else
-                {
-                    //TODO null property???
-                }
-            }
-
-            return false;
-        }
-
-        private HashSet<string> FindAllSerializeReferencePathsInTargetObject(SerializedProperty property)
-        {
-            using var iterator = property.serializedObject.GetIterator();
-            iterator.NextVisible(true);
-            var paths = new HashSet<string>();
-            PropertyUtils.TraverseProperty(iterator, string.Empty, FillAllPaths);
-            return paths;
-
-            bool FillAllPaths(SerializedProperty serializeReferenceProperty)
-            {
-                paths.Add(serializeReferenceProperty.propertyPath);
-                return false;
-            }
-        }
-
-        private void FixCrossReference(SerializedProperty property)
-        {
-            var json = JsonUtility.ToJson(property.managedReferenceValue);
-            CreateAndApplyNewInstanceFromType(property.managedReferenceValue.GetType(), property);
-            property.serializedObject.ApplyModifiedProperties();
-            property.serializedObject.Update();
-            JsonUtility.FromJsonOverwrite(json, property.managedReferenceValue);
-            property.serializedObject.ApplyModifiedProperties();
-            property.serializedObject.Update();
-        }
-
-        private void OpenSourceFile(Type type)
-        {
-            var (filePath, lineNumber, columnNumber) = CodeAnalysis.GetSourceFileLocation(type);
-
-            if (string.IsNullOrEmpty(filePath) == false)
-            {
-                var asset = AssetDatabase.LoadMainAssetAtPath(filePath);
-                AssetDatabase.OpenAsset(asset, lineNumber, columnNumber);
-            }
-        }
+        #region Dropdown
 
         private string GetTypeName(Type type)
         {
@@ -240,7 +136,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             {
                 var needSaveData = SerializeReferenceToolsUserPreferences.GetOrLoadSettings().CopyDataWithNewType;
                 var targets = property.serializedObject.targetObjects;
-                
+
                 // Multiple object edit.
                 //One Serialized Object for multiple Objects work sometimes incorrectly  
                 foreach (var target in targets)
@@ -252,7 +148,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                     {
                         previousJsonData = JsonUtility.ToJson(targetProperty.managedReferenceValue);
                     }
-                    
+
                     if (needSaveData)
                     {
                         JsonUtility.FromJsonOverwrite(previousJsonData, value);
@@ -266,5 +162,125 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 }
             }
         }
+
+        #endregion
+
+        
+        
+        #region CrossReferences
+        
+        //TODO: need to find better solution
+        private static readonly Dictionary<Object, HashSet<string>> targetObjectAndSerializeReferencePaths =
+            new Dictionary<Object, HashSet<string>>();
+
+        //TODO Make better unique colors for equal references
+        private static Color GetColorForEqualSerializedReference(SerializedProperty property)
+        {
+            var refId = ManagedReferenceUtility.GetManagedReferenceIdForObject(property.serializedObject.targetObject,
+                property.managedReferenceValue);
+            var refsArray = ManagedReferenceUtility.GetManagedReferenceIds(property.serializedObject.targetObject);
+            var index = Array.FindIndex(refsArray, t => t == refId);
+            var hue = (float)index / refsArray.Length;
+            return Color.HSVToRGB(hue, 0.8f, 0.8f);
+        }
+
+        private bool IsHaveSameOtherSerializeReference(SerializedProperty property)
+        {
+            if (SerializeReferenceToolsUserPreferences.GetOrLoadSettings().DisableCrossReferencesCheck)
+            {
+                return false;
+            }
+
+            if (property.managedReferenceValue == null)
+            {
+                return false;
+            }
+
+            var target = property.serializedObject.targetObject;
+            if (targetObjectAndSerializeReferencePaths.TryGetValue(target, out var serializeReferencePaths) == false)
+            {
+                serializeReferencePaths = new HashSet<string>();
+                targetObjectAndSerializeReferencePaths.Add(target, serializeReferencePaths);
+            }
+
+            // Can't find this path in serialized object. Example - new element in array
+            if (serializeReferencePaths.Contains(property.propertyPath) == false)
+            {
+                var paths = FindAllSerializeReferencePathsInTargetObject();
+                serializeReferencePaths.Clear();
+                foreach (var path in paths)
+                {
+                    serializeReferencePaths.Add(path);
+                }
+            }
+
+            foreach (var referencePath in serializeReferencePaths)
+            {
+                if (property.propertyPath == referencePath)
+                {
+                    continue;
+                }
+
+                using var otherProperty = property.serializedObject.FindProperty(referencePath);
+                if (otherProperty != null)
+                {
+                    if (otherProperty.managedReferenceId == property.managedReferenceId)
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    //TODO null property???
+                }
+            }
+
+            return false;
+
+            HashSet<string> FindAllSerializeReferencePathsInTargetObject()
+            {
+                using var iterator = property.serializedObject.GetIterator();
+                iterator.NextVisible(true);
+                var paths = new HashSet<string>();
+                PropertyUtils.TraverseProperty(iterator, string.Empty, FillAllPaths);
+                return paths;
+
+                bool FillAllPaths(SerializedProperty serializeReferenceProperty)
+                {
+                    paths.Add(serializeReferenceProperty.propertyPath);
+                    return false;
+                }
+            }
+        }
+
+        private void FixCrossReference(SerializedProperty property)
+        {
+            var json = JsonUtility.ToJson(property.managedReferenceValue);
+            CreateAndApplyNewInstanceFromType(property.managedReferenceValue.GetType(), property);
+            property.serializedObject.ApplyModifiedProperties();
+            property.serializedObject.Update();
+            JsonUtility.FromJsonOverwrite(json, property.managedReferenceValue);
+            property.serializedObject.ApplyModifiedProperties();
+            property.serializedObject.Update();
+        }
+
+        #endregion
+        
+        
+
+        #region OpenSource
+
+        private void OpenSourceFile(Type type)
+        {
+            var (filePath, lineNumber, columnNumber) = CodeAnalysis.GetSourceFileLocation(type);
+
+            if (string.IsNullOrEmpty(filePath) == false)
+            {
+                var asset = AssetDatabase.LoadMainAssetAtPath(filePath);
+                AssetDatabase.OpenAsset(asset, lineNumber, columnNumber);
+            }
+        }
+
+        #endregion
     }
 }
