@@ -32,8 +32,8 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
         private void DrawUIToolkitTypeDropdown(VisualElement root, SerializedProperty property)
         {
-            var hideStyle = new StyleEnum<Visibility>() { value = Visibility.Hidden };
-            var visibleStyle = new StyleEnum<Visibility>() { value = Visibility.Visible };
+            var hideStyle = new StyleEnum<DisplayStyle> { value = DisplayStyle.None };
+            var visibleStyle = new StyleEnum<DisplayStyle> { value = DisplayStyle.Flex };
             bool isNew = true;
             var uiToolkitLayoutPath =
                 "Packages/com.alexeytaranov.serializereferencedropdown/Editor/Layouts/SerializeReferenceDropdown.uxml";
@@ -51,11 +51,11 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 FixCrossReference(property);
             };
             var openSourceFIleButton = root.Q<Button>("openSourceFile");
-            openSourceFIleButton.style.visibility = hideStyle;
+            openSourceFIleButton.style.display = hideStyle;
             openSourceFIleButton.clicked += () => { OpenSourceFile(property.managedReferenceValue.GetType()); };
 
             var showSearchToolButton = root.Q<Button>("showSearchTool");
-            showSearchToolButton.style.visibility = hideStyle;
+            showSearchToolButton.style.display = hideStyle;
             showSearchToolButton.clicked += () =>
             {
                 var type = TypeUtils.ExtractTypeFromString(property.managedReferenceFullTypename);
@@ -93,11 +93,11 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
                 if (SerializeReferenceToolsUserPreferences.GetOrLoadSettings().DisableOpenSourceFile == false)
                 {
-                    openSourceFIleButton.style.visibility =
+                    openSourceFIleButton.style.display =
                         property.managedReferenceValue == null ? hideStyle : visibleStyle;
                 }
 
-                showSearchToolButton.style.visibility = selectedType != null ? visibleStyle : hideStyle;
+                showSearchToolButton.style.display = selectedType != null ? visibleStyle : hideStyle;
 
                 if (isNew == false && isDirtyUIToolkit == false)
                 {
@@ -105,11 +105,11 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 }
 
                 selectTypeButton.style.color = new StyleColor(Color.white);
-                fixCrossRefButton.style.visibility = hideStyle;
+                fixCrossRefButton.style.display = hideStyle;
 
                 if (IsHaveSameOtherSerializeReference(property))
                 {
-                    fixCrossRefButton.style.visibility = visibleStyle;
+                    fixCrossRefButton.style.display = visibleStyle;
                     var color = GetColorForEqualSerializedReference(property);
                     selectTypeButton.style.color = color;
                 }

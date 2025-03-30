@@ -1,0 +1,35 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:VisualElement style="flex-grow: 1; padding-top: 8px; padding-right: 8px; padding-bottom: 8px; padding-left: 8px;">
+        <ui:VisualElement style="flex-grow: 1; max-height: 30px; flex-direction: row; padding-left: 4px; padding-top: 4px; padding-right: 4px; padding-bottom: 4px; justify-content: flex-start; align-items: center;">
+            <ui:Button name="refreshDatabase" text="Refresh" tooltip="Find all objects" />
+            <ui:Label text="Database. Last refresh:" style="-unity-text-align: middle-left;" />
+            <ui:Label name="lastSearchRefresh" text="Date" style="max-height: 30px; -unity-text-align: middle-left;" />
+        </ui:VisualElement>
+        <ui:VisualElement style="flex-grow: 1; flex-direction: row; max-height: 30px; padding-top: 4px; padding-right: 4px; padding-bottom: 4px; padding-left: 4px; justify-content: flex-start; align-items: auto; min-height: 30px;">
+            <ui:Label text="Type filter" style="-unity-text-align: middle-left; white-space: pre-wrap;" />
+            <ui:Button name="targetType" text="Type:" style="-unity-text-align: middle-center;" />
+            <ui:Button name="clearTargetType" text="Clear" />
+        </ui:VisualElement>
+        <ui:VisualElement style="flex-grow: 1; flex-direction: row;">
+            <ui:VisualElement style="flex-grow: 1; min-width: 150px; padding-top: 4px; padding-right: 4px; padding-bottom: 4px; padding-left: 4px; margin-top: 4px; margin-right: 4px; margin-bottom: 4px; margin-left: 4px;">
+                <ui:Label text="Unity Objects" style="-unity-text-align: upper-center; background-color: rgba(255, 255, 255, 0.3);" />
+                <ui:ListView name="unityObjects" style="padding-top: 4px; padding-right: 4px; padding-bottom: 4px; padding-left: 4px; margin-top: 4px; margin-right: 4px; margin-bottom: 4px; margin-left: 4px; background-color: rgba(255, 255, 255, 0.1);" />
+            </ui:VisualElement>
+            <ui:VisualElement style="flex-grow: 1; flex-direction: row; margin-top: 4px; margin-right: 4px; margin-bottom: 4px; margin-left: 4px; padding-top: 4px; padding-right: 4px; padding-bottom: 4px; padding-left: 4px;">
+                <ui:VisualElement name="componentsRoot" enabled="true" style="flex-grow: 1; padding-top: 0; padding-right: 4px; padding-bottom: 0; padding-left: 4px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;">
+                    <ui:Label text="Components" style="-unity-text-align: upper-center; background-color: rgba(255, 255, 255, 0.3);" />
+                    <ui:ListView name="components" style="margin-top: 4px; margin-right: 4px; margin-bottom: 4px; margin-left: 4px;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="flex-grow: 1; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 4px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0;">
+                    <ui:Label text="Property Paths" style="-unity-text-align: upper-center; background-color: rgba(255, 255, 255, 0.3);" />
+                    <ui:ListView name="properties" style="margin-top: 4px; margin-right: 4px; margin-bottom: 4px; margin-left: 4px;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement style="flex-grow: 1; min-width: 150px; padding-top: 4px; padding-right: 4px; padding-bottom: 4px; padding-left: 4px; margin-top: 4px; margin-right: 4px; margin-bottom: 4px; margin-left: 4px; background-color: rgba(204, 204, 204, 0.1);">
+                <ui:Label text="Data Editor" style="-unity-text-align: upper-center; background-color: rgba(255, 255, 255, 0.3);" />
+                <uie:PropertyField name="serializeReferenceProperty" />
+                <ui:Button name="applyData" text="Apply" style="max-height: 30px; max-width: 60px; align-content: flex-start; align-self: center;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

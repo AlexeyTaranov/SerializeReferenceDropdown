@@ -13,8 +13,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
         public struct ReferenceData
         {
             public long referenceID;
-            //TODO replace with Type
-            public string objectTypeName;
+            public Type objectType;
         }
         
         public interface IAssetData

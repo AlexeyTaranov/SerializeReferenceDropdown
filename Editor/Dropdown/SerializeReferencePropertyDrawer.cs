@@ -121,16 +121,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
         private void CreateAndApplyNewInstanceFromType(Type type, SerializedProperty property)
         {
-            object newObject;
-            if (type?.GetConstructor(Type.EmptyTypes) != null)
-            {
-                newObject = Activator.CreateInstance(type);
-            }
-            else
-            {
-                newObject = type != null ? FormatterServices.GetUninitializedObject(type) : null;
-            }
-
+            var newObject = TypeUtils.CreateObjectFromType(type);
             ApplyValueToProperty(newObject);
 
             void ApplyValueToProperty(object value)
