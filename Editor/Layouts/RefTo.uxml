@@ -1,7 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
     <ui:VisualElement>
         <ui:GroupBox style="flex-direction: row; align-items: center; background-color: rgb(62, 62, 62); padding-top: 2px; padding-bottom: 2px; border-left-color: rgba(153, 153, 153, 0.5); border-right-color: rgba(153, 153, 153, 0.5); border-top-color: rgba(153, 153, 153, 0.5); border-bottom-color: rgba(153, 153, 153, 0.5); border-top-width: 1px; border-right-width: 0; border-bottom-width: 1px; border-left-width: 0; position: relative;">
-            <uie:PropertyField enabled="true" name="Property" focusable="true" style="padding-left: 8px; position: relative;" />
+            <ui:Label text="Property" name="PropertyName" style="max-width: 100px; color: rgb(255, 255, 255);" />
             <ui:Label text="Label" name="FieldName" style="max-width: 120px; color: rgb(196, 196, 196); padding-left: 8px; display: none;" />
             <ui:VisualElement style="flex-grow: 1; max-width: 8px;" />
             <ui:Label text="Label" name="RefName" style="-unity-font-style: bold; color: rgb(255, 255, 255); background-color: rgb(88, 88, 88); padding-right: 6px; padding-left: 6px;" />

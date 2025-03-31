@@ -6,12 +6,12 @@ using UnityEditor.Compilation;
 using UnityEngine;
 using Assembly = System.Reflection.Assembly;
 
-namespace SerializeReferenceDropdown.Editor
+namespace SerializeReferenceDropdown.Editor.Utils
 {
     public static class TypeUtils
     {
         private const string ArrayPropertySubstring = ".Array.data[";
-        private static Dictionary<AppDomain, List<Type>> CachedDomainTypes = new Dictionary<AppDomain, List<Type>>();
+        private static Dictionary<AppDomain, List<Type>> cachedDomainTypes = new Dictionary<AppDomain, List<Type>>();
 
         public static Type ExtractTypeFromString(string typeName)
         {
@@ -55,7 +55,7 @@ namespace SerializeReferenceDropdown.Editor
         public static IEnumerable<Type> GetAllTypesInCurrentDomain()
         {
             var currentDomain = AppDomain.CurrentDomain;
-            if (CachedDomainTypes.TryGetValue(currentDomain, out var cachedTypes))
+            if (cachedDomainTypes.TryGetValue(currentDomain, out var cachedTypes))
             {
                 return cachedTypes;
             }
@@ -74,7 +74,7 @@ namespace SerializeReferenceDropdown.Editor
                 }
             }
 
-            CachedDomainTypes.Add(currentDomain, types);
+            cachedDomainTypes.Add(currentDomain, types);
 
             return types;
         }
@@ -120,12 +120,12 @@ namespace SerializeReferenceDropdown.Editor
             };
         }
 
-        private static IReadOnlyList<Type> SystemObjectTypes;
+        private static IReadOnlyList<Type> systemObjectTypes;
 
 
         public static IReadOnlyList<Type> GetAllSystemObjectTypes()
         {
-            if (SystemObjectTypes == null)
+            if (systemObjectTypes == null)
             {
                 var assemblies = CompilationPipeline.GetAssemblies();
                 var playerAssemblies = assemblies.Where(t => t.flags.HasFlag(AssemblyFlags.EditorAssembly) == false)
@@ -137,7 +137,7 @@ namespace SerializeReferenceDropdown.Editor
                 var typesList = new List<Type>();
                 typesList.AddRange(GetBuiltInUnitySerializeTypes());
                 typesList.AddRange(customTypes);
-                SystemObjectTypes = typesList.ToArray();
+                systemObjectTypes = typesList.ToArray();
 
                 bool IsValidTypeForGenericParameter(Type t)
                 {
@@ -152,7 +152,7 @@ namespace SerializeReferenceDropdown.Editor
                 }
             }
 
-            return SystemObjectTypes;
+            return systemObjectTypes;
         }
     }
 }

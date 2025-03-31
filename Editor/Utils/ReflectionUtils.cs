@@ -3,9 +3,9 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEditor;
 
-namespace SerializeReferenceDropdown.Editor
+namespace SerializeReferenceDropdown.Editor.Utils
 {
-    public static class Extensions
+    public static class ReflectionUtils
     {
         private static readonly Regex ArrayIndexCapturePattern = new Regex(@"\[(\d*)\]");
 

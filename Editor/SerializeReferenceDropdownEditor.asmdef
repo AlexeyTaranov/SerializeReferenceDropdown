@@ -1,6 +1,6 @@
 {
     "name": "SerializeReferenceDropdownEditor",
-    "rootNamespace": "",
+    "rootNamespace": "SerializeReferenceDropdown",
     "references": [
         "UnityEditor.UI",
         "UnityEngine.UI",

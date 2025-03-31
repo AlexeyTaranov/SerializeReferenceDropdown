@@ -1,5 +1,6 @@
 #if UNITY_2023_2_OR_NEWER
 using System;
+using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -73,16 +74,16 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             var visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(uiToolkitLayoutPath);
             root.Add(visualTreeAsset.Instantiate());
 
-            var propertyField = root.Q<PropertyField>();
-
-            propertyField.BindProperty(property);
             var (_, targetType, hostType, _, _) = RefToExtensions.GetInspectorValues(property);
 
-            propertyField.tooltip =
+            var fieldName = root.Q<Label>("PropertyName");
+            fieldName.text = ObjectNames.NicifyVariableName(property.name);
+            fieldName.tooltip =
                 $"Field: {property.name} \nTarget Type: {targetType.Name} \nNamespace: {targetType.Namespace}";
 
             var propertyPath = property.propertyPath;
             root.TrackSerializedObjectValue(property.serializedObject, RefreshDynamic);
+
             var objectField = root.Q<ObjectField>();
             objectField.objectType = hostType;
             var targetObject = property.serializedObject.targetObject;

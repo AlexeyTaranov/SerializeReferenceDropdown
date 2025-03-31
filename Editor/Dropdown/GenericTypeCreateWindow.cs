@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace SerializeReferenceDropdown.Editor
+namespace SerializeReferenceDropdown.Editor.Dropdown
 {
     public class GenericTypeCreateWindow : EditorWindow
     {
@@ -50,6 +51,7 @@ namespace SerializeReferenceDropdown.Editor
 
             var genericParams = inputGenericType.GetGenericArguments();
             selectedIndexes = new int[genericParams.Length];
+            
             FillTypesAndNames();
             FillSpecifiedTypesFromProperty();
         }
@@ -167,9 +169,7 @@ namespace SerializeReferenceDropdown.Editor
 
                 button.clickable.clicked += () => ShowTypesForParamIndex(index, button);
 
-                var parameterTypeLabel = new TextElement();
-                parameterTypeLabel.text = paramName;
-
+                var parameterTypeLabel = new TextElement { text = paramName };
                 var makeArrayToggle = new Toggle("Make Array Type");
 
                 var group = new Box();
@@ -190,8 +190,7 @@ namespace SerializeReferenceDropdown.Editor
 
         private void CreateGenerateGenericTypeButton()
         {
-            generateGenericTypeButton = new Button();
-            generateGenericTypeButton.text = "Generate";
+            generateGenericTypeButton = new Button { text = "Generate" };
             generateGenericTypeButton.clickable.clicked += GenerateGenericType;
             rootVisualElement.Add(generateGenericTypeButton);
 
@@ -238,7 +237,7 @@ namespace SerializeReferenceDropdown.Editor
         {
             var currentTypeNames = typeNamesForParameters[genericParamIndex];
 
-            var dropdown = new AdvancedDropdown(new AdvancedDropdownState(), currentTypeNames,
+            var dropdown = new SerializeReferenceAdvancedDropdown(new AdvancedDropdownState(), currentTypeNames,
                 ApplySelectedTypeIndex);
 
             var buttonRect = new Rect(selectedButton.transform.position, selectedButton.transform.scale);

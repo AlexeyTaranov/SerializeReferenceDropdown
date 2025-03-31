@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using UnityEditor.IMGUI.Controls;
 
-namespace SerializeReferenceDropdown.Editor
+namespace SerializeReferenceDropdown.Editor.Dropdown
 {
-    public class AdvancedDropdown : UnityEditor.IMGUI.Controls.AdvancedDropdown
+    public class SerializeReferenceAdvancedDropdown : AdvancedDropdown
     {
         private readonly IEnumerable<string> typeNames;
 
@@ -13,7 +13,7 @@ namespace SerializeReferenceDropdown.Editor
 
         private readonly Action<int> onSelectedTypeIndex;
 
-        public AdvancedDropdown(AdvancedDropdownState state, IEnumerable<string> typeNames,
+        public SerializeReferenceAdvancedDropdown(AdvancedDropdownState state, IEnumerable<string> typeNames,
             Action<int> onSelectedNewType) :
             base(state)
         {
