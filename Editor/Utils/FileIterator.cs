@@ -17,9 +17,9 @@ namespace SerializeReferenceDropdown.Editor.Utils
     public class FileIterator<T> where T : UnityEngine.Object
     {
         private readonly Func<string, bool> filePredicate;
-
         public string ProgressBarLabel { get; set; }
         public string ProgressBarInfoPrefix { get; set; }
+        public List<string> SkipFileExtensions = new List<string>();
 
         public FileIterator(Func<string, bool> filePredicate)
         {
@@ -29,9 +29,16 @@ namespace SerializeReferenceDropdown.Editor.Utils
 
         public IteratorResult IterateOnUnityAssetFiles()
         {
-            var assetPaths = AssetDatabase.FindAssets($"t: {typeof(T).Name}").Select(AssetDatabase.GUIDToAssetPath)
-                .ToArray();
-            return IterateOnFiles(assetPaths);
+            var assetPaths = AssetDatabase.FindAssets($"t: {typeof(T).Name}").Select(AssetDatabase.GUIDToAssetPath);
+            var filteredPaths = assetPaths.Where(IsCorrectExtensions).ToArray();
+            return IterateOnFiles(filteredPaths);
+
+            bool IsCorrectExtensions(string path)
+            {
+                var extension = Path.GetExtension(path);
+                var needSkip = SkipFileExtensions.Contains(extension);
+                return needSkip == false;
+            }
         }
 
         private IteratorResult IterateOnFiles(IReadOnlyList<string> filePaths)

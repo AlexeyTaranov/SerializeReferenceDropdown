@@ -110,7 +110,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 if (IsHaveSameOtherSerializeReference(property))
                 {
                     fixCrossRefButton.style.display = visibleStyle;
-                    var color = GetColorForEqualSerializedReference(property);
+                    var color = GetColorForEqualSerializeReference(property);
                     selectTypeButton.style.color = color;
                 }
             }

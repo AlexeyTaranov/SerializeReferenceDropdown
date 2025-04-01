@@ -10,12 +10,36 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
         public List<ScriptableObjectData> SOsData = new List<ScriptableObjectData>();
 
         [Serializable]
-        public struct ReferenceData
+        public struct ReferenceIdData
         {
-            public long referenceID;
+            public long referenceId;
             public Type objectType;
         }
-        
+
+        [Serializable]
+        public struct ReferencePropertyData : IEquatable<ReferencePropertyData>
+        {
+            public string propertyPath;
+            public long assignedReferenceId;
+            public Type propertyType;
+
+            public bool Equals(ReferencePropertyData other)
+            {
+                return propertyPath == other.propertyPath && assignedReferenceId == other.assignedReferenceId &&
+                       propertyType == other.propertyType;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is ReferencePropertyData other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(propertyPath, assignedReferenceId, propertyType);
+            }
+        }
+
         public interface IAssetData
         {
             public string AssetPath { get; }
@@ -24,24 +48,31 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
         [Serializable]
         public class PrefabData : IAssetData
         {
-            public string assetPath;
+            public PrefabData(string assetPath)
+            {
+                AssetPath = assetPath;
+            }
+
+            public string AssetPath { get; }
             public List<PrefabComponentData> componentsData = new List<PrefabComponentData>();
-            public string AssetPath => assetPath;
         }
 
-        [Serializable]
-        public class PrefabComponentData
-        {
-            public int instanceId;
-            public List<ReferenceData> serializeReferencesData;
-        }
 
         [Serializable]
-        public class ScriptableObjectData : IAssetData
+        public class ScriptableObjectData : UnityObjectReferenceData, IAssetData
         {
-            public string assetPath;
-            public List<ReferenceData> serializeReferencesData;
-            public string AssetPath => assetPath;
+            public string AssetPath { get; set; }
+        }
+
+        public class PrefabComponentData : UnityObjectReferenceData
+        {
+            public int InstanceId;
+        }
+
+        public class UnityObjectReferenceData
+        {
+            public List<ReferenceIdData> RefIdsData = new List<ReferenceIdData>();
+            public List<ReferencePropertyData> RefPropertiesData = new List<ReferencePropertyData>();
         }
     }
 }

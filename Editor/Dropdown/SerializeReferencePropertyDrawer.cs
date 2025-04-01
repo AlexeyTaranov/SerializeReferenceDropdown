@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Serialization;
 using SerializeReferenceDropdown.Editor.Preferences;
 using SerializeReferenceDropdown.Editor.SearchTool;
 using SerializeReferenceDropdown.Editor.Utils;
@@ -157,22 +156,26 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
         #endregion
 
-        
-        
+
         #region CrossReferences
-        
+
         //TODO: need to find better solution
         private static readonly Dictionary<Object, HashSet<string>> targetObjectAndSerializeReferencePaths =
             new Dictionary<Object, HashSet<string>>();
 
         //TODO Make better unique colors for equal references
-        private static Color GetColorForEqualSerializedReference(SerializedProperty property)
+        private static Color GetColorForEqualSerializeReference(SerializedProperty property)
         {
             var refId = ManagedReferenceUtility.GetManagedReferenceIdForObject(property.serializedObject.targetObject,
                 property.managedReferenceValue);
             var refsArray = ManagedReferenceUtility.GetManagedReferenceIds(property.serializedObject.targetObject);
             var index = Array.FindIndex(refsArray, t => t == refId);
-            var hue = (float)index / refsArray.Length;
+            return GetColorForEqualSerializeReference(index, refsArray.Length);
+        }
+
+        public static Color GetColorForEqualSerializeReference(int srIndex, int srCount)
+        {
+            var hue = srCount == 0 ? 0 : (float)srIndex / srCount;
             return Color.HSVToRGB(hue, 0.8f, 0.8f);
         }
 
@@ -257,8 +260,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
         }
 
         #endregion
-        
-        
+
 
         #region OpenSource
 
@@ -274,7 +276,6 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
         }
 
         #endregion
-
 
 
         #region SearchTool

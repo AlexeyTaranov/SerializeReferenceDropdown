@@ -1,0 +1,4 @@
+.toolbar-label {
+    color: rgb(196, 196, 196);
+    -unity-text-align: middle-left;
+}

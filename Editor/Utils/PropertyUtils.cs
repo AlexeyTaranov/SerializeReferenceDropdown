@@ -5,7 +5,7 @@ namespace SerializeReferenceDropdown.Editor.Utils
 {
     public static class PropertyUtils
     {
-        //TODO Need make better
+        //TODO Need make better - some bugs with iteration here. Need to fix later - maybe...
         public static bool TraverseProperty(SerializedProperty property, string path,
             Func<SerializedProperty, bool> isCompleteFunc)
         {
