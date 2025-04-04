@@ -1,4 +1,59 @@
-.toolbar-label {
-    color: rgb(196, 196, 196);
-    -unity-text-align: middle-left;
+.bold-label {
+    -unity-font-style: bold;
+}
+
+.property-label {
+    min-width: 120px;
+    align-self: center;
+}
+
+.property-group {
+    flex-grow: 1;
+    flex-direction: row;
+    align-items: center;
+}
+
+.list-header {
+    padding-top: 2px;
+    padding-right: 2px;
+    padding-bottom: 2px;
+    padding-left: 2px;
+    flex-direction: row;
+    background-color: rgb(37, 37, 37);
+    flex-grow: 0;
+    flex-shrink: 1;
+}
+
+.list-size {
+    min-width: 200px;
+}
+
+.placeholder {
+    flex-grow: 1;
+    -unity-text-align: middle-center;
+    font-size: 18px;
+    background-color: rgba(103, 103, 103, 0.25);
+    display: none;
+}
+
+.group-root {
+    flex-grow: 0;
+    flex-shrink: 0;
+    margin: 8px;
+}
+
+.list-size {
+    min-width: 200px;
+}
+
+.maximize-size {
+    flex-grow: 1;
+}
+
+.group-margin {
+    margin: 8px;
+    margin-top: 2px;
+    margin-right: 2px;
+    margin-bottom: 2px;
+    margin-left: 2px;
 }

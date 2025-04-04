@@ -118,7 +118,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             }
         }
 
-        private void CreateAndApplyNewInstanceFromType(Type type, SerializedProperty property)
+        private static void CreateAndApplyNewInstanceFromType(Type type, SerializedProperty property)
         {
             var newObject = TypeUtils.CreateObjectFromType(type);
             ApplyValueToProperty(newObject);
@@ -248,7 +248,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             }
         }
 
-        private void FixCrossReference(SerializedProperty property)
+        public static void FixCrossReference(SerializedProperty property)
         {
             var json = JsonUtility.ToJson(property.managedReferenceValue);
             CreateAndApplyNewInstanceFromType(property.managedReferenceValue.GetType(), property);

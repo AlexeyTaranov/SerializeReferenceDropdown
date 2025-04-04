@@ -1,55 +1,61 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements"
-         xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements"
-         editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd"
-         editor-extension-mode="True">
-    <Style
-        src="project://database/Packages/com.alexeytaranov.serializereferencedropdown/Editor/Layouts/SearchToolStyle.uss?fileID=7433441132597879392&amp;guid=a9491872dc0164243a237871a3da5141&amp;type=3#SearchToolStyle" />
-    <ui:VisualElement>
-        <uie:Toolbar>
-            <uie:ToolbarButton text="Refresh" name="refreshDatabase" />
-            <uie:ToolbarSpacer />
-            <ui:Label text="Database. Last refresh:" class="toolbar-label" />
-            <ui:Label name="lastSearchRefresh" text="Date" class="toolbar-label" />
-        </uie:Toolbar>
-        <uie:Toolbar>
-            <ui:Label text="Type filter" class="toolbar-label" />
-            <uie:ToolbarSpacer />
-            <uie:ToolbarButton text="Type:" name="targetType" />
-            <uie:ToolbarSpacer />
-            <uie:ToolbarButton text="Clear" name="clearTargetType" />
-        </uie:Toolbar>
-        <ui:VisualElement style="flex-grow: 1; flex-direction: row;">
-            <ui:VisualElement class="list-selection">
-                <uie:Toolbar>
-                    <ui:Label text="Unity Objects" class="toolbar-label" />
-                </uie:Toolbar>
-                <ui:ListView name="unityObjects" />
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Packages/com.alexeytaranov.serializereferencedropdown/Editor/Layouts/SearchToolStyle.uss?fileID=7433441132597879392&amp;guid=aaabece9a65a94609ba1a1a174428104&amp;type=3#SearchToolStyle" />
+    <ui:VisualElement class="search-tool-root extend maximize-size">
+        <ui:VisualElement class="search-tool-group-root group-root">
+            <ui:Label text="Database" name="Label" class="search-tool-group-header-label bold-label" />
+            <ui:VisualElement class="search-tool-label-group property-group">
+                <ui:Label text="Last refresh" class="search-tool-label property-label" />
+                <ui:Button text="Refresh" name="refresh-database" />
+                <ui:Label name="last-search-refresh" text="Date" />
             </ui:VisualElement>
-            <ui:VisualElement name="componentsRoot" enabled="true">
-                <uie:Toolbar>
-                    <ui:Label text="Components" class="toolbar-label" />
-                </uie:Toolbar>
-                <ui:ListView name="components" />
+        </ui:VisualElement>
+        <ui:VisualElement class="search-tool-group-root group-root">
+            <ui:Label text="Type" class="search-tool-group-header-label bold-label" />
+            <ui:VisualElement style="flex-direction: row;">
+                <ui:Label text="Selected type" class="search-tool-label property-label" />
+                <ui:Button text="Type:" name="target-type" />
+                <ui:Button text="Clear" name="clear-target-type" />
             </ui:VisualElement>
-            <ui:VisualElement name="refPropRoot">
-                <uie:Toolbar>
-                    <ui:Label text="Ref Properties" class="toolbar-label" />
-                </uie:Toolbar>
-                <ui:ListView name="referenceProperties" />
+        </ui:VisualElement>
+        <ui:VisualElement class="search-tool-group-root group-root">
+            <ui:Label text="Reference Selection" name="Settings" class="search-tool-group-header-label bold-label" />
+            <ui:VisualElement style="flex-direction: row;">
+                <ui:Label text="Reference type" class="search-tool-label property-label" />
+                <ui:ToggleButtonGroup style="align-self: center;">
+                    <ui:Button text="Property Path" name="select-props" />
+                    <ui:Button text="Reference ID" name="select-ids" />
+                </ui:ToggleButtonGroup>
             </ui:VisualElement>
-            <ui:VisualElement name="refIdsRoot">
-                <uie:Toolbar>
-                    <ui:Label text="Ref IDs" class="toolbar-label" />
-                </uie:Toolbar>
-                <ui:ListView name="referenceIDs" />
+        </ui:VisualElement>
+        <ui:VisualElement name="main-view" style="flex-grow: 1; flex-direction: row;">
+            <ui:VisualElement name="unity-objects-tab" class="list-selection list-objects-view list-unity-objects-parent list-size group-margin">
+                <ui:Label text="Unity Objects" name="header-label" class="header-label search-tool-list-header list-header" />
+                <ui:ListView name="unity-objects" fixed-item-height="18" class="list-view-scale maximize-size" />
             </ui:VisualElement>
-            <ui:VisualElement>
-                <uie:Toolbar>
-                    <ui:Label text="Data Editor" class="toolbar-label" />
-                </uie:Toolbar>
-                <uie:PropertyField name="serializeReferenceProperty" />
-                <ui:Button name="applyData" text="Apply" />
+            <ui:VisualElement enabled="true" name="unity-object-settings" class="list-view-scale maximize-size" style="flex-direction: row; display: flex;">
+                <ui:VisualElement name="components-root" enabled="true" class="list-size group-margin">
+                    <ui:Label text="Components" name="header-label" class="header-label search-tool-list-header list-header" />
+                    <ui:ListView name="components" fixed-item-height="18" class="maximize-size" />
+                </ui:VisualElement>
+                <ui:VisualElement class="list-size group-margin">
+                    <ui:VisualElement name="ref-props-root" class="maximize-size">
+                        <ui:Label text="Ref Properties" name="header-label" class="header-label search-tool-list-header list-header" />
+                        <ui:ListView name="ref-props" fixed-item-height="18" class="list-size maximize-size" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="ref-ids-root" class="maximize-size">
+                        <ui:Label text="Ref IDs" name="header-label" class="header-label search-tool-list-header list-header" />
+                        <ui:ListView name="ref-ids" fixed-item-height="18" class="list-size" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement class="list-size group-margin">
+                    <ui:Label text="Data Editor" name="header-label" class="header-label search-tool-list-header maximize-size list-header" style="flex-grow: 0;" />
+                    <ui:Label text="Edit property" name="edit-property-label" class="search-tool-label group-margin" />
+                    <uie:PropertyField name="edit-property" />
+                    <ui:Button name="apply-data" text="Apply" />
+                </ui:VisualElement>
+                <ui:Label text="Select any asset on Unity Objects Tab" name="non-selected-unity-object" class="non-selected-label search-tool-placeholder maximize-size placeholder" />
             </ui:VisualElement>
+            <ui:Label text="No assets. Need refresh Database" name="non-unity-objects" class="non-selected-label search-tool-placeholder maximize-size placeholder" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

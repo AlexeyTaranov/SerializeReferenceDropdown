@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using SerializeReferenceDropdown.Editor.Preferences;
 using SerializeReferenceDropdown.Editor.Utils;
@@ -13,7 +15,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
     public partial class SerializeReferencePropertyDrawer : PropertyDrawer
     {
         //TODO Need find better solution for check ui update and traverse all serialized properties
-        private static bool isDirtyUIToolkit;
+        private HashSet<Object> dirtySerializedObjects = new HashSet<Object>();
 
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
@@ -32,30 +34,26 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
         private void DrawUIToolkitTypeDropdown(VisualElement root, SerializedProperty property)
         {
-            var hideStyle = new StyleEnum<DisplayStyle> { value = DisplayStyle.None };
-            var visibleStyle = new StyleEnum<DisplayStyle> { value = DisplayStyle.Flex };
-            bool isNew = true;
-            var uiToolkitLayoutPath =
-                "Packages/com.alexeytaranov.serializereferencedropdown/Editor/Layouts/SerializeReferenceDropdown.uxml";
-            var visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(uiToolkitLayoutPath);
+            var treeAssetPath = Path.Combine(Paths.PackageLayouts, "SerializeReferenceDropdown.uxml");
+            var visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(treeAssetPath);
             root.Add(visualTreeAsset.Instantiate());
             var propertyField = root.Q<PropertyField>();
 
-            var selectTypeButton = root.Q<Button>("typeSelect");
+            var selectTypeButton = root.Q<Button>("type-select");
             selectTypeButton.clickable.clicked += ShowDropdown;
 
-            var fixCrossRefButton = root.Q<Button>("fixCrossReferences");
+            var fixCrossRefButton = root.Q<Button>("fix-cross-references");
             fixCrossRefButton.clickable.clicked += () =>
             {
                 MakeDirtyUIToolkit();
                 FixCrossReference(property);
             };
-            var openSourceFIleButton = root.Q<Button>("openSourceFile");
-            openSourceFIleButton.style.display = hideStyle;
+            var openSourceFIleButton = root.Q<Button>("open-source-file");
+            openSourceFIleButton.SetDisplayElement(false);
             openSourceFIleButton.clicked += () => { OpenSourceFile(property.managedReferenceValue.GetType()); };
 
-            var showSearchToolButton = root.Q<Button>("showSearchTool");
-            showSearchToolButton.style.display = hideStyle;
+            var showSearchToolButton = root.Q<Button>("show-search-tool");
+            showSearchToolButton.SetDisplayElement(false);
             showSearchToolButton.clicked += () =>
             {
                 var type = TypeUtils.ExtractTypeFromString(property.managedReferenceFullTypename);
@@ -65,8 +63,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             var propertyPath = property.propertyPath;
             assignableTypes ??= GetAssignableTypes(property);
             root.TrackSerializedObjectValue(property.serializedObject, UpdateDropdown);
-            UpdateDropdown(property.serializedObject);
-            isNew = false;
+            RefreshDropdown(property.serializedObject, true);
 
             void ShowDropdown()
             {
@@ -84,8 +81,12 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
             void UpdateDropdown(SerializedObject so)
             {
+                RefreshDropdown(so, false);
+            }
+
+            void RefreshDropdown(SerializedObject so, bool isNew)
+            {
                 var prop = so.FindProperty(propertyPath);
-                propertyField.BindProperty(prop);
                 var selectedType = TypeUtils.ExtractTypeFromString(prop.managedReferenceFullTypename);
                 var selectedTypeName = GetTypeName(selectedType);
                 selectTypeButton.text = selectedTypeName;
@@ -93,23 +94,22 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
                 if (SerializeReferenceToolsUserPreferences.GetOrLoadSettings().DisableOpenSourceFile == false)
                 {
-                    openSourceFIleButton.style.display =
-                        property.managedReferenceValue == null ? hideStyle : visibleStyle;
+                    openSourceFIleButton.SetDisplayElement(property.managedReferenceValue != null);
                 }
 
-                showSearchToolButton.style.display = selectedType != null ? visibleStyle : hideStyle;
-
-                if (isNew == false && isDirtyUIToolkit == false)
+                showSearchToolButton.SetDisplayElement(selectedType != null);
+                if (isNew == false && dirtySerializedObjects.Contains(so.targetObject) == false)
                 {
                     return;
                 }
-
+                
+                propertyField.BindProperty(prop);
                 selectTypeButton.style.color = new StyleColor(Color.white);
-                fixCrossRefButton.style.display = hideStyle;
+                fixCrossRefButton.SetDisplayElement(false);
 
                 if (IsHaveSameOtherSerializeReference(property))
                 {
-                    fixCrossRefButton.style.display = visibleStyle;
+                    fixCrossRefButton.SetDisplayElement(true);
                     var color = GetColorForEqualSerializeReference(property);
                     selectTypeButton.style.color = color;
                 }
@@ -117,8 +117,9 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
             void MakeDirtyUIToolkit()
             {
-                isDirtyUIToolkit = true;
-                EditorApplication.delayCall += () => { isDirtyUIToolkit = false; };
+                var target = property.serializedObject.targetObject;
+                dirtySerializedObjects.Add(target);
+                EditorApplication.delayCall += () => { dirtySerializedObjects.Remove(target); };
             }
         }
     }

@@ -2,17 +2,16 @@
          xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements"
          editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd"
          editor-extension-mode="True">
+    <Style
+        src="project://database/Packages/com.alexeytaranov.serializereferencedropdown/Editor/Layouts/SerializeReferenceToolStyle.uss?fileID=7433441132597879392&amp;guid=a9491872dc0164243a237871a3da5141&amp;type=3#SerializeReferenceToolStyle" />
     <ui:VisualElement>
-        <uie:PropertyField name="propertyField" style="min-height: 20px;" />
-        <ui:VisualElement name="DropdownGroup"
-                          style="position: absolute; left: 80px; right: 0; height: 18px; flex-direction: row; flex-wrap: nowrap;">
-            <ui:VisualElement style="flex-grow: 1;">
-                <ui:Button tabindex="-1" name="typeSelect" display-tooltip-when-elided="false"
-                           style="padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0;" />
-            </ui:VisualElement>
-            <ui:Button name="fixCrossReferences" text="Fix" tooltip="Fix Cross References" />
-            <ui:Button name="openSourceFile" text="#" tooltip="Open Source File" />
-            <ui:Button name="showSearchTool" text="Search" tooltip="Open Search Tool" />
+        <uie:PropertyField name="property-field" class="serialize-reference-dropdown-property" />
+        <ui:VisualElement name="dropdown-group" class="serialize-reference-dropdown-root">
+            <ui:Button tabindex="-1" name="type-select" display-tooltip-when-elided="false"
+                       class="serialize-reference-typeselect" />
+            <ui:Button name="fix-cross-references" text="Fix" tooltip="Fix Cross References" />
+            <ui:Button name="open-source-file" text="#" tooltip="Open Source File" />
+            <ui:Button name="show-search-tool" text="&gt;" tooltip="Open Search Tool" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
