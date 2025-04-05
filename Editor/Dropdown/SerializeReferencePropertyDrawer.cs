@@ -21,7 +21,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
         #region Dropdown
 
-        private string GetTypeName(Type type)
+        public static string GetTypeName(Type type)
         {
             if (type == null)
             {
@@ -140,7 +140,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                         previousJsonData = JsonUtility.ToJson(targetProperty.managedReferenceValue);
                     }
 
-                    if (needSaveData)
+                    if (needSaveData && value != null)
                     {
                         JsonUtility.FromJsonOverwrite(previousJsonData, value);
                     }

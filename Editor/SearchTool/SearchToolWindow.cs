@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using SerializeReferenceDropdown.Editor.Dropdown;
 using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
+using UnityEditor.IMGUI.Controls;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -34,6 +35,8 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
         private Action saveRefAction;
 
+        private (IReadOnlyList<Type> types, IReadOnlyList<string> names) selectedTypesData;
+
         private Action<SearchToolData.ReferenceIdData> selectRefIdAction;
         private Action<SearchToolData.ReferenceIdData> applyRefIdAction;
 
@@ -43,7 +46,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
         private Action<SearchToolData.PrefabComponentData> selectPrefabComponentDataAction;
         private Action<VisualElement, int> bindItemPrefabComponentDataAction;
 
-        private SearchToolData.UnityObjectReferenceData selectedUnityObjectRefData;
+        private (SearchToolData.UnityObjectReferenceData referenceData, Object unityObject) selectedUnityData;
 
 
         #region Window
@@ -106,6 +109,12 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             rootVisualElement.Q<Button>("apply-data").clicked += () => saveRefAction?.Invoke();
             rootVisualElement.Q<Button>("select-props").clicked += () => SetDisplayPropsOrIDs(true);
             rootVisualElement.Q<Button>("select-ids").clicked += () => SetDisplayPropsOrIDs(false);
+            rootVisualElement.Q<Toggle>("unity-objects-activate-prefabs")
+                .RegisterValueChangedCallback(evt => RefreshFilterSelection());
+            rootVisualElement.Q<Toggle>("unity-objects-activate-scriptableobjects")
+                .RegisterValueChangedCallback(evt => RefreshFilterSelection());
+            rootVisualElement.Q<ToolbarSearchField>("unity-objects-filter-name")
+                .RegisterValueChangedCallback(evt => RefreshFilterSelection());
 
             var property = rootVisualElement.Q<PropertyField>("edit-property");
             property.Bind(tempSO);
@@ -113,6 +122,8 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
             unityObjectsListView = rootVisualElement.Q<ListView>("unity-objects");
             MakeDefaultSingleListView(ref unityObjectsListView);
+            unityObjectsListView.makeItem = MakeUnityObjectItem;
+
             unityObjectsListView.bindItem = BindUnityObjectItem;
             unityObjectsListView.selectionChanged += SelectUnityObject;
             unityObjectsListView.itemsChosen += ChoseUnityObject;
@@ -139,8 +150,8 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
             void SetDisplayPropsOrIDs(bool isProps)
             {
-                rootVisualElement.Q<VisualElement>("ref-props-root").SetDisplayElement(isProps);
-                rootVisualElement.Q<VisualElement>("ref-ids-root").SetDisplayElement(isProps == false);
+                refPropertiesListView.SetDisplayElement(isProps);
+                refIdsListView.SetDisplayElement(isProps == false);
                 refIdsListView.ClearSelection();
                 refIdsListView.RefreshItems();
                 refPropertiesListView.ClearSelection();
@@ -156,13 +167,30 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 listView.selectionType = SelectionType.Single;
             }
 
+            VisualElement MakeUnityObjectItem()
+            {
+                var root = new VisualElement();
+                var image = new Image();
+                root.Add(image);
+                root.Add(new Label());
+                image.style.maxWidth = new StyleLength(15);
+                root.style.flexDirection = new StyleEnum<FlexDirection>(FlexDirection.Row);
+                root.style.alignItems = new StyleEnum<Align>(Align.Center);
+                return root;
+            }
+
             void BindUnityObjectItem(VisualElement element, int i)
             {
-                if (element is Label label &&
+                var label = element.Q<Label>();
+                var icon = element.Q<Image>();
+                if (label != null && icon != null &&
                     unityObjectsListView.itemsSource[i] is SearchToolData.IAssetData assetData)
                 {
                     label.text = Path.GetFileNameWithoutExtension(assetData.AssetPath);
                     label.tooltip = assetData.AssetPath;
+                    var iconName = assetData is SearchToolData.PrefabData ? "d_Prefab Icon" : "d_ScriptableObject Icon";
+                    var guiContent = EditorGUIUtility.IconContent(iconName);
+                    icon.image = guiContent.image;
                 }
             }
 
@@ -215,19 +243,24 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 if (label != null &&
                     refPropertiesListView.itemsSource[i] is SearchToolData.ReferencePropertyData propertyData)
                 {
-                    var isHaveSameRefId = selectedUnityObjectRefData.RefPropertiesData.Count(t =>
+                    var isHaveSameRefId = selectedUnityData.referenceData.RefPropertiesData.Count(t =>
                         t.assignedReferenceId == propertyData.assignedReferenceId) > 1;
+                    var fixButton = element.Q<Button>();
                     if (isHaveSameRefId)
                     {
-                        var index = selectedUnityObjectRefData.RefIdsData.FindIndex(t =>
+                        var index = selectedUnityData.referenceData.RefIdsData.FindIndex(t =>
                             t.referenceId == propertyData.assignedReferenceId);
                         var equalsColor = SerializeReferencePropertyDrawer.GetColorForEqualSerializeReference(index,
-                            selectedUnityObjectRefData.RefIdsData.Count);
+                            selectedUnityData.referenceData.RefIdsData.Count);
                         label.style.color = equalsColor;
-                        var fixButton = element.Q<Button>();
-                        fixButton.SetDisplayElement(true);
                         fixButton.clicked += () => FixCrossReference(propertyData);
                     }
+                    else
+                    {
+                        label.style.color = new StyleColor() { value = Color.white };
+                    }
+
+                    fixButton.SetDisplayElement(isHaveSameRefId);
 
                     label.text = $"{propertyData.propertyPath} - {propertyData.propertyType.Name}";
                     label.tooltip = $"Type: {propertyData.propertyType.FullName}\n" +
@@ -258,6 +291,63 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
         #region Selection
 
+        private void RefreshFilterSelection()
+        {
+            refIdsListView.itemsSource.Clear();
+            refIdsListView.ClearSelection();
+            refIdsListView.RefreshItems();
+
+            refPropertiesListView.itemsSource.Clear();
+            refPropertiesListView.ClearSelection();
+            refPropertiesListView.RefreshItems();
+
+            componentsListView.itemsSource.Clear();
+            componentsListView.ClearSelection();
+            componentsListView.RefreshItems();
+
+            unityObjectsListView.itemsSource.Clear();
+            unityObjectsListView.ClearSelection();
+
+            if (lastSearchData != null)
+            {
+                var activatePrefabs = rootVisualElement.Q<Toggle>("unity-objects-activate-prefabs").value;
+                var activateSOs = rootVisualElement.Q<Toggle>("unity-objects-activate-scriptableobjects").value;
+                var searchFilter = rootVisualElement.Q<ToolbarSearchField>("unity-objects-filter-name").value;
+
+                var prefabData = lastSearchData.PrefabsData.Where(ApplyPrefabFilter);
+                var soData = lastSearchData.SOsData.Where(ApplySOFilter);
+
+                soData.ForEach(so => unityObjectsListView.itemsSource.Add(so));
+                prefabData.ForEach(p => unityObjectsListView.itemsSource.Add(p));
+
+                bool ApplySOFilter(SearchToolData.ScriptableObjectData so)
+                {
+                    var isHaveType = so.RefIdsData.Any(IsTargetType);
+                    var isCorrectName = Path.GetFileNameWithoutExtension(so.AssetPath).ToLower()
+                        .Contains(searchFilter.ToLower());
+                    var isActive = activateSOs && isHaveType && isCorrectName;
+                    return isActive;
+                }
+
+                bool ApplyPrefabFilter(SearchToolData.PrefabData p)
+                {
+                    var isHaveType = p.componentsData.FirstOrDefault(c => c.RefIdsData.Any(IsTargetType)) != null;
+                    var isCorrectName = Path.GetFileNameWithoutExtension(p.AssetPath).ToLower()
+                        .Contains(searchFilter.ToLower());
+                    var isActive = activatePrefabs && isHaveType && isCorrectName;
+                    return isActive;
+                }
+            }
+
+            unityObjectsListView.RefreshItems();
+            var nonUnityObjects = rootVisualElement.Q<Label>("non-unity-objects");
+            nonUnityObjects.SetActiveEmptyPlaceholder(lastSearchData == null ||
+                                                      (lastSearchData.PrefabsData.Count == 0 &&
+                                                       lastSearchData.SOsData.Count == 0));
+
+            ClearSaveRefId();
+        }
+
         private void SelectUnityObject(IEnumerable<object> objects)
         {
             var nonSelectedUnityObject = rootVisualElement.Q<Label>("non-selected-unity-object");
@@ -280,15 +370,15 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
         private void SelectScriptableObject(SearchToolData.ScriptableObjectData soData)
         {
-            selectedUnityObjectRefData = soData;
             AddUnityReferenceData(soData);
-            var asset = AssetDatabase.LoadAssetAtPath<Object>(soData.AssetPath);
-            selectRefIdAction = data => { SelectRefId(asset, data, SaveCallback); };
-            selectRefPropertyAction = data => { SelectRefProperty(asset, data, SaveCallback); };
+            var so = AssetDatabase.LoadAssetAtPath<Object>(soData.AssetPath);
+            selectedUnityData = (soData, so);
+            selectRefIdAction = data => { SelectRefId(so, data, SaveCallback); };
+            selectRefPropertyAction = data => { SelectRefProperty(so, data, SaveCallback); };
 
             void SaveCallback()
             {
-                EditorUtility.SetDirty(asset);
+                EditorUtility.SetDirty(so);
             }
         }
 
@@ -316,11 +406,11 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             componentsListView.RefreshListViewData(prefabData.componentsData);
             selectPrefabComponentDataAction = data =>
             {
-                selectedUnityObjectRefData = data;
                 ClearSaveRefId();
                 var targetComponent = GetTargetComponent(data);
                 if (targetComponent != null)
                 {
+                    selectedUnityData = (data, targetComponent);
                     AddUnityReferenceData(data);
                 }
             };
@@ -400,6 +490,8 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 propertyEdit.Dispose();
                 propertyEdit = null;
             }
+            
+            rootVisualElement.Q<Label>("edit-property-label").text = String.Empty;
         }
 
         private void SelectRefId(Object asset, SearchToolData.ReferenceIdData idData, Action saveCallback)
@@ -475,7 +567,11 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
         private void FixCrossReference(SearchToolData.ReferencePropertyData propertyData)
         {
-            //TODO Implement
+            var so = new SerializedObject(selectedUnityData.unityObject);
+            var property = so.FindProperty(propertyData.propertyPath);
+            SerializeReferencePropertyDrawer.FixCrossReference(property);
+            FillReferenceDataFromUnityObject(selectedUnityData.unityObject, selectedUnityData.referenceData);
+            AddUnityReferenceData(selectedUnityData.referenceData);
         }
 
         #endregion
@@ -511,7 +607,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             {
                 var so = AssetDatabase.LoadMainAssetAtPath(path);
                 var soData = new SearchToolData.ScriptableObjectData() { AssetPath = path };
-                FillData(so, soData);
+                FillReferenceDataFromUnityObject(so, soData);
                 if (soData.RefIdsData.Any())
                 {
                     searchData.SOsData.Add(soData);
@@ -544,7 +640,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                     {
                         InstanceId = component.GetInstanceID()
                     };
-                    FillData(component, componentData);
+                    FillReferenceDataFromUnityObject(component, componentData);
                     if (componentData.RefIdsData.Any())
                     {
                         prefabData.componentsData.Add(componentData);
@@ -558,55 +654,56 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
                 return false;
             }
+        }
 
-            void FillData(Object unityObject, SearchToolData.UnityObjectReferenceData refData)
+        private void FillReferenceDataFromUnityObject(Object unityObject,
+            SearchToolData.UnityObjectReferenceData refData)
+        {
+            refData.RefIdsData = GetReferenceIdsListFromObject();
+            refData.RefPropertiesData = GetReferencePropertiesListFromObject();
+
+            List<SearchToolData.ReferenceIdData> GetReferenceIdsListFromObject()
             {
-                refData.RefIdsData = GetReferenceIdsListFromObject();
-                refData.RefPropertiesData = GetReferencePropertiesListFromObject();
-
-                List<SearchToolData.ReferenceIdData> GetReferenceIdsListFromObject()
+                var ids = ManagedReferenceUtility.GetManagedReferenceIds(unityObject);
+                var referenceList = new List<SearchToolData.ReferenceIdData>();
+                foreach (var id in ids)
                 {
-                    var ids = ManagedReferenceUtility.GetManagedReferenceIds(unityObject);
-                    var referenceList = new List<SearchToolData.ReferenceIdData>();
-                    foreach (var id in ids)
+                    var type = ManagedReferenceUtility.GetManagedReference(unityObject, id)?.GetType();
+                    if (type != null)
                     {
-                        var type = ManagedReferenceUtility.GetManagedReference(unityObject, id)?.GetType();
-                        if (type != null)
+                        referenceList.Add(new SearchToolData.ReferenceIdData()
                         {
-                            referenceList.Add(new SearchToolData.ReferenceIdData()
-                            {
-                                objectType = type,
-                                referenceId = id,
-                            });
-                        }
+                            objectType = type,
+                            referenceId = id,
+                        });
                     }
-
-                    return referenceList;
                 }
 
-                List<SearchToolData.ReferencePropertyData> GetReferencePropertiesListFromObject()
+                return referenceList;
+            }
+
+            List<SearchToolData.ReferencePropertyData> GetReferencePropertiesListFromObject()
+            {
+                var propertiesData = new List<SearchToolData.ReferencePropertyData>();
+                using var so = new SerializedObject(unityObject);
+                using var iterator = so.GetIterator();
+                iterator.NextVisible(true);
+                PropertyUtils.TraverseProperty(iterator, string.Empty, FillPropertiesData);
+                return propertiesData.Distinct().ToList();
+
+                bool FillPropertiesData(SerializedProperty property)
                 {
-                    var propertiesData = new List<SearchToolData.ReferencePropertyData>();
-                    using var so = new SerializedObject(unityObject);
-                    using var iterator = so.GetIterator();
-                    iterator.NextVisible(true);
-                    PropertyUtils.TraverseProperty(iterator, string.Empty, FillPropertiesData);
-                    return propertiesData.Distinct().ToList();
-
-                    bool FillPropertiesData(SerializedProperty property)
+                    if (property.managedReferenceValue != null)
                     {
-                        if (property.managedReferenceValue != null)
+                        propertiesData.Add(new SearchToolData.ReferencePropertyData()
                         {
-                            propertiesData.Add(new SearchToolData.ReferencePropertyData()
-                            {
-                                assignedReferenceId = property.managedReferenceId,
-                                propertyPath = property.propertyPath,
-                                propertyType = property.managedReferenceValue.GetType()
-                            });
-                        }
-
-                        return false;
+                            assignedReferenceId = property.managedReferenceId,
+                            propertyPath = property.propertyPath,
+                            propertyType = property.managedReferenceValue.GetType()
+                        });
                     }
+
+                    return false;
                 }
             }
         }
@@ -647,6 +744,9 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
         {
             var lastRefreshDate = searchDataRefreshTime.ToString("G");
             var refreshDateText = $"{lastRefreshDate}";
+            rootVisualElement.Q<Toggle>("unity-objects-activate-prefabs").SetValueWithoutNotify(true);
+            rootVisualElement.Q<Toggle>("unity-objects-activate-scriptableobjects").SetValueWithoutNotify(true);
+            rootVisualElement.Q<ToolbarSearchField>("unity-objects-filter-name").SetValueWithoutNotify(String.Empty);
             rootVisualElement.Q<Label>("last-search-refresh").text = refreshDateText;
 
             lastSearchData = searchToolData;
@@ -661,33 +761,59 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
         {
             selectedType = type;
             var button = rootVisualElement.Q<Button>("target-type");
-            button.text = $"Type: {selectedType.Name}";
-            button.tooltip = $"Type FullName: {selectedType.FullName}";
+            button.clicked += ShowAssignableTypes;
+            AssignTypeTextToButton(selectedType, button);
 
-            refIdsListView.itemsSource.Clear();
-            refIdsListView.ClearSelection();
-            refIdsListView.RefreshItems();
-
-            componentsListView.itemsSource.Clear();
-            componentsListView.ClearSelection();
-            componentsListView.RefreshItems();
-
-            unityObjectsListView.itemsSource.Clear();
-            unityObjectsListView.ClearSelection();
-            if (lastSearchData != null)
+            var interfacesRoot = rootVisualElement.Q<VisualElement>("target-type-interfaces-root");
+            var previousButtons = interfacesRoot.Query<Button>().ToList();
+            foreach (var previousButton in previousButtons)
             {
-                var soData = lastSearchData.SOsData.Where(so => so.RefIdsData.Any(IsTargetType));
-                var prefabData = lastSearchData.PrefabsData.Where(p =>
-                    p.componentsData.FirstOrDefault(c => c.RefIdsData.Any(IsTargetType)) != null);
-                soData.ForEach(so => unityObjectsListView.itemsSource.Add(so));
-                prefabData.ForEach(p => unityObjectsListView.itemsSource.Add(p));
+                interfacesRoot.Remove(previousButton);
             }
 
-            unityObjectsListView.RefreshItems();
-            var nonUnityObjects = rootVisualElement.Q<Label>("non-unity-objects");
-            nonUnityObjects.SetActiveEmptyPlaceholder(unityObjectsListView.itemsSource.Count == 0);
+            var typeInterfaces = selectedType.GetInterfaces();
+            foreach (var typeInterface in typeInterfaces)
+            {
+                var typeButton = new Button();
+                AssignTypeTextToButton(typeInterface, typeButton);
+                typeButton.clicked += () => SetNewType(typeInterface);
+                interfacesRoot.Add(typeButton);
+            }
 
-            ClearSaveRefId();
+            RefreshFilterSelection();
+
+            void AssignTypeTextToButton(Type t, Button b)
+            {
+                b.text = $"Type: {t.Name}";
+                b.tooltip = $"Type FullName: {t.FullName}";
+            }
+        }
+
+        private void ShowAssignableTypes()
+        {
+            if (selectedTypesData.types == null)
+            {
+                var typesList = new List<Type>();
+                var allTypes = TypeUtils.GetAllTypesInCurrentDomain();
+                var interfaces = allTypes.Where(t => (t.IsInterface || t.IsAbstract) && t.IsGenericType == false);
+                var nonUnityObjectTypes =
+                    allTypes.Where(t => t.IsClass && t.IsSubclassOf(typeof(UnityEngine.Object)) == false);
+                typesList.AddRange(interfaces);
+                typesList.AddRange(nonUnityObjectTypes);
+                selectedTypesData.types = typesList;
+                selectedTypesData.names = typesList.Select(SerializeReferencePropertyDrawer.GetTypeName).ToArray();
+            }
+
+
+            //TODO: replace with searchservice
+            var dropdown = new SerializeReferenceAdvancedDropdown(new AdvancedDropdownState(), selectedTypesData.names,
+                index => { SetNewType(selectedTypesData.types[index]); });
+
+            var button = rootVisualElement.Q<Button>("target-type");
+            var buttonMatrix = button.worldTransform;
+            var buttonPos = new Vector3(buttonMatrix.m03, buttonMatrix.m13, buttonMatrix.m23);
+            var buttonRect = new Rect(buttonPos, button.contentRect.size);
+            dropdown.Show(buttonRect);
         }
 
         private bool IsTargetType(SearchToolData.ReferenceIdData referenceIdData)

@@ -137,8 +137,7 @@ namespace SerializeReferenceDropdown.Editor.Utils
         }
 
         private static IReadOnlyList<Type> systemObjectTypes;
-
-
+        
         public static IReadOnlyList<Type> GetAllSystemObjectTypes()
         {
             if (systemObjectTypes == null)
@@ -158,7 +157,6 @@ namespace SerializeReferenceDropdown.Editor.Utils
                 bool IsValidTypeForGenericParameter(Type t)
                 {
                     var isUnityObjectType = t.IsSubclassOf(typeof(UnityEngine.Object));
-
                     var isFinalSerializeType = !t.IsAbstract && !t.IsInterface && !t.IsGenericType && t.IsSerializable;
                     var isEnum = t.IsEnum;
                     var isTargetType = playerAssemblies.Any(asm => t.Assembly.FullName.StartsWith(asm)) ||
