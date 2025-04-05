@@ -35,8 +35,6 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
         private Action saveRefAction;
 
-        private (IReadOnlyList<Type> types, IReadOnlyList<string> names) selectedTypesData;
-
         private Action<SearchToolData.ReferenceIdData> selectRefIdAction;
         private Action<SearchToolData.ReferenceIdData> applyRefIdAction;
 
@@ -323,8 +321,8 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 bool ApplySOFilter(SearchToolData.ScriptableObjectData so)
                 {
                     var isHaveType = so.RefIdsData.Any(IsTargetType);
-                    var isCorrectName = Path.GetFileNameWithoutExtension(so.AssetPath).ToLower()
-                        .Contains(searchFilter.ToLower());
+                    var isCorrectName = Path.GetFileNameWithoutExtension(so.AssetPath).ToLowerInvariant()
+                        .Contains(searchFilter.ToLowerInvariant());
                     var isActive = activateSOs && isHaveType && isCorrectName;
                     return isActive;
                 }
@@ -332,8 +330,8 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 bool ApplyPrefabFilter(SearchToolData.PrefabData p)
                 {
                     var isHaveType = p.componentsData.FirstOrDefault(c => c.RefIdsData.Any(IsTargetType)) != null;
-                    var isCorrectName = Path.GetFileNameWithoutExtension(p.AssetPath).ToLower()
-                        .Contains(searchFilter.ToLower());
+                    var isCorrectName = Path.GetFileNameWithoutExtension(p.AssetPath).ToLowerInvariant()
+                        .Contains(searchFilter.ToLowerInvariant());
                     var isActive = activatePrefabs && isHaveType && isCorrectName;
                     return isActive;
                 }
@@ -490,7 +488,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 propertyEdit.Dispose();
                 propertyEdit = null;
             }
-            
+
             rootVisualElement.Q<Label>("edit-property-label").text = String.Empty;
         }
 
@@ -762,7 +760,8 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             selectedType = type;
             var button = rootVisualElement.Q<Button>("target-type");
             button.clicked += ShowAssignableTypes;
-            AssignTypeTextToButton(selectedType, button);
+            button.text = $"Type: {selectedType.Name}";
+            button.tooltip = $"Type FullName: {selectedType.FullName}";
 
             var interfacesRoot = rootVisualElement.Q<VisualElement>("target-type-interfaces-root");
             var previousButtons = interfacesRoot.Query<Button>().ToList();
@@ -774,46 +773,21 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             var typeInterfaces = selectedType.GetInterfaces();
             foreach (var typeInterface in typeInterfaces)
             {
-                var typeButton = new Button();
-                AssignTypeTextToButton(typeInterface, typeButton);
+                var typeButton = new Button
+                {
+                    text = $"{typeInterface.Name}",
+                    tooltip = $"FullName: {typeInterface.FullName}"
+                };
                 typeButton.clicked += () => SetNewType(typeInterface);
                 interfacesRoot.Add(typeButton);
             }
 
             RefreshFilterSelection();
-
-            void AssignTypeTextToButton(Type t, Button b)
-            {
-                b.text = $"Type: {t.Name}";
-                b.tooltip = $"Type FullName: {t.FullName}";
-            }
         }
 
         private void ShowAssignableTypes()
         {
-            if (selectedTypesData.types == null)
-            {
-                var typesList = new List<Type>();
-                var allTypes = TypeUtils.GetAllTypesInCurrentDomain();
-                var interfaces = allTypes.Where(t => (t.IsInterface || t.IsAbstract) && t.IsGenericType == false);
-                var nonUnityObjectTypes =
-                    allTypes.Where(t => t.IsClass && t.IsSubclassOf(typeof(UnityEngine.Object)) == false);
-                typesList.AddRange(interfaces);
-                typesList.AddRange(nonUnityObjectTypes);
-                selectedTypesData.types = typesList;
-                selectedTypesData.names = typesList.Select(SerializeReferencePropertyDrawer.GetTypeName).ToArray();
-            }
-
-
-            //TODO: replace with searchservice
-            var dropdown = new SerializeReferenceAdvancedDropdown(new AdvancedDropdownState(), selectedTypesData.names,
-                index => { SetNewType(selectedTypesData.types[index]); });
-
-            var button = rootVisualElement.Q<Button>("target-type");
-            var buttonMatrix = button.worldTransform;
-            var buttonPos = new Vector3(buttonMatrix.m03, buttonMatrix.m13, buttonMatrix.m23);
-            var buttonRect = new Rect(buttonPos, button.contentRect.size);
-            dropdown.Show(buttonRect);
+            SearchToolWindowSearchProvider.Show(SetNewType);
         }
 
         private bool IsTargetType(SearchToolData.ReferenceIdData referenceIdData)
