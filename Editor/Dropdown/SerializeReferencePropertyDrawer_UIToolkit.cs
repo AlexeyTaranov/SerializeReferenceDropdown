@@ -92,17 +92,15 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 selectTypeButton.text = selectedTypeName;
                 selectTypeButton.tooltip = $"Type Full Name: {selectedType?.FullName}";
 
-                if (SerializeReferenceToolsUserPreferences.GetOrLoadSettings().DisableOpenSourceFile == false)
-                {
-                    openSourceFIleButton.SetDisplayElement(property.managedReferenceValue != null);
-                }
+                openSourceFIleButton.SetDisplayElement(property.managedReferenceValue != null);
 
-                showSearchToolButton.SetDisplayElement(selectedType != null);
+                var activeSearchTool = SerializeReferenceToolsUserPreferences.GetOrLoadSettings().EnableSearchTool;
+                showSearchToolButton.SetDisplayElement(selectedType != null && activeSearchTool);
                 if (isNew == false && dirtySerializedObjects.Contains(so.targetObject) == false)
                 {
                     return;
                 }
-                
+
                 propertyField.BindProperty(prop);
                 selectTypeButton.style.color = new StyleColor(Color.white);
                 fixCrossRefButton.SetDisplayElement(false);

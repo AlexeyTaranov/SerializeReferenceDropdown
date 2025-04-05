@@ -29,11 +29,12 @@ namespace SerializeReferenceDropdown.Editor.Preferences
         {
             EditorGUI.BeginChangeCheck();
 
-            preferences.DisableCrossReferencesCheck = GUILayout.Toggle(preferences.DisableCrossReferencesCheck,
-                "Disable Cross References Check");
-            preferences.DisableOpenSourceFile = GUILayout.Toggle(preferences.DisableOpenSourceFile, "Disable Open Source File");
-            preferences.CopyDataWithNewType =
-                GUILayout.Toggle(preferences.CopyDataWithNewType, "Copy Data With New Type");
+            preferences.CopyDataWithNewType = GUILayout.Toggle(preferences.CopyDataWithNewType, "Copy Data With New Type");
+            
+            EditorGUILayout.LabelField("Experimental", EditorStyles.boldLabel);
+            preferences.EnableCrossReferencesCheck = GUILayout.Toggle(preferences.EnableCrossReferencesCheck, "Enable Cross References Check");
+            preferences.EnableSearchTool = GUILayout.Toggle(preferences.EnableSearchTool, "Enable Search Tool");
+
 
             if (EditorGUI.EndChangeCheck())
             {

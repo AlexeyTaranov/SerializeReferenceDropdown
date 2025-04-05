@@ -181,7 +181,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
         private bool IsHaveSameOtherSerializeReference(SerializedProperty property)
         {
-            if (SerializeReferenceToolsUserPreferences.GetOrLoadSettings().DisableCrossReferencesCheck)
+            if (SerializeReferenceToolsUserPreferences.GetOrLoadSettings().EnableCrossReferencesCheck == false)
             {
                 return false;
             }
