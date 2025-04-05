@@ -264,7 +264,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
         #region OpenSource
 
-        private void OpenSourceFile(Type type)
+        public static void OpenSourceFile(Type type)
         {
             var (filePath, lineNumber, columnNumber) = CodeAnalysis.GetSourceFileLocation(type);
 

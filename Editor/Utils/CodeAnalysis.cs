@@ -41,7 +41,12 @@ namespace SerializeReferenceDropdown.Editor.Utils
                     }
 
                     var className = targetType.Name;
-                    var classMatch = Regex.Match(line, @"\bclass\s+" + className + @"\b");
+                    var typeMatch = "class";
+                    if (targetType.IsInterface)
+                    {
+                        typeMatch = "interface";
+                    }
+                    var classMatch = Regex.Match(line, $@"\b{typeMatch}\s+" + className + @"\b");
 
                     if (classMatch.Success && targetType.Namespace == foundNamespace)
                     {

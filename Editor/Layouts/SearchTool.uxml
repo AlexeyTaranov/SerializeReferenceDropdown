@@ -14,6 +14,7 @@
             <ui:VisualElement class="property-group">
                 <ui:Label text="Selected type" class="search-tool-label property-label" />
                 <ui:Button text="Type:" name="target-type" />
+                <ui:Button text="#" name="target-type-open-source" />
                 <ui:Button text="Clear" name="clear-target-type" />
             </ui:VisualElement>
             <ui:VisualElement name="target-type-interfaces-root" class="property-group">

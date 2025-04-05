@@ -113,6 +113,8 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 .RegisterValueChangedCallback(evt => RefreshFilterSelection());
             rootVisualElement.Q<ToolbarSearchField>("unity-objects-filter-name")
                 .RegisterValueChangedCallback(evt => RefreshFilterSelection());
+            rootVisualElement.Q<Button>("target-type").clicked += ShowAssignableTypes;
+            rootVisualElement.Q<Button>("target-type-open-source").clicked += OpenTargetTypeSourceFile;
 
             var property = rootVisualElement.Q<PropertyField>("edit-property");
             property.Bind(tempSO);
@@ -759,7 +761,6 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
         {
             selectedType = type;
             var button = rootVisualElement.Q<Button>("target-type");
-            button.clicked += ShowAssignableTypes;
             button.text = $"Type: {selectedType.Name}";
             button.tooltip = $"Type FullName: {selectedType.FullName}";
 
@@ -782,7 +783,15 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 interfacesRoot.Add(typeButton);
             }
 
+            var openSourceButton = rootVisualElement.Q<Button>("target-type-open-source");
+            openSourceButton.SetDisplayElement(type != typeof(object));
+
             RefreshFilterSelection();
+        }
+
+        private void OpenTargetTypeSourceFile()
+        {
+            SerializeReferencePropertyDrawer.OpenSourceFile(selectedType);
         }
 
         private void ShowAssignableTypes()
