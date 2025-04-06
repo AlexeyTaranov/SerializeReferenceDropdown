@@ -17,6 +17,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 {
     public class SearchToolWindow : EditorWindow
     {
+        private const string fileName = "SerializeReference_ToolSearch_DataCacheFile.txt";
         private static SearchToolWindow instance;
 
         private Type selectedType = typeof(object);
@@ -53,6 +54,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
         {
             var window = GetOrCreateWindow();
             window.SetNewType(type);
+            window.Focus();
         }
 
         private static SearchToolWindow GetOrCreateWindow()
@@ -308,6 +310,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             unityObjectsListView.itemsSource.Clear();
             unityObjectsListView.ClearSelection();
 
+            int referencesCount = 0;
             if (lastSearchData != null)
             {
                 var activatePrefabs = rootVisualElement.Q<Toggle>("unity-objects-activate-prefabs").value;
@@ -322,19 +325,20 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
                 bool ApplySOFilter(SearchToolData.ScriptableObjectData so)
                 {
-                    var isHaveType = so.RefIdsData.Any(IsTargetType);
+                    var refCount = so.RefIdsData.Count(IsTargetType);
                     var isCorrectName = Path.GetFileNameWithoutExtension(so.AssetPath).ToLowerInvariant()
                         .Contains(searchFilter.ToLowerInvariant());
-                    var isActive = activateSOs && isHaveType && isCorrectName;
+                    var isActive = activateSOs && refCount > 0 && isCorrectName;
                     return isActive;
                 }
 
                 bool ApplyPrefabFilter(SearchToolData.PrefabData p)
                 {
-                    var isHaveType = p.componentsData.FirstOrDefault(c => c.RefIdsData.Any(IsTargetType)) != null;
+                    var refCount = p.componentsData.Sum(c => c.RefIdsData.Count(IsTargetType));
+                    referencesCount += refCount;
                     var isCorrectName = Path.GetFileNameWithoutExtension(p.AssetPath).ToLowerInvariant()
                         .Contains(searchFilter.ToLowerInvariant());
-                    var isActive = activatePrefabs && isHaveType && isCorrectName;
+                    var isActive = activatePrefabs && refCount > 0 && isCorrectName;
                     return isActive;
                 }
             }
@@ -344,6 +348,8 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             nonUnityObjects.SetActiveEmptyPlaceholder(lastSearchData == null ||
                                                       (lastSearchData.PrefabsData.Count == 0 &&
                                                        lastSearchData.SOsData.Count == 0));
+
+            rootVisualElement.Q<Label>("target-type-references-count").text = referencesCount.ToString();
 
             ClearSaveRefId();
         }
@@ -711,8 +717,8 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
         private string GetFilePath()
         {
-            var path = Path.Combine($"{Application.persistentDataPath}",
-                "SerializeReference_ToolSearch_DataCacheFile.txt");
+            var editorLibraryPath = Path.Combine(Application.dataPath, "../Library");
+            var path = Path.Combine(editorLibraryPath, fileName);
             return path;
         }
 

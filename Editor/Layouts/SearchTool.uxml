@@ -12,6 +12,10 @@
         <ui:VisualElement class="search-tool-group-root group-root">
             <ui:Label text="Type filter" class="search-tool-group-header-label bold-label" />
             <ui:VisualElement class="property-group">
+                <ui:Label text="References count" class="search-tool-label property-label" />
+                <ui:Label text="?" name="target-type-references-count" class="search-tool-label property-label" />
+            </ui:VisualElement>
+            <ui:VisualElement class="property-group">
                 <ui:Label text="Selected type" class="search-tool-label property-label" />
                 <ui:Button text="Type:" name="target-type" />
                 <ui:Button text="#" name="target-type-open-source" />
