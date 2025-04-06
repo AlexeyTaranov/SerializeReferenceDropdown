@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
+using UnityEditor;
 using UnityEngine;
 
 namespace SerializeReferenceDropdown.Editor.Utils
@@ -9,10 +10,9 @@ namespace SerializeReferenceDropdown.Editor.Utils
     {
         public static (string filePath, int lineNumber, int columnNumber) GetSourceFileLocation(Type targetType)
         {
-            var iterator = new FileIterator(AnalyseSourceFile)
+            var iterator = new FileIterator<MonoScript>(AnalyseSourceFile)
             {
                 ProgressBarLabel = "Open Source File",
-                FileNameExtension = "cs",
                 ProgressBarInfoPrefix = "Analyze source file data"
             };
             
@@ -20,13 +20,13 @@ namespace SerializeReferenceDropdown.Editor.Utils
             var lineNumber = -1;
             var columnNumber = -1;
 
-            iterator.IterateOnUnityProjectFiles();
+            iterator.IterateOnUnityAssetFiles();
 
             return (filePath, lineNumber, columnNumber);
 
-            bool AnalyseSourceFile(string fullFilePath)
+            bool AnalyseSourceFile(string scriptPath)
             {
-                using var reader = new StreamReader(fullFilePath);
+                using var reader = new StreamReader(scriptPath);
                 var currentLine = 0;
 
                 var foundNamespace = String.Empty;
@@ -41,13 +41,17 @@ namespace SerializeReferenceDropdown.Editor.Utils
                     }
 
                     var className = targetType.Name;
-                    var classMatch = Regex.Match(line, @"\bclass\s+" + className + @"\b");
+                    var typeMatch = "class";
+                    if (targetType.IsInterface)
+                    {
+                        typeMatch = "interface";
+                    }
+                    var classMatch = Regex.Match(line, $@"\b{typeMatch}\s+" + className + @"\b");
 
                     if (classMatch.Success && targetType.Namespace == foundNamespace)
                     {
                         columnNumber = classMatch.Index + 1;
-                        filePath = fullFilePath.Replace(Application.dataPath, "");
-                        filePath = $"Assets{filePath}";
+                        filePath = scriptPath;
                         lineNumber = currentLine;
                         return true;
                     }

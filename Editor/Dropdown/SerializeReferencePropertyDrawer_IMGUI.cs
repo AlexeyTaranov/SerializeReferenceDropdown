@@ -52,7 +52,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             var style = EditorStyles.miniPullDown;
             if (isHaveOtherReference)
             {
-                var uniqueColor = GetColorForEqualSerializedReference(property);
+                var uniqueColor = GetColorForEqualSerializeReference(property);
                 style = new GUIStyle(EditorStyles.miniPullDown)
                     { normal = new GUIStyleState() { textColor = uniqueColor } };
             }

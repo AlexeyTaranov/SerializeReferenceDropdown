@@ -3,16 +3,26 @@
 ## (Unity) Editor dropdown for [SerializeReference](https://docs.unity3d.com/ScriptReference/SerializeReference.html "SerializeReference") Attribute. RefTo (Reference to SerializeReference).
 
 ### Features:
-
+- Select type for Serialize Reference
 - Copy/Paste context menu
-- Generic Serialize References (Unity 2023.2+)
-- RefTo type: References to Serialize Reference (Unity 2022.3+)
+- Generic Serialize References
+- RefTo type: References to Serialize Reference
+- Keep Data with new type
+- Fix cross references (WIP)
+- Open source file
+- Search Tool (WIP)
+- Rider Integration (WIP)
+
+WIP Features - available in preferences.
 
 ### Requirements:
 
-Unity 2019.3.0 and higher.
+#### Minimal:
+- Unity 2019+
 
-#### Recommends: [Unity 2021.2.0a19](https://unity3d.com/ru/unity/alpha/2021.2.0a19) and above (works better with scenes and examples)
+#### Recommended: 
+- Unity 2023+
+- Default UI Toolkit Inpsector
 
 <details>
 <summary>Why?</summary>
@@ -40,7 +50,9 @@ null the missing type will be preserved.
 https://github.com/AlexeyTaranov/SerializeReferenceDropdown.git
 ```
 
-### SerializeReferenceDropdown Example:
+## Select type for Serialize Reference:
+
+https://github.com/user-attachments/assets/43a6446d-1b4c-48d4-ab4b-de53dd3ba6ab
 
 <details>
 <summary>Code Example</summary>
@@ -81,12 +93,15 @@ public class Rectangle : IShape
 
  </details>
 
-[![](Documentation~/SerializeReferenceDropdown.gif "SerializeReferenceDropdown Example")](Documentation~/SerializeReferenceDropdown.gif "SerializeReferenceDropdown Example")
+## Copy/Paste context menu
+
+https://github.com/user-attachments/assets/96cb3d58-b9c1-4874-8048-fc55442b4446
 
 ## Generics (Unity 2023.2+)
 
 You can use generics . Unspecified arguments need select in additional window.
 
+![Generics](https://github.com/user-attachments/assets/2d4fa6ff-446d-472b-a570-230226bddbee)
 
 <details>
 <summary>Code Example</summary>
@@ -122,18 +137,14 @@ public class GenericKeyValuePair<TKeyData, TValueData> : ISimpleGenericData<TKey
 
 </details>
 
-[![](Documentation~/Generics.gif "SerializeReferenceDropdown Example")](Documentation~/SerializeReferenceDropdown.gif "SerializeReferenceDropdown Example")
-
-## Copy Paste context menu
-
-[![](Documentation~/CopyPaste.gif "Copy Paste Example")](Documentation~/CopyPaste.gif "Copy Paste Example")
-
-# RefTo (Unity 2023.2+) (Reference to SerializeReference)
+## RefTo type: References to Serialize Reference
 
 This class support references to Serialize References!
 You can assign RefTo with Drag and Drop or with context menu.
 
 Inspector will help avoid not to assign wrong object types, runtime type checks - "as operator" cast.
+
+https://github.com/user-attachments/assets/10aceba6-89c5-4582-8038-315307d0be6c
 
 ```csharp
 [SerializeField] private RefTo<IShape,MonoBehaviour> _refShape;
@@ -143,6 +154,25 @@ public void Execute()
     var sampleString = _refShape.Get()?.ToString();
 }    
 ```
+## Keep Data with new type
 
-[![](Documentation~/RefTo%20Example%202.gif "RefTo Example")](Documentation~/RefTo%20Example%202.gif "RefTo Example")
-[![](Documentation~/RefTo%20Example%203.gif "RefTo Example")](Documentation~/RefTo%20Example%203.gif "RefTo Example")
+https://github.com/user-attachments/assets/aa641d95-ae4a-4e6c-92a3-4ec6554833de
+
+## Fix cross references (WIP)
+
+https://github.com/user-attachments/assets/196cc3fe-0866-490c-99eb-14108a57f50f
+
+## Open source file
+
+https://github.com/user-attachments/assets/e7a5fe26-6df1-4c03-8688-a07b8219c41d
+
+## Search Tool (WIP)
+
+https://github.com/user-attachments/assets/fbf5460c-5ef8-4fde-b888-7943ac12378e
+
+
+##  Rider Integration (WIP)
+
+Rider plugin available here - https://github.com/AlexeyTaranov/SerializeReferenceDropdownIntegration
+
+https://github.com/user-attachments/assets/c50cb516-50c1-4663-ab71-b3fd3ad6ce2d
