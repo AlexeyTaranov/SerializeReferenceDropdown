@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using UnityEditor;
 using UnityEditor.Compilation;
 using UnityEngine;
@@ -12,6 +13,21 @@ namespace SerializeReferenceDropdown.Editor.Utils
     {
         private const string ArrayPropertySubstring = ".Array.data[";
         private static Dictionary<AppDomain, List<Type>> cachedDomainTypes = new Dictionary<AppDomain, List<Type>>();
+
+        public static object CreateObjectFromType(Type type)
+        {
+            object newObject;
+            if (type?.GetConstructor(Type.EmptyTypes) != null)
+            {
+                newObject = Activator.CreateInstance(type);
+            }
+            else
+            {
+                newObject = type != null ? FormatterServices.GetUninitializedObject(type) : null;
+            }
+
+            return newObject;
+        }
 
         public static Type ExtractTypeFromString(string typeName)
         {
@@ -121,8 +137,7 @@ namespace SerializeReferenceDropdown.Editor.Utils
         }
 
         private static IReadOnlyList<Type> systemObjectTypes;
-
-
+        
         public static IReadOnlyList<Type> GetAllSystemObjectTypes()
         {
             if (systemObjectTypes == null)
@@ -142,7 +157,6 @@ namespace SerializeReferenceDropdown.Editor.Utils
                 bool IsValidTypeForGenericParameter(Type t)
                 {
                     var isUnityObjectType = t.IsSubclassOf(typeof(UnityEngine.Object));
-
                     var isFinalSerializeType = !t.IsAbstract && !t.IsInterface && !t.IsGenericType && t.IsSerializable;
                     var isEnum = t.IsEnum;
                     var isTargetType = playerAssemblies.Any(asm => t.Assembly.FullName.StartsWith(asm)) ||

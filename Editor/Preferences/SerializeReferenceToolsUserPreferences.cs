@@ -9,20 +9,20 @@ namespace SerializeReferenceDropdown.Editor.Preferences
 
         private const string UserPreferencesPrefKey = "SerializeReferenceDropdown.Editor.UserPreferences";
 
-        [SerializeField] private bool disableCrossReferencesCheck;
-        [SerializeField] private bool disableOpenSourceFile;
+        [SerializeField] private bool enableCrossReferencesCheck;
+        [SerializeField] private bool enableSearchTool;
         [SerializeField] private bool copyDataWhenAssignNewType;
 
-        public bool DisableCrossReferencesCheck
+        public bool EnableCrossReferencesCheck
         {
-            get => disableCrossReferencesCheck;
-            set => disableCrossReferencesCheck = value;
+            get => enableCrossReferencesCheck;
+            set => enableCrossReferencesCheck = value;
         }
-
-        public bool DisableOpenSourceFile
+        
+        public bool EnableSearchTool
         {
-            get => disableOpenSourceFile;
-            set => disableOpenSourceFile = value;
+            get => enableSearchTool;
+            set => enableSearchTool = value;
         }
 
         public bool CopyDataWithNewType

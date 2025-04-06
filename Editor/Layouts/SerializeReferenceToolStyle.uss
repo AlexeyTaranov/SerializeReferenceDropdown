@@ -1,0 +1,70 @@
+.serialize-reference-dropdown-property {
+    min-height: 20px;
+}
+
+.serialize-reference-dropdown-root {
+    position: absolute;
+    left: 80px;
+    right: 0;
+    height: 18px;
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+.serialize-reference-typeselect {
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    flex-shrink: 1;
+    flex-grow: 1;
+}
+
+.refto-property-name {
+    max-width: 100px;
+    color: rgb(255, 255, 255);
+    flex-shrink: 1;
+}
+
+.refto-field-name {
+    max-width: 120px;
+    color: rgb(196, 196, 196);
+    padding-left: 8px;
+    display: none;
+}
+
+.refto-space {
+    flex-grow: 1;
+    max-width: 8px;
+    min-width: 2px;
+}
+
+.refto-ref-name {
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
+    background-color: rgb(88, 88, 88);
+    padding-right: 6px;
+    padding-left: 6px;
+    flex-shrink: 1;
+}
+
+.refto-groupbox-root {
+    flex-direction: row;
+    align-items: center;
+    background-color: rgb(62, 62, 62);
+    padding-top: 2px;
+    padding-bottom: 2px;
+    border-left-color: rgba(153, 153, 153, 0.5);
+    border-right-color: rgba(153, 153, 153, 0.5);
+    border-top-color: rgba(153, 153, 153, 0.5);
+    border-bottom-color: rgba(153, 153, 153, 0.5);
+    border-top-width: 1px;
+    border-right-width: 0;
+    border-bottom-width: 1px;
+    border-left-width: 0;
+    position: relative;
+}
+
+.refto-host-object {
+    flex-shrink: 1;
+}

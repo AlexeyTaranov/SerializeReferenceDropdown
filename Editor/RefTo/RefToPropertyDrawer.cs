@@ -1,5 +1,6 @@
 #if UNITY_2023_2_OR_NEWER
 using System;
+using System.IO;
 using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -70,13 +71,13 @@ namespace SerializeReferenceDropdown.Editor.RefTo
 
         private void DrawUIToolkit(VisualElement root, SerializedProperty property)
         {
-            var uiToolkitLayoutPath = "Packages/com.alexeytaranov.serializereferencedropdown/Editor/Layouts/RefTo.uxml";
-            var visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(uiToolkitLayoutPath);
+            var treeAssetPath = Path.Combine(Paths.PackageLayouts, "RefTo.uxml");
+            var visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(treeAssetPath);
             root.Add(visualTreeAsset.Instantiate());
 
             var (_, targetType, hostType, _, _) = RefToExtensions.GetInspectorValues(property);
 
-            var fieldName = root.Q<Label>("PropertyName");
+            var fieldName = root.Q<Label>("property-name");
             fieldName.text = ObjectNames.NicifyVariableName(property.name);
             fieldName.tooltip =
                 $"Field: {property.name} \nTarget Type: {targetType.Name} \nNamespace: {targetType.Namespace}";
@@ -94,7 +95,7 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             {
                 using var localProperty = so.FindProperty(propertyPath);
                 var (refType, _, _, host, isSameType) = RefToExtensions.GetInspectorValues(localProperty);
-                var refLabel = root.Q<Label>("RefName");
+                var refLabel = root.Q<Label>("ref-name");
                 var refTypeName = refType == null ? "null" : refType.Name;
                 refLabel.text = $"R:{refTypeName}";
                 refLabel.tooltip = $"Reference \nType: {refType?.Name} \nNamespace: {refType?.Namespace}";

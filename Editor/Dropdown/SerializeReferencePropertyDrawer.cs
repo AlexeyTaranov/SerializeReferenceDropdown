@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Serialization;
 using SerializeReferenceDropdown.Editor.Preferences;
+using SerializeReferenceDropdown.Editor.SearchTool;
 using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
 using UnityEngine;
@@ -21,7 +21,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
         #region Dropdown
 
-        private string GetTypeName(Type type)
+        public static string GetTypeName(Type type)
         {
             if (type == null)
             {
@@ -118,18 +118,9 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             }
         }
 
-        private void CreateAndApplyNewInstanceFromType(Type type, SerializedProperty property)
+        private static void CreateAndApplyNewInstanceFromType(Type type, SerializedProperty property)
         {
-            object newObject;
-            if (type?.GetConstructor(Type.EmptyTypes) != null)
-            {
-                newObject = Activator.CreateInstance(type);
-            }
-            else
-            {
-                newObject = type != null ? FormatterServices.GetUninitializedObject(type) : null;
-            }
-
+            var newObject = TypeUtils.CreateObjectFromType(type);
             ApplyValueToProperty(newObject);
 
             void ApplyValueToProperty(object value)
@@ -149,7 +140,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                         previousJsonData = JsonUtility.ToJson(targetProperty.managedReferenceValue);
                     }
 
-                    if (needSaveData)
+                    if (needSaveData && value != null)
                     {
                         JsonUtility.FromJsonOverwrite(previousJsonData, value);
                     }
@@ -165,28 +156,32 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
         #endregion
 
-        
-        
+
         #region CrossReferences
-        
+
         //TODO: need to find better solution
         private static readonly Dictionary<Object, HashSet<string>> targetObjectAndSerializeReferencePaths =
             new Dictionary<Object, HashSet<string>>();
 
         //TODO Make better unique colors for equal references
-        private static Color GetColorForEqualSerializedReference(SerializedProperty property)
+        private static Color GetColorForEqualSerializeReference(SerializedProperty property)
         {
             var refId = ManagedReferenceUtility.GetManagedReferenceIdForObject(property.serializedObject.targetObject,
                 property.managedReferenceValue);
             var refsArray = ManagedReferenceUtility.GetManagedReferenceIds(property.serializedObject.targetObject);
             var index = Array.FindIndex(refsArray, t => t == refId);
-            var hue = (float)index / refsArray.Length;
+            return GetColorForEqualSerializeReference(index, refsArray.Length);
+        }
+
+        public static Color GetColorForEqualSerializeReference(int srIndex, int srCount)
+        {
+            var hue = srCount == 0 ? 0 : (float)srIndex / srCount;
             return Color.HSVToRGB(hue, 0.8f, 0.8f);
         }
 
         private bool IsHaveSameOtherSerializeReference(SerializedProperty property)
         {
-            if (SerializeReferenceToolsUserPreferences.GetOrLoadSettings().DisableCrossReferencesCheck)
+            if (SerializeReferenceToolsUserPreferences.GetOrLoadSettings().EnableCrossReferencesCheck == false)
             {
                 return false;
             }
@@ -253,7 +248,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             }
         }
 
-        private void FixCrossReference(SerializedProperty property)
+        public static void FixCrossReference(SerializedProperty property)
         {
             var json = JsonUtility.ToJson(property.managedReferenceValue);
             CreateAndApplyNewInstanceFromType(property.managedReferenceValue.GetType(), property);
@@ -265,12 +260,11 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
         }
 
         #endregion
-        
-        
+
 
         #region OpenSource
 
-        private void OpenSourceFile(Type type)
+        public static void OpenSourceFile(Type type)
         {
             var (filePath, lineNumber, columnNumber) = CodeAnalysis.GetSourceFileLocation(type);
 
@@ -279,6 +273,16 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 var asset = AssetDatabase.LoadMainAssetAtPath(filePath);
                 AssetDatabase.OpenAsset(asset, lineNumber, columnNumber);
             }
+        }
+
+        #endregion
+
+
+        #region SearchTool
+
+        private void ShowSearchTool(Type type)
+        {
+            SearchToolWindow.ShowSearchTypeWindow(type);
         }
 
         #endregion
