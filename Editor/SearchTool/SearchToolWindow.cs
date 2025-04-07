@@ -4,9 +4,9 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using SerializeReferenceDropdown.Editor.Dropdown;
+using SerializeReferenceDropdown.Editor.Preferences;
 using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
-using UnityEditor.IMGUI.Controls;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -17,7 +17,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 {
     public class SearchToolWindow : EditorWindow
     {
-        private const string fileName = "SerializeReference_ToolSearch_DataCacheFile.txt";
+        private const string fileName = "SerializeReference_ToolSearch_DataCacheFile.json";
         private static SearchToolWindow instance;
 
         private Type selectedType = typeof(object);
@@ -742,6 +742,9 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 File.Delete(path);
             }
 
+            var settings = SerializeReferenceToolsUserPreferences.GetOrLoadSettings();
+            var port = settings.SearchToolIntegrationPort;
+            searchToolData.InteagrationPort = port;
             var json = JsonConvert.SerializeObject(searchToolData, Formatting.Indented);
             File.WriteAllText(path, json);
         }

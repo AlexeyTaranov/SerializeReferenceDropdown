@@ -1,61 +1,97 @@
 using System;
 using System.IO;
-using System.IO.Pipes;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using SerializeReferenceDropdown.Editor.Preferences;
 using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
-using UnityEngine;
 
 namespace SerializeReferenceDropdown.Editor.SearchTool
 {
     public static class SearchToolWindowIntegration
     {
+        private static (Thread thread, TcpListener listener) instance;
         private static Thread serverThread;
-
-        //TODO: expose to settings
-        private const int portIndex = 11000;
+        private static int? port;
+        
 
         [InitializeOnLoadMethod]
-        private static void Run()
+        public static void Run()
         {
+            EditorApplication.delayCall = TryFetchPort;
+            StopServer();
             serverThread = new Thread(StartServer)
             {
                 IsBackground = true
             };
             serverThread.Start();
         }
-        
+
+
+        private static void StopServer()
+        {
+            instance.listener?.Stop();
+            instance.thread?.Join();
+        }
+
 
         private static void StartServer()
         {
-            var listener = new TcpListener(IPAddress.Loopback, portIndex);
-            listener.Start();
-
-            while (true)
+            try
             {
-                using var client = listener.AcceptTcpClient();
-                using var stream = client.GetStream();
-                using var reader = new StreamReader(stream);
-                using var writer = new StreamWriter(stream) { AutoFlush = true };
-
-                string line = reader.ReadLine();
-                if (!string.IsNullOrEmpty(line))
+                while (port == null)
                 {
-                    Debug.Log($"[SRD] Command received: {line}");
-                    var values = line.Split('-');
-                    if (values.Length >= 2)
-                    {
-                        var cmd = values[0];
-                        var value = values[1];
+                    Thread.Sleep(TimeSpan.FromSeconds(1));
+                }
 
-                        if (cmd == "ShowSearchTypeWindow")
+                var listener = new TcpListener(IPAddress.Loopback, port.Value);
+                instance.listener = listener;
+                listener.Start();
+                Log.DevLog($"Start integration server on port - {port.Value}");
+
+                while (listener.Pending())
+                {
+                    using var client = listener.AcceptTcpClient();
+                    using var stream = client.GetStream();
+                    using var reader = new StreamReader(stream);
+                    using var writer = new StreamWriter(stream) { AutoFlush = true };
+
+                    var line = reader.ReadLine();
+                    if (!string.IsNullOrEmpty(line))
+                    {
+                        Log.DevLog($"Command received: {line}");
+                        var values = line.Split('-');
+                        if (values.Length >= 2)
                         {
-                            EditorApplication.delayCall += () => { ShowSearchWindow(value); };
+                            var cmd = values[0];
+                            var value = values[1];
+
+                            if (cmd == "ShowSearchTypeWindow")
+                            {
+                                EditorApplication.delayCall += () => { ShowSearchWindow(value); };
+                            }
                         }
                     }
                 }
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+                StopServer();
+            }
+        }
+
+        private static void TryFetchPort()
+        {
+            try
+            {
+                var settings = SerializeReferenceToolsUserPreferences.GetOrLoadSettings();
+                port = settings.SearchToolIntegrationPort;
+            }
+            catch (Exception e)
+            {
+                Log.DevError(e);
             }
         }
 

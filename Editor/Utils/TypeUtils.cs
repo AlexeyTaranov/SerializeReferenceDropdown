@@ -86,7 +86,7 @@ namespace SerializeReferenceDropdown.Editor.Utils
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError(e);
+                    Log.DevError(e);
                 }
             }
 

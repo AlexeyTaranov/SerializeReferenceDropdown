@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using SerializeReferenceDropdown.Editor.SearchTool;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace SerializeReferenceDropdown.Editor.Preferences
 {
@@ -9,6 +11,7 @@ namespace SerializeReferenceDropdown.Editor.Preferences
         private const string Path = "Preferences/Serialize Reference Tools";
 
         private readonly SerializeReferenceToolsUserPreferences preferences;
+        private int? startPort;
 
         private SerializedObject serializedObject;
 
@@ -29,17 +32,37 @@ namespace SerializeReferenceDropdown.Editor.Preferences
         {
             EditorGUI.BeginChangeCheck();
 
-            preferences.CopyDataWithNewType = GUILayout.Toggle(preferences.CopyDataWithNewType, "Copy Data With New Type");
-            
-            EditorGUILayout.LabelField("Experimental", EditorStyles.boldLabel);
-            preferences.EnableCrossReferencesCheck = GUILayout.Toggle(preferences.EnableCrossReferencesCheck, "Enable Cross References Check");
-            preferences.EnableSearchTool = GUILayout.Toggle(preferences.EnableSearchTool, "Enable Search Tool");
+            preferences.CopyDataWithNewType =
+                GUILayout.Toggle(preferences.CopyDataWithNewType, "Copy Data With New Type");
 
+            EditorGUILayout.LabelField("Experimental", EditorStyles.boldLabel);
+            preferences.EnableCrossReferencesCheck = GUILayout.Toggle(preferences.EnableCrossReferencesCheck,
+                "Enable Cross References Check");
+            preferences.EnableSearchTool = GUILayout.Toggle(preferences.EnableSearchTool, "Enable Search Tool");
+            preferences.SearchToolIntegrationPort =
+                EditorGUILayout.IntField("Search Tool Port", preferences.SearchToolIntegrationPort);
 
             if (EditorGUI.EndChangeCheck())
             {
                 preferences.SaveToEditorPrefs();
             }
+        }
+
+        public override void OnActivate(string searchContext, VisualElement rootElement)
+        {
+            base.OnActivate(searchContext, rootElement);
+            startPort = preferences.SearchToolIntegrationPort;
+        }
+
+        public override void OnDeactivate()
+        {
+            base.OnDeactivate();
+            if (startPort != null && startPort != preferences.SearchToolIntegrationPort)
+            {
+                SearchToolWindowIntegration.Run();
+            }
+
+            startPort = preferences.SearchToolIntegrationPort;
         }
     }
 }

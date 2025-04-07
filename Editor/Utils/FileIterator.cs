@@ -57,7 +57,7 @@ namespace SerializeReferenceDropdown.Editor.Utils
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError(e);
+                    Log.Error(e);
                 }
 
                 if (EditorUtility.DisplayCancelableProgressBar(ProgressBarLabel, info,

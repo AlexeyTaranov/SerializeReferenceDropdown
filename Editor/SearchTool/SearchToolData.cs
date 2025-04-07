@@ -6,6 +6,8 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
     [Serializable]
     public class SearchToolData
     {
+        //Need sync same port between rider and unity-server
+        public int InteagrationPort;
         public List<PrefabData> PrefabsData = new List<PrefabData>();
         public List<ScriptableObjectData> SOsData = new List<ScriptableObjectData>();
 
