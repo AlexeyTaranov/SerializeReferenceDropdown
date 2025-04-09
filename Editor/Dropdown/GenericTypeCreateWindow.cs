@@ -227,7 +227,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             }
             catch (Exception e)
             {
-                Debug.LogError(e);
+                Log.Error(e);
             }
 
             Close();

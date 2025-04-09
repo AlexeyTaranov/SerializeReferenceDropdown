@@ -54,7 +54,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             }
             catch (Exception e)
             {
-                // ignored
+                Log.DevError($"Failed paste value: {e}");
             }
         }
 

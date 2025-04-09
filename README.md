@@ -12,6 +12,8 @@
 - Open source file
 - Search Tool (WIP)
 - Rider Integration (WIP)
+- Check\Fix missing type (TODO)
+- Indirect rename types (TODO)
 
 WIP Features - available in preferences.
 

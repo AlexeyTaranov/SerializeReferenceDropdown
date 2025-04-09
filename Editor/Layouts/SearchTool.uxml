@@ -39,22 +39,22 @@
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement enabled="true" name="unity-object-settings" class="list-view-scale maximize-size flex-row">
-                <ui:VisualElement name="components-root" enabled="true" class="list-size group-margin">
+                <ui:VisualElement name="components-root" enabled="true" class="list-size group-margin maximize-size">
                     <ui:Label text="Components" name="header-label" class="header-label search-tool-list-header list-header" />
                     <ui:ListView name="components" fixed-item-height="18" class="maximize-size" />
                 </ui:VisualElement>
-                <ui:VisualElement class="list-size group-margin">
+                <ui:VisualElement class="group-margin maximize-size">
                     <ui:VisualElement name="ref-props-root" class="maximize-size">
                         <ui:Label text="Reference Selection" name="header-label" class="header-label search-tool-list-header list-header" />
                         <ui:ToggleButtonGroup class="group-margin">
-                            <ui:Button text="Property Path" name="select-props" />
-                            <ui:Button text="Reference ID" name="select-ids" />
+                            <ui:Button text="Property Path" name="select-props" class="maximize-size" />
+                            <ui:Button text="Reference ID" name="select-ids" class="maximize-size" />
                         </ui:ToggleButtonGroup>
                         <ui:ListView name="ref-props" fixed-item-height="18" class="list-size maximize-size" />
                         <ui:ListView name="ref-ids" fixed-item-height="18" class="list-size maximize-size" />
                     </ui:VisualElement>
                 </ui:VisualElement>
-                <ui:VisualElement class="list-size group-margin">
+                <ui:VisualElement class="group-margin list-size">
                     <ui:Label text="Data Editor" name="header-label" class="header-label search-tool-list-header list-header" />
                     <ui:Label text="Edit property" name="edit-property-label" class="search-tool-label group-margin" />
                     <uie:PropertyField name="edit-property" />
