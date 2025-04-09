@@ -423,7 +423,8 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 }
             };
 
-            componentsListView.RefreshListViewData(prefabData.componentsData);
+            var filteredComponents = prefabData.componentsData.Where(t => t.RefIdsData.Any(IsTargetType));
+            componentsListView.RefreshListViewData(filteredComponents);
             selectPrefabComponentDataAction = data =>
             {
                 ClearSaveRefId();
@@ -572,8 +573,15 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
         private void AddUnityReferenceData(SearchToolData.UnityObjectReferenceData referenceData)
         {
-            refIdsListView.RefreshListViewData(referenceData.RefIdsData);
-            refPropertiesListView.RefreshListViewData(referenceData.RefPropertiesData);
+            refIdsListView.RefreshListViewData(referenceData.RefIdsData.Where(IsTargetType));
+
+            refPropertiesListView.RefreshListViewData(referenceData.RefPropertiesData.Where(GetRefIdFromPropertyId));
+
+            bool GetRefIdFromPropertyId(SearchToolData.ReferencePropertyData property)
+            {
+                var refId = referenceData.RefIdsData.First(t => t.referenceId == property.assignedReferenceId);
+                return IsTargetType(refId);
+            }
         }
 
         private void ClearUnityReferenceData()

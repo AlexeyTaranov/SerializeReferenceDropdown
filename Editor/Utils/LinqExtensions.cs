@@ -14,7 +14,7 @@ namespace SerializeReferenceDropdown.Editor.Utils
             }
         }
 
-        public static void RefreshListViewData<T>(this ListView listView, IReadOnlyList<T> list)
+        public static void RefreshListViewData<T>(this ListView listView, IEnumerable<T> list)
         {
             listView.ClearSelection();
             listView.itemsSource.Clear();
