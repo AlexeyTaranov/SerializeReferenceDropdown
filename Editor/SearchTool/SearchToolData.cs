@@ -68,7 +68,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
         public class PrefabComponentData : UnityObjectReferenceData
         {
-            public int InstanceId;
+            public long FileId;
         }
 
         public class UnityObjectReferenceData

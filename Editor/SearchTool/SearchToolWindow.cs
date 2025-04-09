@@ -391,6 +391,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
         private void SelectPrefab(SearchToolData.PrefabData prefabData)
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabData.AssetPath);
+            var components = prefab.GetComponentsInChildren<Component>(true);
             ClearUnityReferenceData();
 
             bindItemPrefabComponentDataAction = (element, i) =>
@@ -401,11 +402,24 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                     var targetComponent = GetTargetComponent(data);
                     if (targetComponent != null)
                     {
-                        label.text = targetComponent.name;
+                        var goPath = GetGameObjectPath(targetComponent.gameObject);
+                        label.text = goPath;
                         label.tooltip = $"Name: {targetComponent.name}\n" +
-                                        $"Component type: {targetComponent.GetType().FullName}\n" +
-                                        $"Instance ID: {targetComponent.GetInstanceID()}\n";
+                                        $"Path: {goPath}\n" +
+                                        $"Component type: {targetComponent.GetType().FullName}\n";
                     }
+                }
+
+                string GetGameObjectPath(GameObject obj)
+                {
+                    var path = "/" + obj.name;
+                    while (obj.transform.parent != null)
+                    {
+                        obj = obj.transform.parent.gameObject;
+                        path = "/" + obj.name + path;
+                    }
+
+                    return path;
                 }
             };
 
@@ -451,24 +465,26 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 }
             };
 
-            SearchToolData.PrefabComponentData GetLastSelectedComponent()
-            {
-                var selectedData = componentsListView.itemsSource[componentsListView.selectedIndex];
-                return selectedData as SearchToolData.PrefabComponentData;
-            }
-
             Component GetTargetComponent(SearchToolData.PrefabComponentData prefabComponentData)
             {
-                var components = prefab.GetComponents<Component>();
-                var targetComponent =
-                    components?.FirstOrDefault(t => t.GetInstanceID() == prefabComponentData.InstanceId);
-                return targetComponent;
+                foreach (var component in components)
+                {
+                    if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(component, out var guid, out var localId))
+                    {
+                        if (prefabComponentData.FileId == localId)
+                        {
+                            return component;
+                        }
+                    }
+                }
+
+                return null;
             }
 
             Component GetLastSelectedTargetComponent()
             {
-                var componentData = GetLastSelectedComponent();
-                if (componentData != null)
+                var selectedData = componentsListView.itemsSource[componentsListView.selectedIndex];
+                if (selectedData is SearchToolData.PrefabComponentData componentData)
                 {
                     var targetComponent = GetTargetComponent(componentData);
                     if (targetComponent != null)
@@ -636,20 +652,22 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 }
 
                 var prefabData = new SearchToolData.PrefabData(path);
-                var components = prefab.GetComponents<Component>();
+                var components = prefab.GetComponentsInChildren<Component>(true);
                 foreach (var component in components)
                 {
                     //TODO: need skip serialize references on prefab overrides when references is not changed,
                     // or mark this reference
-
-                    var componentData = new SearchToolData.PrefabComponentData()
+                    if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(component, out var guid, out var localId))
                     {
-                        InstanceId = component.GetInstanceID()
-                    };
-                    FillReferenceDataFromUnityObject(component, componentData);
-                    if (componentData.RefIdsData.Any())
-                    {
-                        prefabData.componentsData.Add(componentData);
+                        var componentData = new SearchToolData.PrefabComponentData()
+                        {
+                            FileId = localId,
+                        };
+                        FillReferenceDataFromUnityObject(component, componentData);
+                        if (componentData.RefIdsData.Any())
+                        {
+                            prefabData.componentsData.Add(componentData);
+                        }
                     }
                 }
 
