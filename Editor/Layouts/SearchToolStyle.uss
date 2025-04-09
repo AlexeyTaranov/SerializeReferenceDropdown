@@ -24,10 +24,6 @@
     flex-shrink: 1;
 }
 
-.list-size {
-    min-width: 200px;
-}
-
 .placeholder {
     flex-grow: 1;
     -unity-text-align: middle-center;
