@@ -37,10 +37,8 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
         private Action saveRefAction;
 
         private Action<SearchToolData.ReferenceIdData> selectRefIdAction;
-        private Action<SearchToolData.ReferenceIdData> applyRefIdAction;
 
         private Action<SearchToolData.ReferencePropertyData> selectRefPropertyAction;
-        private Action<SearchToolData.ReferencePropertyData> applyRefPropertyAction;
 
         private Action<SearchToolData.PrefabComponentData> selectPrefabComponentDataAction;
         private Action<VisualElement, int> bindItemPrefabComponentDataAction;
@@ -770,7 +768,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
             var settings = SerializeReferenceToolsUserPreferences.GetOrLoadSettings();
             var port = settings.SearchToolIntegrationPort;
-            searchToolData.InteagrationPort = port;
+            searchToolData.IntegrationPort = port;
             var json = JsonConvert.SerializeObject(searchToolData, Formatting.Indented);
             File.WriteAllText(path, json);
         }
