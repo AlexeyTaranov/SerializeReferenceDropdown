@@ -783,6 +783,11 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             rootVisualElement.Q<Toggle>("unity-objects-activate-scriptableobjects").SetValueWithoutNotify(true);
             rootVisualElement.Q<ToolbarSearchField>("unity-objects-filter-name").SetValueWithoutNotify(String.Empty);
             rootVisualElement.Q<Label>("last-search-refresh").text = refreshDateText;
+            
+            var soRefs = searchToolData.SOsData.SelectMany(t => t.RefIdsData);
+            var prefabRefs = searchToolData.PrefabsData.SelectMany(t => t.componentsData).SelectMany(t => t.RefIdsData);
+            rootVisualElement.Q<Label>("total-type-references-count").text =
+                (soRefs.Count() + prefabRefs.Count()).ToString();
 
             lastSearchData = searchToolData;
             SetNewType(selectedType);
@@ -792,36 +797,60 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
         #region Type filter
 
-        private void SetNewType(Type type)
+        private void SetNewType(Type newType)
         {
-            selectedType = type;
+            selectedType = newType;
             var button = rootVisualElement.Q<Button>("target-type");
             button.text = $"Type: {selectedType.Name}";
             button.tooltip = $"Type FullName: {selectedType.FullName}";
 
             var interfacesRoot = rootVisualElement.Q<VisualElement>("target-type-interfaces-root");
-            var previousButtons = interfacesRoot.Query<Button>().ToList();
-            foreach (var previousButton in previousButtons)
-            {
-                interfacesRoot.Remove(previousButton);
-            }
-
             var typeInterfaces = selectedType.GetInterfaces();
-            foreach (var typeInterface in typeInterfaces)
-            {
-                var typeButton = new Button
-                {
-                    text = $"{typeInterface.Name}",
-                    tooltip = $"FullName: {typeInterface.FullName}"
-                };
-                typeButton.clicked += () => SetNewType(typeInterface);
-                interfacesRoot.Add(typeButton);
-            }
+            ClearButtons(interfacesRoot);
+            GenerateTypeButtons(typeInterfaces, interfacesRoot);
+
+            var baseTypesRoot = rootVisualElement.Q<VisualElement>("target-type-base-root");
+            var baseTypes = GetBaseTypes(selectedType);
+            ClearButtons(baseTypesRoot);
+            GenerateTypeButtons(baseTypes, baseTypesRoot);
 
             var openSourceButton = rootVisualElement.Q<Button>("target-type-open-source");
-            openSourceButton.SetDisplayElement(type != typeof(object));
+            openSourceButton.SetDisplayElement(newType != typeof(object));
 
             RefreshFilterSelection();
+
+            void ClearButtons(VisualElement element)
+            {
+                var previousButtons = element.Query<Button>().ToList();
+                foreach (var previousButton in previousButtons)
+                {
+                    element.Remove(previousButton);
+                }
+            }
+
+            void GenerateTypeButtons(IEnumerable<Type> types, VisualElement root)
+            {
+                foreach (var type in types)
+                {
+                    var typeButton = new Button
+                    {
+                        text = $"{type.Name}",
+                        tooltip = $"FullName: {type.FullName}"
+                    };
+                    typeButton.clicked += () => SetNewType(type);
+                    root.Add(typeButton);
+                }
+            }
+
+            static IEnumerable<Type> GetBaseTypes(Type type)
+            {
+                var current = type.BaseType;
+                while (current != null)
+                {
+                    yield return current;
+                    current = current.BaseType;
+                }
+            }
         }
 
         private void OpenTargetTypeSourceFile()

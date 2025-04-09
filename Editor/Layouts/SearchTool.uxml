@@ -8,13 +8,13 @@
                 <ui:Button text="Refresh" name="refresh-database" />
                 <ui:Label name="last-search-refresh" text="Date" />
             </ui:VisualElement>
+            <ui:VisualElement class="property-group">
+                <ui:Label text="Total references" class="search-tool-label property-label" />
+                <ui:Label text="?" name="total-type-references-count" class="search-tool-label property-label" />
+            </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement class="search-tool-group-root group-root">
             <ui:Label text="Type filter" class="search-tool-group-header-label bold-label" />
-            <ui:VisualElement class="property-group">
-                <ui:Label text="References count" class="search-tool-label property-label" />
-                <ui:Label text="?" name="target-type-references-count" class="search-tool-label property-label" />
-            </ui:VisualElement>
             <ui:VisualElement class="property-group">
                 <ui:Label text="Selected type" class="search-tool-label property-label" />
                 <ui:Button text="Type:" name="target-type" />
@@ -23,6 +23,13 @@
             </ui:VisualElement>
             <ui:VisualElement name="target-type-interfaces-root" class="property-group">
                 <ui:Label text="Interfaces" class="search-tool-label property-label" />
+            </ui:VisualElement>
+            <ui:VisualElement name="target-type-base-root" class="property-group">
+                <ui:Label text="Base types" class="search-tool-label property-label" />
+            </ui:VisualElement>
+            <ui:VisualElement class="property-group">
+                <ui:Label text="Filtered references" class="search-tool-label property-label" />
+                <ui:Label text="?" name="target-type-references-count" class="search-tool-label property-label" />
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="main-view" class="maximize-size flex-row">
