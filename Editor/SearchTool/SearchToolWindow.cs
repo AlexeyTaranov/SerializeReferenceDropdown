@@ -769,10 +769,22 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             var path = GetFilePath();
             if (File.Exists(path))
             {
-                var json = File.ReadAllText(path);
-                var searchCachedData = JsonConvert.DeserializeObject<SearchToolData>(json);
-                var creationTime = File.GetCreationTime(path);
-                ApplyAssetDatabase(searchCachedData, creationTime);
+                try
+                {
+                    var json = File.ReadAllText(path);
+                    var searchCachedData = JsonConvert.DeserializeObject<SearchToolData>(json,
+                        new JsonSerializerSettings
+                        {
+                            NullValueHandling = NullValueHandling.Ignore
+                        }
+                    );
+                    var creationTime = File.GetCreationTime(path);
+                    ApplyAssetDatabase(searchCachedData, creationTime);
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e);
+                }
             }
         }
 
