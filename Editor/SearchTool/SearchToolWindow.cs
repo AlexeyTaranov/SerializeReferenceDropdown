@@ -37,10 +37,8 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
         private Action saveRefAction;
 
         private Action<SearchToolData.ReferenceIdData> selectRefIdAction;
-        private Action<SearchToolData.ReferenceIdData> applyRefIdAction;
 
         private Action<SearchToolData.ReferencePropertyData> selectRefPropertyAction;
-        private Action<SearchToolData.ReferencePropertyData> applyRefPropertyAction;
 
         private Action<SearchToolData.PrefabComponentData> selectPrefabComponentDataAction;
         private Action<VisualElement, int> bindItemPrefabComponentDataAction;
@@ -423,7 +421,8 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 }
             };
 
-            componentsListView.RefreshListViewData(prefabData.componentsData);
+            var filteredComponents = prefabData.componentsData.Where(t => t.RefIdsData.Any(IsTargetType));
+            componentsListView.RefreshListViewData(filteredComponents);
             selectPrefabComponentDataAction = data =>
             {
                 ClearSaveRefId();
@@ -572,8 +571,15 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
         private void AddUnityReferenceData(SearchToolData.UnityObjectReferenceData referenceData)
         {
-            refIdsListView.RefreshListViewData(referenceData.RefIdsData);
-            refPropertiesListView.RefreshListViewData(referenceData.RefPropertiesData);
+            refIdsListView.RefreshListViewData(referenceData.RefIdsData.Where(IsTargetType));
+
+            refPropertiesListView.RefreshListViewData(referenceData.RefPropertiesData.Where(GetRefIdFromPropertyId));
+
+            bool GetRefIdFromPropertyId(SearchToolData.ReferencePropertyData property)
+            {
+                var refId = referenceData.RefIdsData.First(t => t.referenceId == property.assignedReferenceId);
+                return IsTargetType(refId);
+            }
         }
 
         private void ClearUnityReferenceData()
@@ -762,7 +768,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
             var settings = SerializeReferenceToolsUserPreferences.GetOrLoadSettings();
             var port = settings.SearchToolIntegrationPort;
-            searchToolData.InteagrationPort = port;
+            searchToolData.IntegrationPort = port;
             var json = JsonConvert.SerializeObject(searchToolData, Formatting.Indented);
             File.WriteAllText(path, json);
         }
@@ -775,6 +781,11 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             rootVisualElement.Q<Toggle>("unity-objects-activate-scriptableobjects").SetValueWithoutNotify(true);
             rootVisualElement.Q<ToolbarSearchField>("unity-objects-filter-name").SetValueWithoutNotify(String.Empty);
             rootVisualElement.Q<Label>("last-search-refresh").text = refreshDateText;
+            
+            var soRefs = searchToolData.SOsData.SelectMany(t => t.RefIdsData);
+            var prefabRefs = searchToolData.PrefabsData.SelectMany(t => t.componentsData).SelectMany(t => t.RefIdsData);
+            rootVisualElement.Q<Label>("total-type-references-count").text =
+                (soRefs.Count() + prefabRefs.Count()).ToString();
 
             lastSearchData = searchToolData;
             SetNewType(selectedType);
@@ -784,36 +795,60 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
         #region Type filter
 
-        private void SetNewType(Type type)
+        private void SetNewType(Type newType)
         {
-            selectedType = type;
+            selectedType = newType;
             var button = rootVisualElement.Q<Button>("target-type");
             button.text = $"Type: {selectedType.Name}";
             button.tooltip = $"Type FullName: {selectedType.FullName}";
 
             var interfacesRoot = rootVisualElement.Q<VisualElement>("target-type-interfaces-root");
-            var previousButtons = interfacesRoot.Query<Button>().ToList();
-            foreach (var previousButton in previousButtons)
-            {
-                interfacesRoot.Remove(previousButton);
-            }
-
             var typeInterfaces = selectedType.GetInterfaces();
-            foreach (var typeInterface in typeInterfaces)
-            {
-                var typeButton = new Button
-                {
-                    text = $"{typeInterface.Name}",
-                    tooltip = $"FullName: {typeInterface.FullName}"
-                };
-                typeButton.clicked += () => SetNewType(typeInterface);
-                interfacesRoot.Add(typeButton);
-            }
+            ClearButtons(interfacesRoot);
+            GenerateTypeButtons(typeInterfaces, interfacesRoot);
+
+            var baseTypesRoot = rootVisualElement.Q<VisualElement>("target-type-base-root");
+            var baseTypes = GetBaseTypes(selectedType);
+            ClearButtons(baseTypesRoot);
+            GenerateTypeButtons(baseTypes, baseTypesRoot);
 
             var openSourceButton = rootVisualElement.Q<Button>("target-type-open-source");
-            openSourceButton.SetDisplayElement(type != typeof(object));
+            openSourceButton.SetDisplayElement(newType != typeof(object));
 
             RefreshFilterSelection();
+
+            void ClearButtons(VisualElement element)
+            {
+                var previousButtons = element.Query<Button>().ToList();
+                foreach (var previousButton in previousButtons)
+                {
+                    element.Remove(previousButton);
+                }
+            }
+
+            void GenerateTypeButtons(IEnumerable<Type> types, VisualElement root)
+            {
+                foreach (var type in types)
+                {
+                    var typeButton = new Button
+                    {
+                        text = $"{type.Name}",
+                        tooltip = $"FullName: {type.FullName}"
+                    };
+                    typeButton.clicked += () => SetNewType(type);
+                    root.Add(typeButton);
+                }
+            }
+
+            static IEnumerable<Type> GetBaseTypes(Type type)
+            {
+                var current = type.BaseType;
+                while (current != null)
+                {
+                    yield return current;
+                    current = current.BaseType;
+                }
+            }
         }
 
         private void OpenTargetTypeSourceFile()

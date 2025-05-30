@@ -1,5 +1,9 @@
 .bold-label {
     -unity-font-style: bold;
+    margin-top: 1px;
+    margin-right: 0;
+    margin-bottom: 2px;
+    margin-left: 0;
 }
 
 .property-label {
@@ -11,6 +15,8 @@
     flex-grow: 1;
     flex-direction: row;
     align-items: center;
+    max-height: 22px;
+    min-height: 22px;
 }
 
 .list-header {
@@ -36,6 +42,18 @@
     flex-grow: 0;
     flex-shrink: 0;
     margin: 8px;
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-left-color: rgba(255, 255, 255, 0.2);
+    border-right-color: rgba(255, 255, 255, 0.2);
+    border-top-color: rgba(255, 255, 255, 0.2);
+    border-bottom-color: rgba(255, 255, 255, 0.2);
+    padding-top: 4px;
+    padding-right: 4px;
+    padding-bottom: 4px;
+    padding-left: 4px;
 }
 
 .list-size {
