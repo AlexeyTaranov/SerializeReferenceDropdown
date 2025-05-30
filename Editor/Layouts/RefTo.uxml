@@ -10,6 +10,11 @@
             <ui:VisualElement class="refto-space" />
             <ui:Label text="Label" name="ref-name" class="refto-ref-name" />
             <ui:VisualElement class="refto-space" />
+            <ui:Button name="fix-missing-references" text="Fix" tooltip="Fix Missing References" />
+            <ui:Button name="copy" text="Copy" />
+            <ui:Button name="paste" text="Paste" />
+            <ui:Button name="reset" text="Reset" />
+            <ui:VisualElement class="refto-space" />
             <ui:Label text="Host:" />
             <uie:ObjectField name="host" enabled="true" class="refto-host-object" />
         </ui:GroupBox>
