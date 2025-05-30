@@ -41,8 +41,11 @@
                 <ui:Label text="Unity Objects" name="header-label"
                           class="header-label search-tool-list-header list-header" />
                 <ui:VisualElement class="group-margin">
-                    <ui:Toggle label="Prefabs" name="unity-objects-activate-prefabs" value="true" />
-                    <ui:Toggle label="ScriptableObjects" value="true" name="unity-objects-activate-scriptableobjects" />
+                    <uie:Toolbar>
+                        <uie:ToolbarToggle label="Prefabs" name="unity-objects-activate-prefabs" value="true" />
+                        <uie:ToolbarToggle label="ScriptableObjects" value="true"
+                                           name="unity-objects-activate-scriptableobjects" />
+                    </uie:Toolbar>
                     <uie:ToolbarSearchField name="unity-objects-filter-name" class="max-width-auto" />
                 </ui:VisualElement>
                 <ui:VisualElement style="flex-grow: 1;">
