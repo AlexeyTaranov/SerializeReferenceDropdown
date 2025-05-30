@@ -116,6 +116,11 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             rootVisualElement.Q<Button>("target-type").clicked += ShowAssignableTypes;
             rootVisualElement.Q<Button>("target-type-open-source").clicked += OpenTargetTypeSourceFile;
 
+            var errorIcon = EditorGUIUtility.IconContent("d_console.erroricon").image;
+            var warningIcon = EditorGUIUtility.IconContent("d_console.warnicon").image;
+            var prefabIcon = EditorGUIUtility.IconContent("d_Prefab Icon").image;
+            var soIcon = EditorGUIUtility.IconContent("d_ScriptableObject Icon").image;
+
             var property = rootVisualElement.Q<PropertyField>("edit-property");
             property.Bind(tempSO);
             property.bindingPath = nameof(temp.tempObject);
@@ -170,10 +175,16 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             VisualElement MakeUnityObjectItem()
             {
                 var root = new VisualElement();
-                var image = new Image();
-                root.Add(image);
-                root.Add(new Label());
-                image.style.maxWidth = new StyleLength(15);
+                var typeImage = new Image() { name = "type-image", style = { maxWidth = 15 } };
+                var fixCrossReferencesImage = new Image() { name = "fix-cross-refs", style = { maxWidth = 15 } };
+                fixCrossReferencesImage.tooltip = "Asset has cross references";
+                var missingTypeImage = new Image() { name = "missing-types", style = { maxWidth = 15 } };
+                missingTypeImage.tooltip = "Asset has missing types";
+                var label = new Label() { style = { flexGrow = 1 } };
+                root.Add(typeImage);
+                root.Add(label);
+                root.Add(fixCrossReferencesImage);
+                root.Add(missingTypeImage);
                 root.style.flexDirection = new StyleEnum<FlexDirection>(FlexDirection.Row);
                 root.style.alignItems = new StyleEnum<Align>(Align.Center);
                 return root;
@@ -182,15 +193,39 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             void BindUnityObjectItem(VisualElement element, int i)
             {
                 var label = element.Q<Label>();
-                var icon = element.Q<Image>();
-                if (label != null && icon != null &&
+                var typeIcon = element.Q<Image>("type-image");
+                if (label != null && typeIcon != null &&
                     unityObjectsListView.itemsSource[i] is SearchToolData.IAssetData assetData)
                 {
                     label.text = Path.GetFileNameWithoutExtension(assetData.AssetPath);
                     label.tooltip = assetData.AssetPath;
-                    var iconName = assetData is SearchToolData.PrefabData ? "d_Prefab Icon" : "d_ScriptableObject Icon";
-                    var guiContent = EditorGUIUtility.IconContent(iconName);
-                    icon.image = guiContent.image;
+                    var typeImage = assetData is SearchToolData.PrefabData ? prefabIcon : soIcon;
+                    typeIcon.image = typeImage;
+                    
+                    var isHaveCrossReferences = assetData.IsHaveCrossReferences();
+                    var fixCrossRefsImage = element.Q<Image>("fix-cross-refs");
+                    fixCrossRefsImage.SetDisplayElement(isHaveCrossReferences);
+                    fixCrossRefsImage.image = warningIcon;
+                    
+                    var asset = AssetDatabase.LoadAssetAtPath<Object>(assetData.AssetPath);
+                    //TODO Okay - isnt working....
+                    var hasMissingTypes = SerializationUtility.HasManagedReferencesWithMissingTypes(asset);
+                    if (asset is GameObject go)
+                    {
+                        var components = go.GetComponentsInChildren<MonoBehaviour>(true);
+                        foreach (var component in components)
+                        {
+                            var missingTypes = SerializationUtility.GetManagedReferencesWithMissingTypes(component);
+                            if (SerializationUtility.HasManagedReferencesWithMissingTypes(component))
+                            {
+                                hasMissingTypes = true;
+                                break;
+                            }
+                        }
+                    }
+                    var missingTypesImage = element.Q<Image>("missing-types");
+                    missingTypesImage.image = errorIcon;
+                    missingTypesImage.SetDisplayElement(hasMissingTypes);
                 }
             }
 
@@ -377,19 +412,23 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             AddUnityReferenceData(soData);
             var so = AssetDatabase.LoadAssetAtPath<Object>(soData.AssetPath);
             selectedUnityData = (soData, so);
-            selectRefIdAction = data => { SelectRefId(so, data, SaveCallback); };
-            selectRefPropertyAction = data => { SelectRefProperty(so, data, SaveCallback); };
+            selectRefIdAction = data => { SelectRefId(so, data, PreEditCallback, PostEditCallback); };
+            selectRefPropertyAction = data => { SelectRefProperty(so, data, PreEditCallback, PostEditCallback); };
 
-            void SaveCallback()
+            void PreEditCallback()
             {
-                EditorUtility.SetDirty(so);
+                Undo.RecordObject(so, "Update SO Serialize Reference");
+            }
+
+            void PostEditCallback()
+            {
             }
         }
 
         private void SelectPrefab(SearchToolData.PrefabData prefabData)
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabData.AssetPath);
-            var components = prefab.GetComponentsInChildren<Component>(true);
+            var components = prefab.GetComponentsInChildren<MonoBehaviour>(true);
             ClearUnityReferenceData();
 
             bindItemPrefabComponentDataAction = (element, i) =>
@@ -439,12 +478,17 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 var targetComponent = GetLastSelectedTargetComponent();
                 if (targetComponent != null)
                 {
-                    SelectRefId(targetComponent, referenceData, SaveCallback);
+                    SelectRefId(targetComponent, referenceData, SaveToUndo, ModifyPrefab);
 
-                    void SaveCallback()
+                    void SaveToUndo()
                     {
-                        EditorUtility.SetDirty(targetComponent);
-                        EditorUtility.SetDirty(prefab);
+                        Undo.RecordObject(targetComponent, "Update Prefab Component Serialize Reference");
+                        PrefabUtility.RecordPrefabInstancePropertyModifications(targetComponent);
+                    }
+
+                    void ModifyPrefab()
+                    {
+                        PrefabUtility.SavePrefabAsset(prefab);
                     }
                 }
             };
@@ -454,12 +498,17 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 var targetComponent = GetLastSelectedTargetComponent();
                 if (targetComponent != null)
                 {
-                    SelectRefProperty(targetComponent, data, SaveCallback);
+                    SelectRefProperty(targetComponent, data, SaveToUndo, SaveEditPrefabContent);
 
-                    void SaveCallback()
+                    void SaveToUndo()
                     {
-                        EditorUtility.SetDirty(targetComponent);
-                        EditorUtility.SetDirty(prefab);
+                        Undo.RecordObject(targetComponent, "Update Prefab Component Serialize Reference");
+                        PrefabUtility.RecordPrefabInstancePropertyModifications(targetComponent);
+                    }
+
+                    void SaveEditPrefabContent()
+                    {
+                        PrefabUtility.SavePrefabAsset(prefab);
                     }
                 }
             };
@@ -515,7 +564,8 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             rootVisualElement.Q<Label>("edit-property-label").text = String.Empty;
         }
 
-        private void SelectRefId(Object asset, SearchToolData.ReferenceIdData idData, Action saveCallback)
+        private void SelectRefId(Object asset, SearchToolData.ReferenceIdData idData, Action preEditCallback,
+            Action fromToPostEditCallback)
         {
             var referenceObject = ManagedReferenceUtility.GetManagedReference(asset, idData.referenceId);
             if (referenceObject != null)
@@ -529,15 +579,16 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
             saveRefAction = () =>
             {
+                preEditCallback.Invoke();
                 var refObject = ManagedReferenceUtility.GetManagedReference(asset, idData.referenceId);
                 var json = JsonUtility.ToJson(temp.tempObject);
                 JsonUtility.FromJsonOverwrite(json, refObject);
-                saveCallback.Invoke();
+                fromToPostEditCallback.Invoke();
             };
         }
 
         private void SelectRefProperty(Object asset, SearchToolData.ReferencePropertyData propertyData,
-            Action saveCallback)
+            Action preEditCallback, Action fromToPostEditCallback)
         {
             if (soForPropertyEdit != null && propertyEdit != null)
             {
@@ -547,25 +598,21 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
             soForPropertyEdit = new SerializedObject(asset);
             propertyEdit = soForPropertyEdit.FindProperty(propertyData.propertyPath);
-            if (propertyEdit != null)
-            {
-                var copyObject = TypeUtils.CreateObjectFromType(propertyEdit.managedReferenceValue.GetType());
-                var json = JsonUtility.ToJson(propertyEdit.managedReferenceValue);
-                JsonUtility.FromJsonOverwrite(json, copyObject);
-                rootVisualElement.Q<Label>("edit-property-label").text = $"Edit: {copyObject.GetType().Name}";
-                temp.tempObject = copyObject;
-            }
-            else
-            {
-                //TODO invalid so??
-            }
+            var copyObject = TypeUtils.CreateObjectFromType(propertyEdit.managedReferenceValue.GetType());
+            var json = JsonUtility.ToJson(propertyEdit.managedReferenceValue);
+            JsonUtility.FromJsonOverwrite(json, copyObject);
+            rootVisualElement.Q<Label>("edit-property-label").text = $"Edit: {copyObject.GetType().Name}";
+            temp.tempObject = copyObject;
 
             saveRefAction = () =>
             {
+                preEditCallback.Invoke();
                 var refObject = propertyEdit.managedReferenceValue;
                 var json = JsonUtility.ToJson(temp.tempObject);
                 JsonUtility.FromJsonOverwrite(json, refObject);
-                saveCallback.Invoke();
+                soForPropertyEdit.ApplyModifiedProperties();
+                soForPropertyEdit.Update();
+                fromToPostEditCallback.Invoke();
             };
         }
 
@@ -598,8 +645,11 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             var so = new SerializedObject(selectedUnityData.unityObject);
             var property = so.FindProperty(propertyData.propertyPath);
             SerializeReferencePropertyDrawer.FixCrossReference(property);
+            AssetDatabase.Refresh(ImportAssetOptions.Default);
             FillReferenceDataFromUnityObject(selectedUnityData.unityObject, selectedUnityData.referenceData);
             AddUnityReferenceData(selectedUnityData.referenceData);
+            SaveAssetDatabaseToFile(lastSearchData);
+            unityObjectsListView.RefreshItems();
         }
 
         #endregion
@@ -661,8 +711,6 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 var components = prefab.GetComponentsInChildren<MonoBehaviour>(true);
                 foreach (var component in components)
                 {
-                    //TODO: need skip serialize references on prefab overrides when references is not changed,
-                    // or mark this reference
                     if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(component, out var guid, out var localId))
                     {
                         var componentData = new SearchToolData.PrefabComponentData()
@@ -748,10 +796,22 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             var path = GetFilePath();
             if (File.Exists(path))
             {
-                var json = File.ReadAllText(path);
-                var searchCachedData = JsonConvert.DeserializeObject<SearchToolData>(json);
-                var creationTime = File.GetCreationTime(path);
-                ApplyAssetDatabase(searchCachedData, creationTime);
+                try
+                {
+                    var json = File.ReadAllText(path);
+                    var searchCachedData = JsonConvert.DeserializeObject<SearchToolData>(json,
+                        new JsonSerializerSettings
+                        {
+                            NullValueHandling = NullValueHandling.Ignore
+                        }
+                    );
+                    var creationTime = File.GetCreationTime(path);
+                    ApplyAssetDatabase(searchCachedData, creationTime);
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e);
+                }
             }
         }
 
@@ -778,7 +838,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             rootVisualElement.Q<Toggle>("unity-objects-activate-scriptableobjects").SetValueWithoutNotify(true);
             rootVisualElement.Q<ToolbarSearchField>("unity-objects-filter-name").SetValueWithoutNotify(String.Empty);
             rootVisualElement.Q<Label>("last-search-refresh").text = refreshDateText;
-            
+
             var soRefs = searchToolData.SOsData.SelectMany(t => t.RefIdsData);
             var prefabRefs = searchToolData.PrefabsData.SelectMany(t => t.componentsData).SelectMany(t => t.RefIdsData);
             rootVisualElement.Q<Label>("total-type-references-count").text =
