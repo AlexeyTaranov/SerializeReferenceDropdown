@@ -25,7 +25,7 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             return EditorGUI.GetPropertyHeight(property, label, false);
         }
 
-        private static readonly GUIStyle ErrorStyle = new GUIStyle(EditorStyles.boldLabel)
+        private GUIStyle ErrorStyle = new GUIStyle(EditorStyles.boldLabel)
             { normal = new GUIStyleState() { textColor = Color.red } };
 
         public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
@@ -117,11 +117,7 @@ namespace SerializeReferenceDropdown.Editor.RefTo
         private bool TryApplyRefToValue(Object newValue, Object targetObject, Type targetType,
             string targetPropertyPath)
         {
-            using var newValueSo = new SerializedObject(newValue);
-            using var newValueIteratorProperty = newValueSo.GetIterator();
-            newValueIteratorProperty.NextVisible(true);
-            return PropertyUtils.TraverseProperty(newValueIteratorProperty, string.Empty, TryWriteToRefTo);
-
+            return SOUtils.TraverseSO(newValue, TryWriteToRefTo);
 
             bool TryWriteToRefTo(SerializedProperty refProperty)
             {

@@ -39,6 +39,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
         {
             try
             {
+                SOUtils.RegisterUndo(property, "Paste reference value");
                 if (lastObject.type != null)
                 {
                     var pasteObj = JsonUtility.FromJson(lastObject.json, lastObject.type);
@@ -56,28 +57,6 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             {
                 Log.DevError($"Failed paste value: {e}");
             }
-        }
-
-        private static void DuplicateSerializeReferenceArrayElement(SerializedProperty property)
-        {
-            var sourceElement = GetReferenceToValueFromSerializerPropertyReference(property);
-            var arrayProperty = TypeUtils.GetArrayPropertyFromArrayElement(property);
-            var newElementIndex = arrayProperty.arraySize;
-            arrayProperty.arraySize = newElementIndex + 1;
-
-            if (sourceElement != null)
-            {
-                property.serializedObject.ApplyModifiedProperties();
-                property.serializedObject.Update();
-                
-                var json = JsonUtility.ToJson(sourceElement);
-                var newObj = JsonUtility.FromJson(json, sourceElement.GetType());
-                var newElementProperty = arrayProperty.GetArrayElementAtIndex(newElementIndex);
-                newElementProperty.managedReferenceValue = newObj;
-            }
-
-            property.serializedObject.ApplyModifiedProperties();
-            property.serializedObject.Update();
         }
 
         private static object GetReferenceToValueFromSerializerPropertyReference(SerializedProperty property)

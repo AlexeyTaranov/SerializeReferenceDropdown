@@ -1,6 +1,7 @@
 #if UNITY_2023_2_OR_NEWER
 using System;
 using System.Reflection;
+using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
 using Object = UnityEngine.Object;
 
@@ -35,6 +36,9 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             SerializedProperty toProperty)
         {
             var targetObject = toProperty.boxedValue;
+            
+            SOUtils.RegisterUndo(toProperty, "Paste RefTo");
+            
             SetValue(targetObject, HostPropertyName, fromProperty.serializedObject.targetObject);
             SetValue(targetObject, ReferenceIdName, fromProperty.managedReferenceId);
             toProperty.boxedValue = targetObject;
@@ -57,6 +61,7 @@ namespace SerializeReferenceDropdown.Editor.RefTo
 
         public static void ResetRefTo(SerializedProperty property)
         {
+            SOUtils.RegisterUndo(property, "Reset RefTo");
             var targetObject = property.boxedValue;
             SetValue(targetObject, HostPropertyName, null);
             SetValue(targetObject, ReferenceIdName, 0);
