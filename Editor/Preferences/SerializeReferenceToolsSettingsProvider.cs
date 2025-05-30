@@ -12,6 +12,7 @@ namespace SerializeReferenceDropdown.Editor.Preferences
 
         private readonly SerializeReferenceToolsUserPreferences preferences;
         private int? startPort;
+        private bool isBusyPort;
 
         private SerializedObject serializedObject;
 
@@ -41,6 +42,16 @@ namespace SerializeReferenceDropdown.Editor.Preferences
             preferences.EnableSearchTool = GUILayout.Toggle(preferences.EnableSearchTool, "Enable Search Tool");
             preferences.SearchToolIntegrationPort =
                 EditorGUILayout.IntField("Search Tool Port", preferences.SearchToolIntegrationPort);
+            if (preferences.SearchToolIntegrationPort != startPort)
+            {
+                isBusyPort = SearchToolWindowIntegration.IsAvailablePort(preferences.SearchToolIntegrationPort) == false;
+            }
+
+            if (isBusyPort)
+            {
+                EditorGUILayout.HelpBox($"Port {preferences.SearchToolIntegrationPort} is used, Choose another port", MessageType.Warning);
+            }
+            
 
             if (EditorGUI.EndChangeCheck())
             {

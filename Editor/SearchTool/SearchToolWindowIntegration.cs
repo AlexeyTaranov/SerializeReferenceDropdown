@@ -1,6 +1,8 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading;
 using SerializeReferenceDropdown.Editor.Preferences;
@@ -33,6 +35,21 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
         {
             instance.listener?.Stop();
             instance.thread?.Join();
+        }
+
+        public static bool IsAvailablePort(int checkPort)
+        {
+            try
+            {
+                var listener = new TcpListener(IPAddress.Loopback, checkPort);
+                listener.Start();
+                listener.Stop();
+                return true;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
         }
 
 
