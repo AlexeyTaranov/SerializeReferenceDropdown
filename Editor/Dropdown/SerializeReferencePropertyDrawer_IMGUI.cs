@@ -32,6 +32,8 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             EditorGUI.EndProperty();
         }
 
+        //IMGUI with base implementation. If u want to use IMGUI in your project - u can extend and setup all features.
+        //But much better - switch your inspector to UI Toolkit 
         private void DrawIMGUITypeDropdown(Rect rect, SerializedProperty property, GUIContent label)
         {
             const float fixButtonWidth = 40f;
@@ -61,7 +63,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             {
                 var dropdown = new SerializeReferenceAdvancedDropdown(new AdvancedDropdownState(),
                     assignableTypes.Select(GetTypeName),
-                    index => WriteNewInstanceByIndexType(index, property));
+                    index => WriteNewInstanceByIndexType(index, property, registerUndo: true));
                 dropdown.Show(dropdownRect);
             }
 

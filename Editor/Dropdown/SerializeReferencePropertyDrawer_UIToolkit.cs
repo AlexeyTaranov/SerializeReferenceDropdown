@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using SerializeReferenceDropdown.Editor.Preferences;
@@ -14,9 +13,6 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
     [CustomPropertyDrawer(typeof(SerializeReferenceDropdownAttribute))]
     public partial class SerializeReferencePropertyDrawer : PropertyDrawer
     {
-        //TODO Need find better solution for check ui update and traverse all serialized properties
-        private HashSet<Object> dirtySerializedObjects = new HashSet<Object>();
-
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement();
@@ -45,7 +41,6 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             var fixCrossRefButton = root.Q<Button>("fix-cross-references");
             fixCrossRefButton.clickable.clicked += () =>
             {
-                MakeDirtyUIToolkit();
                 FixCrossReference(property);
             };
             var openSourceFIleButton = root.Q<Button>("open-source-file");
@@ -62,16 +57,15 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
             var propertyPath = property.propertyPath;
             assignableTypes ??= GetAssignableTypes(property);
-            root.TrackSerializedObjectValue(property.serializedObject, UpdateDropdown);
-            RefreshDropdown(property.serializedObject, true);
+            root.TrackSerializedObjectValue(property.serializedObject, RefreshDropdown);
+            RefreshDropdown(property.serializedObject);
 
             void ShowDropdown()
             {
                 var dropdown = new SerializeReferenceAdvancedDropdown(new AdvancedDropdownState(),
                     assignableTypes.Select(GetTypeName), index =>
                     {
-                        MakeDirtyUIToolkit();
-                        WriteNewInstanceByIndexType(index, property);
+                        WriteNewInstanceByIndexType(index, property, registerUndo: true);
                     });
                 var buttonMatrix = selectTypeButton.worldTransform;
                 var position = new Vector3(buttonMatrix.m03, buttonMatrix.m13, buttonMatrix.m23);
@@ -79,12 +73,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 dropdown.Show(buttonRect);
             }
 
-            void UpdateDropdown(SerializedObject so)
-            {
-                RefreshDropdown(so, false);
-            }
-
-            void RefreshDropdown(SerializedObject so, bool isNew)
+            void RefreshDropdown(SerializedObject so)
             {
                 var prop = so.FindProperty(propertyPath);
                 var selectedType = TypeUtils.ExtractTypeFromString(prop.managedReferenceFullTypename);
@@ -96,11 +85,6 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
                 var activeSearchTool = SerializeReferenceToolsUserPreferences.GetOrLoadSettings().EnableSearchTool;
                 showSearchToolButton.SetDisplayElement(selectedType != null && activeSearchTool);
-                if (isNew == false && dirtySerializedObjects.Contains(so.targetObject) == false)
-                {
-                    return;
-                }
-
                 propertyField.BindProperty(prop);
                 selectTypeButton.style.color = new StyleColor(Color.white);
                 fixCrossRefButton.SetDisplayElement(false);
@@ -111,13 +95,6 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                     var color = GetColorForEqualSerializeReference(property);
                     selectTypeButton.style.color = color;
                 }
-            }
-
-            void MakeDirtyUIToolkit()
-            {
-                var target = property.serializedObject.targetObject;
-                dirtySerializedObjects.Add(target);
-                EditorApplication.delayCall += () => { dirtySerializedObjects.Remove(target); };
             }
         }
     }

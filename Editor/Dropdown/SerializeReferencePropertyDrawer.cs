@@ -94,7 +94,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             }
         }
 
-        private void WriteNewInstanceByIndexType(int typeIndex, SerializedProperty property)
+        private void WriteNewInstanceByIndexType(int typeIndex, SerializedProperty property, bool registerUndo)
         {
             var newType = assignableTypes[typeIndex];
             var propertyType = TypeUtils.ExtractTypeFromString(property.managedReferenceFieldTypename);
@@ -104,21 +104,21 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 var concreteGenericType = TypeUtils.GetConcreteGenericType(propertyType, newType);
                 if (concreteGenericType != null)
                 {
-                    CreateAndApplyNewInstanceFromType(concreteGenericType, property);
+                    CreateAndApplyNewInstanceFromType(concreteGenericType, property, registerUndo);
                 }
                 else
                 {
                     GenericTypeCreateWindow.ShowCreateTypeMenu(property, propertyRect, newType,
-                        (type) => CreateAndApplyNewInstanceFromType(type, property));
+                        (type) => CreateAndApplyNewInstanceFromType(type, property, registerUndo));
                 }
             }
             else
             {
-                CreateAndApplyNewInstanceFromType(newType, property);
+                CreateAndApplyNewInstanceFromType(newType, property, registerUndo);
             }
         }
 
-        private static void CreateAndApplyNewInstanceFromType(Type type, SerializedProperty property)
+        private static void CreateAndApplyNewInstanceFromType(Type type, SerializedProperty property, bool registerUndo)
         {
             var newObject = TypeUtils.CreateObjectFromType(type);
             ApplyValueToProperty(newObject);
@@ -147,9 +147,13 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
                     targetProperty.managedReferenceValue = value;
 
-
                     so.ApplyModifiedProperties();
                     so.Update();
+                }
+
+                if (registerUndo)
+                {
+                    SOUtils.RegisterUndoMultiple(targets, "Apply new type");
                 }
             }
         }
@@ -224,20 +228,14 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                         return true;
                     }
                 }
-                else
-                {
-                    //TODO null property???
-                }
             }
 
             return false;
 
             HashSet<string> FindAllSerializeReferencePathsInTargetObject()
             {
-                using var iterator = property.serializedObject.GetIterator();
-                iterator.NextVisible(true);
                 var paths = new HashSet<string>();
-                PropertyUtils.TraverseProperty(iterator, string.Empty, FillAllPaths);
+                SOUtils.TraverseSO(property.serializedObject.targetObject, FillAllPaths);
                 return paths;
 
                 bool FillAllPaths(SerializedProperty serializeReferenceProperty)
@@ -250,8 +248,10 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
         public static void FixCrossReference(SerializedProperty property)
         {
+            SOUtils.RegisterUndo(property, "Fix cross references");
+
             var json = JsonUtility.ToJson(property.managedReferenceValue);
-            CreateAndApplyNewInstanceFromType(property.managedReferenceValue.GetType(), property);
+            CreateAndApplyNewInstanceFromType(property.managedReferenceValue.GetType(), property, registerUndo: false);
             property.serializedObject.ApplyModifiedProperties();
             property.serializedObject.Update();
             JsonUtility.FromJsonOverwrite(json, property.managedReferenceValue);

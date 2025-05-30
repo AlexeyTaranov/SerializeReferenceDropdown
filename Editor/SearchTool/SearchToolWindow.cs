@@ -658,7 +658,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 }
 
                 var prefabData = new SearchToolData.PrefabData(path);
-                var components = prefab.GetComponentsInChildren<Component>(true);
+                var components = prefab.GetComponentsInChildren<MonoBehaviour>(true);
                 foreach (var component in components)
                 {
                     //TODO: need skip serialize references on prefab overrides when references is not changed,
@@ -715,10 +715,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             List<SearchToolData.ReferencePropertyData> GetReferencePropertiesListFromObject()
             {
                 var propertiesData = new List<SearchToolData.ReferencePropertyData>();
-                using var so = new SerializedObject(unityObject);
-                using var iterator = so.GetIterator();
-                iterator.NextVisible(true);
-                PropertyUtils.TraverseProperty(iterator, string.Empty, FillPropertiesData);
+                SOUtils.TraverseSO(unityObject, FillPropertiesData);
                 return propertiesData.Distinct().ToList();
 
                 bool FillPropertiesData(SerializedProperty property)

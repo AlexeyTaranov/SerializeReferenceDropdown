@@ -1,6 +1,7 @@
 #if UNITY_2023_2_OR_NEWER
 using System;
 using System.Reflection;
+using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
 using Object = UnityEngine.Object;
 
@@ -35,6 +36,9 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             SerializedProperty toProperty)
         {
             var targetObject = toProperty.boxedValue;
+
+            SOUtils.RegisterUndo(toProperty, "Paste RefTo");
+
             SetValue(targetObject, HostPropertyName, fromProperty.serializedObject.targetObject);
             SetValue(targetObject, ReferenceIdName, fromProperty.managedReferenceId);
             toProperty.boxedValue = targetObject;
@@ -42,7 +46,20 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             toProperty.serializedObject.Update();
         }
 
-        private static (Object host, long id) GetRefToFieldsFromProperty(SerializedProperty property)
+        public static void WriteRefDataToProperty(long refId, Object host, SerializedProperty toProperty)
+        {
+            var targetObject = toProperty.boxedValue;
+
+            SOUtils.RegisterUndo(toProperty, "Paste RefTo");
+
+            SetValue(targetObject, HostPropertyName, host);
+            SetValue(targetObject, ReferenceIdName, refId);
+            toProperty.boxedValue = targetObject;
+            toProperty.serializedObject.ApplyModifiedProperties();
+            toProperty.serializedObject.Update();
+        }
+
+        public static (Object host, long id) GetRefToFieldsFromProperty(SerializedProperty property)
         {
             var targetObject = property.boxedValue;
             if (targetObject != null)
@@ -57,6 +74,7 @@ namespace SerializeReferenceDropdown.Editor.RefTo
 
         public static void ResetRefTo(SerializedProperty property)
         {
+            SOUtils.RegisterUndo(property, "Reset RefTo");
             var targetObject = property.boxedValue;
             SetValue(targetObject, HostPropertyName, null);
             SetValue(targetObject, ReferenceIdName, 0);
@@ -79,8 +97,9 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             return field?.GetValue(target);
         }
 
-        public static (Type refType, Type targetType, Type hostType, Object host, bool isSameType) GetInspectorValues(
-            SerializedProperty property)
+        public static (Type refType, Type targetType, Type hostType, Object host, bool isSameType)
+            GetInspectorValues(
+                SerializedProperty property)
         {
             var (host, id) = GetRefToFieldsFromProperty(property);
             TryGetRefType(property, out var targetType, out var hostType);
