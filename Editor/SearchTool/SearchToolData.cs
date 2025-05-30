@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using SerializeReferenceDropdown.Editor.Utils;
 
 namespace SerializeReferenceDropdown.Editor.SearchTool
 {
@@ -45,6 +47,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
         public interface IAssetData
         {
             public string AssetPath { get; }
+            bool IsHaveCrossReferences();
         }
 
         [Serializable]
@@ -56,6 +59,21 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             }
 
             public string AssetPath { get; }
+
+            public bool IsHaveCrossReferences()
+            {
+                foreach (var componentData in componentsData)
+                {
+                    var groups = componentData.RefPropertiesData.GroupBy(t => t.assignedReferenceId);
+                    if (groups.Any(t => t.Count() > 1))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
             public List<PrefabComponentData> componentsData = new List<PrefabComponentData>();
         }
 
@@ -64,6 +82,17 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
         public class ScriptableObjectData : UnityObjectReferenceData, IAssetData
         {
             public string AssetPath { get; set; }
+
+            public bool IsHaveCrossReferences()
+            {
+                var groups = RefPropertiesData.GroupBy(t => t.assignedReferenceId);
+                if (groups.Any(t => t.Count() > 1))
+                {
+                    return true;
+                }
+
+                return false;
+            }
         }
 
         public class PrefabComponentData : UnityObjectReferenceData

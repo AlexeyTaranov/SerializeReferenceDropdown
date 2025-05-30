@@ -48,6 +48,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             }
             catch (Exception e)
             {
+                Log.Error(e);
                 return false;
             }
         }
