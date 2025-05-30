@@ -658,7 +658,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 }
 
                 var prefabData = new SearchToolData.PrefabData(path);
-                var components = prefab.GetComponentsInChildren<Component>(true);
+                var components = prefab.GetComponentsInChildren<MonoBehaviour>(true);
                 foreach (var component in components)
                 {
                     //TODO: need skip serialize references on prefab overrides when references is not changed,

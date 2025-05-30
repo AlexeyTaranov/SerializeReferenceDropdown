@@ -33,7 +33,7 @@ namespace SerializeReferenceDropdown.Editor.Utils
             {
                 do
                 {
-                    if (iterator.propertyType == SerializedPropertyType.ManagedReference)
+                    if (iterator.propertyType == SerializedPropertyType.ManagedReference && property.isArray == false)
                     {
                         if (isCompleteFunc.Invoke(iterator))
                         {
