@@ -2,8 +2,7 @@
          xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements"
          editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd"
          editor-extension-mode="True">
-    <Style
-        src="project://database/Packages/com.alexeytaranov.serializereferencedropdown/Editor/Layouts/SearchReferenceToolStyle.uss?fileID=7433441132597879392&amp;guid=a9491872dc0164243a237871a3da5141&amp;type=3#SearchReferenceToolStyle" />
+    <Style src="/Packages/com.alexeytaranov.serializereferencedropdown/Editor/Layouts/SerializeReferenceToolStyle.uss" />
     <ui:VisualElement>
         <ui:GroupBox class="refto-groupbox-root">
             <ui:Label text="Property" name="property-name" class="refto-property-name" />
