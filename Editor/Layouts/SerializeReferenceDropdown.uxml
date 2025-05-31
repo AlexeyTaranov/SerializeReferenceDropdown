@@ -10,6 +10,7 @@
                        class="serialize-reference-typeselect" />
             <ui:Button name="fix-cross-references" text="Fix" tooltip="Fix Cross References" />
             <ui:Button name="open-source-file" text="#" tooltip="Open Source File" />
+            <ui:Button name="modify-direct-type" text="!" tooltip="Modify Direct Type" />
             <ui:Button name="show-search-tool" text="&gt;" tooltip="Open Search Tool" />
         </ui:VisualElement>
     </ui:VisualElement>

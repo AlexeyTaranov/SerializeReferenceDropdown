@@ -85,7 +85,7 @@
                 <ui:VisualElement name="missing-type-root" class="group-margin list-size">
                     <ui:Label text="Missing Type Data" class="header-label search-tool-list-header list-header" />
                     <ui:Label text="Missing Type Data" name="missing-type-data" class="search-tool-label group-margin" />
-                    <ui:Button name="apply-new-missing-type-data" text="Apply Type From Missing Data" />
+                    <ui:Button name="edit-missing-type" text="Edit Missing Type" />
                 </ui:VisualElement>
                 <ui:Label text="Select any asset on Unity Objects Tab" name="non-selected-unity-object"
                           class="non-selected-label search-tool-placeholder maximize-size placeholder" />

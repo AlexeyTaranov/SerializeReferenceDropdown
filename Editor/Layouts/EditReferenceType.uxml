@@ -1,0 +1,16 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements"
+         xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements"
+         editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd"
+         editor-extension-mode="True">
+    <Style
+        src="project://database/Packages/com.alexeytaranov.serializereferencedropdown/Editor/Layouts/SearchToolStyle.uss" />
+    <ui:VisualElement class="search-tool-root extend maximize-size">
+        <ui:VisualElement class="search-tool-group-root group-root">
+            <ui:Label text="Edit Serialize Reference Type" name="Label" class="search-tool-group-header-label bold-label" />
+            <ui:TextField label="Assembly" name="assembly-field" />
+            <ui:TextField label="Namespace" name="namespace-field" />
+            <ui:TextField label="Classname" name="classname-field" />
+            <ui:Button text="Apply" name="apply" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

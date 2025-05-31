@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using SerializeReferenceDropdown.Editor.EditReferenceType;
 using SerializeReferenceDropdown.Editor.Preferences;
 using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
@@ -34,6 +35,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             var visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(treeAssetPath);
             root.Add(visualTreeAsset.Instantiate());
             var propertyField = root.Q<PropertyField>();
+            var propertyPath = property.propertyPath;
 
             var selectTypeButton = root.Q<Button>("type-select");
             selectTypeButton.clickable.clicked += ShowDropdown;
@@ -47,6 +49,9 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             openSourceFIleButton.SetDisplayElement(false);
             openSourceFIleButton.clicked += () => { OpenSourceFile(property.managedReferenceValue.GetType()); };
 
+            var modifyDirectType = root.Q<Button>("modify-direct-type");
+            modifyDirectType.clicked += ModifyDirectType;
+
             var showSearchToolButton = root.Q<Button>("show-search-tool");
             showSearchToolButton.SetDisplayElement(false);
             showSearchToolButton.clicked += () =>
@@ -55,7 +60,6 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 ShowSearchTool(type);
             };
 
-            var propertyPath = property.propertyPath;
             assignableTypes ??= GetAssignableTypes(property);
             root.TrackSerializedObjectValue(property.serializedObject, RefreshDropdown);
             RefreshDropdown(property.serializedObject);
@@ -88,6 +92,8 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 propertyField.BindProperty(prop);
                 selectTypeButton.style.color = new StyleColor(Color.white);
                 fixCrossRefButton.SetDisplayElement(false);
+                
+                modifyDirectType.SetDisplayElement(selectedType != null);
 
                 if (IsHaveSameOtherSerializeReference(property))
                 {
@@ -95,6 +101,25 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                     var color = GetColorForEqualSerializeReference(property);
                     selectTypeButton.style.color = color;
                 }
+            }
+            
+            void ModifyDirectType()
+            {
+                var prop = property.serializedObject.FindProperty(propertyPath);
+                var type = prop.managedReferenceValue.GetType();
+                var typeData = new TypeData()
+                {
+                    AssemblyName = type.Assembly.GetName().Name,
+                    ClassName = type.Name,
+                    Namespace = type.Namespace
+                };
+                EditReferenceTypeWindow.ShowWindow(typeData, data =>
+                {
+                    var obj = property.serializedObject.targetObject;
+                    var path = AssetDatabase.GetAssetPath(obj);
+                    EditReferenceTypeUtils.TryModifyDirectFileReferenceType(path, property.managedReferenceId, typeData,
+                        data);
+                });
             }
         }
     }

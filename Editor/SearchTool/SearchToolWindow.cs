@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
 using SerializeReferenceDropdown.Editor.Dropdown;
+using SerializeReferenceDropdown.Editor.EditReferenceType;
 using SerializeReferenceDropdown.Editor.Preferences;
 using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
@@ -42,7 +43,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
         private Action saveRefAction;
 
-        private Action applyMissingType;
+        private Action editMissingType;
 
         private Action<SearchToolData.ReferenceIdData> selectRefIdAction;
 
@@ -113,7 +114,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             rootVisualElement.Q<Button>("refresh-database").clicked += RefreshAssetsDatabase;
             rootVisualElement.Q<Button>("clear-target-type").clicked += () => SetNewType(typeof(object));
             rootVisualElement.Q<Button>("apply-data").clicked += () => saveRefAction?.Invoke();
-            rootVisualElement.Q<Button>("apply-new-missing-type-data").clicked += () => applyMissingType?.Invoke();
+            rootVisualElement.Q<Button>("edit-missing-type").clicked += () => editMissingType?.Invoke();
             rootVisualElement.Q<Button>("select-props").clicked += () => SetDisplayPropsOrIDs(true);
             rootVisualElement.Q<Button>("select-ids").clicked += () => SetDisplayPropsOrIDs(false);
             missingTypesButton = rootVisualElement.Q<Button>("missing-types");
@@ -388,27 +389,15 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                     sb.AppendFormat("\n{0}", missingTypeData.serializedData);
                     label.text = sb.ToString();
 
-                    applyMissingType = () => { SearchToolWindowSearchProvider.Show(ApplyMissingType); };
-
-                    void ApplyMissingType(Type selectedNewType)
+                    editMissingType = () =>
                     {
-                        var newObject = TypeUtils.CreateObjectFromType(selectedNewType);
-                        //TODO Restore data to json
-                        var json = "{" + missingTypeData.serializedData + "}";
-                        JsonUtility.FromJsonOverwrite(json, newObject);
-                        
-                        return;
-
-                        ManagedReferenceUtility.SetManagedReferenceIdForObject(selectedUnityData.unityObject, newObject,
-                            missingTypeData.referenceId);
-
-                        FillReferenceDataFromUnityObject(selectedUnityData.unityObject,
-                            selectedUnityData.referenceData);
-                        AddUnityReferenceData(selectedUnityData.referenceData, selectedUnityData.unityObject);
-                        SaveAssetDatabaseToFile(lastSearchData);
-
-                        unityObjectsListView.RefreshItems();
-                    }
+                        EditReferenceTypeWindow.ShowWindow(new TypeData()
+                        {
+                            AssemblyName = missingTypeData.assemblyName,
+                            Namespace = missingTypeData.namespaceName,
+                            ClassName = missingTypeData.className
+                        }, data => ModifyMissingTypeData(missingTypeData, data));
+                    };
                 }
             }
         }
@@ -755,10 +744,32 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             var property = so.FindProperty(propertyData.propertyPath);
             SerializeReferencePropertyDrawer.FixCrossReference(property);
             AssetDatabase.Refresh(ImportAssetOptions.Default);
+            RefreshAssetDatabaseWithUpdateSelectedUnityObject();
+        }
+
+        private void RefreshAssetDatabaseWithUpdateSelectedUnityObject()
+        {
             FillReferenceDataFromUnityObject(selectedUnityData.unityObject, selectedUnityData.referenceData);
             AddUnityReferenceData(selectedUnityData.referenceData, selectedUnityData.unityObject);
             SaveAssetDatabaseToFile(lastSearchData);
             unityObjectsListView.RefreshItems();
+        }
+
+        private void ModifyMissingTypeData(ManagedReferenceMissingType missingType, TypeData fixTypeData)
+        {
+            var path = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(selectedUnityData.unityObject);
+            var result = EditReferenceTypeUtils.TryModifyDirectFileReferenceType(path,
+                missingType.referenceId,
+                new TypeData()
+                {
+                    AssemblyName = missingType.assemblyName,
+                    ClassName = missingType.className,
+                    Namespace = missingType.namespaceName
+                }, fixTypeData);
+            if (result)
+            {
+                RefreshAssetDatabaseWithUpdateSelectedUnityObject();
+            }
         }
 
         #endregion
