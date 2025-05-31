@@ -17,7 +17,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
         private static (ISearchView view, SearchProvider provider, SearchItem item) last;
 
-        
+
         public static void Show(Action<Type> onSelectedType)
         {
             if (last.view == null)
@@ -93,7 +93,14 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
         {
             if (last.item?.data is Type type)
             {
-                selectType.Invoke(type);
+                try
+                {
+                    selectType.Invoke(type);
+                }
+                catch (Exception e)
+                {
+                    Log.DevError(e);
+                }
             }
 
             last.view = null;

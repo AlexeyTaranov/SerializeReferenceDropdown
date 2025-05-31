@@ -6,6 +6,6 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
     //https://t.me/unsafecsharp/78
     public class SearchToolWindowTempSO : ScriptableObject
     {
-        [SerializeReference] public object tempObject;
+        [SerializeReference] public object data;
     }
 }
