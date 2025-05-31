@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Newtonsoft.Json;
 using SerializeReferenceDropdown.Editor.Dropdown;
 using SerializeReferenceDropdown.Editor.EditReferenceType;
@@ -381,13 +380,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 if (obj is ManagedReferenceMissingType missingTypeData)
                 {
                     var label = rootVisualElement.Q<Label>("missing-type-data");
-                    var sb = new StringBuilder();
-                    sb.AppendLine($"ASM: {missingTypeData.assemblyName}");
-                    sb.AppendLine($"Namespace: {missingTypeData.namespaceName}");
-                    sb.AppendLine($"Class: {missingTypeData.className}");
-                    sb.AppendLine($"RefID: {missingTypeData.referenceId}");
-                    sb.AppendFormat("\n{0}", missingTypeData.serializedData);
-                    label.text = sb.ToString();
+                    label.text = missingTypeData.GetDetailData();
 
                     editMissingType = () =>
                     {

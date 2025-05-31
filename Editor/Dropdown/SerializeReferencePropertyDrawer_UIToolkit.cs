@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.UIElements;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UIElements;
 
 namespace SerializeReferenceDropdown.Editor.Dropdown
@@ -82,8 +83,23 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 var prop = so.FindProperty(propertyPath);
                 var selectedType = TypeUtils.ExtractTypeFromString(prop.managedReferenceFullTypename);
                 var selectedTypeName = GetTypeName(selectedType);
+                var tooltipText = $"Type Full Name: {selectedType?.FullName}";
+                var isHaveMissingType = selectedType == null && prop.managedReferenceId != 0;
+                if (isHaveMissingType)
+                {
+                    var missingTypes = SerializationUtility.GetManagedReferencesWithMissingTypes(so.targetObject);
+                    var thisMissingType = missingTypes.FirstOrDefault(t => t.referenceId == prop.managedReferenceId);
+                    selectedTypeName = string.IsNullOrEmpty(thisMissingType.className) ? "MISSING TYPE" : $"MISSING TYPE: {thisMissingType.className}";
+                    tooltipText = thisMissingType.GetDetailData();
+                    selectTypeButton.AddToClassList("error-bg");
+                }
+                else
+                {
+                    selectTypeButton.RemoveFromClassList("error-bg");
+                }
+                
                 selectTypeButton.text = selectedTypeName;
-                selectTypeButton.tooltip = $"Type Full Name: {selectedType?.FullName}";
+                selectTypeButton.tooltip = tooltipText;
 
                 openSourceFIleButton.SetDisplayElement(property.managedReferenceValue != null);
 
@@ -117,8 +133,20 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 {
                     var obj = property.serializedObject.targetObject;
                     var path = AssetDatabase.GetAssetPath(obj);
-                    EditReferenceTypeUtils.TryModifyDirectFileReferenceType(path, property.managedReferenceId, typeData,
-                        data);
+                    if (string.IsNullOrEmpty(path))
+                    {
+                        path = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(obj);
+                    }
+
+                    if (string.IsNullOrEmpty(path))
+                    {
+                        Log.Error($"Can't find path for this object type: {obj.name}");
+                    }
+                    else
+                    {
+                        EditReferenceTypeUtils.TryModifyDirectFileReferenceType(path, property.managedReferenceId, typeData,
+                            data);
+                    }
                 });
             }
         }
