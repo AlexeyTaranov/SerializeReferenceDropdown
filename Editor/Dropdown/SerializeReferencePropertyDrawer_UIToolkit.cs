@@ -84,7 +84,9 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 var selectedType = TypeUtils.ExtractTypeFromString(prop.managedReferenceFullTypename);
                 var selectedTypeName = GetTypeName(selectedType);
                 var tooltipText = $"Type Full Name: {selectedType?.FullName}";
-                var isHaveMissingType = selectedType == null && prop.managedReferenceId != 0;
+                var nullTypeId = -2;
+                var isNullValue = prop.managedReferenceId == nullTypeId || prop.managedReferenceId == 0;
+                var isHaveMissingType = selectedType == null && isNullValue == false;
                 if (isHaveMissingType)
                 {
                     var missingTypes = SerializationUtility.GetManagedReferencesWithMissingTypes(so.targetObject);
