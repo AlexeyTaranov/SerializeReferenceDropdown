@@ -68,17 +68,24 @@
                         <ui:ToggleButtonGroup class="group-margin">
                             <ui:Button text="Property Path" name="select-props" class="maximize-size" />
                             <ui:Button text="Reference ID" name="select-ids" class="maximize-size" />
+                            <ui:Button text="Missing types" name="missing-types" class="maximize-size" />
                         </ui:ToggleButtonGroup>
                         <ui:ListView name="ref-props" fixed-item-height="18" class="list-size maximize-size" />
                         <ui:ListView name="ref-ids" fixed-item-height="18" class="list-size maximize-size" />
+                        <ui:ListView name="ref-missing" fixed-item-height="18" class="list-size maximize-size" />
                     </ui:VisualElement>
                 </ui:VisualElement>
-                <ui:VisualElement class="group-margin list-size">
+                <ui:VisualElement name="edit-data-root" class="group-margin list-size">
                     <ui:Label text="Data Editor" name="header-label"
                               class="header-label search-tool-list-header list-header" />
                     <ui:Label text="Edit property" name="edit-property-label" class="search-tool-label group-margin" />
                     <uie:PropertyField name="edit-property" />
                     <ui:Button name="apply-data" text="Apply" />
+                </ui:VisualElement>
+                <ui:VisualElement name="missing-type-root" class="group-margin list-size">
+                    <ui:Label text="Missing Type Data" class="header-label search-tool-list-header list-header" />
+                    <ui:Label text="Missing Type Data" name="missing-type-data" class="search-tool-label group-margin" />
+                    <ui:Button name="edit-missing-type" text="Edit Missing Type" />
                 </ui:VisualElement>
                 <ui:Label text="Select any asset on Unity Objects Tab" name="non-selected-unity-object"
                           class="non-selected-label search-tool-placeholder maximize-size placeholder" />

@@ -68,3 +68,7 @@
 .refto-host-object {
     flex-shrink: 1;
 }
+
+.error-bg {
+    background-color: rgb(226, 91, 78);
+}
