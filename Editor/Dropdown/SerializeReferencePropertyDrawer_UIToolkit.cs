@@ -36,6 +36,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             var visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(treeAssetPath);
             root.Add(visualTreeAsset.Instantiate());
             var propertyField = root.Q<PropertyField>();
+            propertyField.BindProperty(property);
             var propertyPath = property.propertyPath;
 
             var selectTypeButton = root.Q<Button>("type-select");
@@ -107,7 +108,6 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
                 var activeSearchTool = SerializeReferenceToolsUserPreferences.GetOrLoadSettings().EnableSearchTool;
                 showSearchToolButton.SetDisplayElement(selectedType != null && activeSearchTool);
-                propertyField.BindProperty(prop);
                 selectTypeButton.style.color = new StyleColor(Color.white);
                 fixCrossRefButton.SetDisplayElement(false);
                 
