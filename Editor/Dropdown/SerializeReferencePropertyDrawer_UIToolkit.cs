@@ -108,7 +108,6 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
                 var activeSearchTool = SerializeReferenceToolsUserPreferences.GetOrLoadSettings().EnableSearchTool;
                 showSearchToolButton.SetDisplayElement(selectedType != null && activeSearchTool);
-                selectTypeButton.style.color = new StyleColor(Color.white);
                 fixCrossRefButton.SetDisplayElement(false);
                 
                 modifyDirectType.SetDisplayElement(selectedType != null);
