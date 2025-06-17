@@ -15,6 +15,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
     [CustomPropertyDrawer(typeof(SerializeReferenceDropdownAttribute))]
     public partial class SerializeReferencePropertyDrawer : PropertyDrawer
     {
+        private StyleColor defaultSelectTypeTextColor;
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement();
@@ -41,6 +42,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
             var selectTypeButton = root.Q<Button>("type-select");
             selectTypeButton.clickable.clicked += ShowDropdown;
+            defaultSelectTypeTextColor = selectTypeButton.style.color;
 
             var fixCrossRefButton = root.Q<Button>("fix-cross-references");
             fixCrossRefButton.clickable.clicked += () =>
@@ -103,14 +105,13 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 
                 selectTypeButton.text = selectedTypeName;
                 selectTypeButton.tooltip = tooltipText;
+                selectTypeButton.style.color = defaultSelectTypeTextColor;
 
                 openSourceFIleButton.SetDisplayElement(property.managedReferenceValue != null);
 
                 var activeSearchTool = SerializeReferenceToolsUserPreferences.GetOrLoadSettings().EnableSearchTool;
                 showSearchToolButton.SetDisplayElement(selectedType != null && activeSearchTool);
-                selectTypeButton.style.color = new StyleColor(Color.white);
                 fixCrossRefButton.SetDisplayElement(false);
-                
                 modifyDirectType.SetDisplayElement(selectedType != null);
 
                 if (IsHaveSameOtherSerializeReference(property))
