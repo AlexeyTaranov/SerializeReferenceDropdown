@@ -39,7 +39,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             const float fixButtonWidth = 40f;
             assignableTypes ??= GetAssignableTypes(property);
 
-            var isHaveOtherReference = IsHaveSameOtherSerializeReference(property);
+            var isHaveOtherReference = IsHaveSameOtherSerializeReference(property, out _);
 
             var referenceType = TypeUtils.ExtractTypeFromString(property.managedReferenceFullTypename);
 

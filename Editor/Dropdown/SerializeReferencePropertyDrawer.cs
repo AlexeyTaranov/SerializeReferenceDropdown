@@ -183,8 +183,9 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             return Color.HSVToRGB(hue, 0.8f, 0.8f);
         }
 
-        private bool IsHaveSameOtherSerializeReference(SerializedProperty property)
+        private bool IsHaveSameOtherSerializeReference(SerializedProperty property, out bool isNewElement)
         {
+            isNewElement = false;
             if (SerializeReferenceToolsUserPreferences.GetOrLoadSettings().EnableCrossReferencesCheck == false)
             {
                 return false;
@@ -198,6 +199,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             var target = property.serializedObject.targetObject;
             if (targetObjectAndSerializeReferencePaths.TryGetValue(target, out var serializeReferencePaths) == false)
             {
+                isNewElement = true;
                 serializeReferencePaths = new HashSet<string>();
                 targetObjectAndSerializeReferencePaths.Add(target, serializeReferencePaths);
             }
@@ -205,6 +207,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             // Can't find this path in serialized object. Example - new element in array
             if (serializeReferencePaths.Contains(property.propertyPath) == false)
             {
+                isNewElement = true;
                 var paths = FindAllSerializeReferencePathsInTargetObject();
                 serializeReferencePaths.Clear();
                 foreach (var path in paths)
