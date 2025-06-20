@@ -114,11 +114,28 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 fixCrossRefButton.SetDisplayElement(false);
                 modifyDirectType.SetDisplayElement(selectedType != null);
 
-                if (IsHaveSameOtherSerializeReference(property))
+                if (IsHaveSameOtherSerializeReference(property, out var isNewElement))
                 {
                     fixCrossRefButton.SetDisplayElement(true);
                     var color = GetColorForEqualSerializeReference(property);
                     selectTypeButton.style.color = color;
+                    if (isNewElement)
+                    {
+                        //https://github.com/AlexeyTaranov/SerializeReferenceDropdown/issues/49
+                        //HACK: For correct refresh duplicate references need to call some refresh inspector
+                        RefreshInspector();
+
+                        void RefreshInspector()
+                        {
+                            var savedValue = property.managedReferenceValue;
+                            property.managedReferenceValue = null;
+                            property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
+                            property.serializedObject.Update();
+                            property.managedReferenceValue = savedValue;
+                            property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
+                            property.serializedObject.Update();
+                        }
+                    }
                 }
             }
             
