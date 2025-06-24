@@ -33,9 +33,6 @@ namespace SerializeReferenceDropdown.Editor.Preferences
         {
             EditorGUI.BeginChangeCheck();
 
-            preferences.CopyDataWithNewType =
-                GUILayout.Toggle(preferences.CopyDataWithNewType, "Copy Data With New Type");
-
             EditorGUILayout.LabelField("Experimental", EditorStyles.boldLabel);
             preferences.EnableCrossReferencesCheck = GUILayout.Toggle(preferences.EnableCrossReferencesCheck,
                 "Enable Cross References Check");
