@@ -11,7 +11,7 @@ namespace SerializeReferenceDropdown.Editor.Preferences
 
         private const string UserPreferencesPrefKey = "SerializeReferenceDropdown.Editor.UserPreferences";
 
-        [SerializeField] private bool enableCrossReferencesCheck;
+        [SerializeField] private bool enableCrossReferencesCheck = true;
         [SerializeField] private bool enableSearchTool;
         [SerializeField] private int searchToolIntegrationPort = 11000;
 
