@@ -8,12 +8,14 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.Pool;
+using UnityEngine.Serialization;
 using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
 
 namespace SerializeReferenceDropdown.Editor.RefTo
 {
     [CustomPropertyDrawer(typeof(RefTo<,>))]
+    [CustomPropertyDrawer(typeof(RefTo<>))]
     public class RefToPropertyDrawer : PropertyDrawer
     {
         private static Dictionary<SerializedObject, Action>
@@ -34,9 +36,6 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             return EditorGUI.GetPropertyHeight(property, label, false);
         }
 
-        private GUIStyle ErrorStyle = new GUIStyle(EditorStyles.boldLabel)
-            { normal = new GUIStyleState() { textColor = Color.red } };
-
         public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
         {
             var propertyRect = rect;
@@ -55,7 +54,10 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             var fieldRect = new Rect(labelRect.position + new Vector2(labelRect.width, 0),
                 new Vector2(fieldSize, height));
 
-            var style = isSameType ? EditorStyles.boldLabel : ErrorStyle;
+            var style = isSameType
+                ? EditorStyles.boldLabel
+                : new GUIStyle(EditorStyles.boldLabel)
+                    { normal = new GUIStyleState() { textColor = Color.red } };
             var refLabel = $" R: {refType?.Name}";
             EditorGUI.LabelField(labelRect,
                 new GUIContent(refLabel, $"Reference \nType - {refType?.Name} \nNamespace - {refType?.Namespace}"),
@@ -94,11 +96,14 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             fieldName.tooltip =
                 $"Field: {property.name} \nTarget Type: {targetType.Name} \nNamespace: {targetType.Namespace}";
 
+            var copyButton = root.Q<Button>("copy");
+            var pasteButton = root.Q<Button>("paste");
+            var resetButton = root.Q<Button>("reset");
+
             var fixButton = root.Q<Button>("fix-missing-references");
             fixButton.SetDisplayElement(false);
             fixButton.clicked += FixMissingReference;
 
-            var copyButton = root.Q<Button>("copy");
             copyButton.clicked += () =>
             {
                 using var localSo = new SerializedObject(targetObject);
@@ -108,13 +113,9 @@ namespace SerializeReferenceDropdown.Editor.RefTo
                 _dirtyRefreshes[property.serializedObject].Invoke();
             };
 
-            var pasteButton = root.Q<Button>("paste");
             pasteButton.SetDisplayElement(false);
             pasteButton.clicked += () => RefToContextMenu.PasteToProperty(property);
-
-            var resetButton = root.Q<Button>("reset");
-
-            resetButton.clicked += () => RefToExtensions.ResetRefTo(property);
+            resetButton.clicked += Reset;
 
             root.TrackSerializedObjectValue(property.serializedObject, RefreshDynamic);
 
@@ -138,6 +139,11 @@ namespace SerializeReferenceDropdown.Editor.RefTo
                 RefreshDynamic(property.serializedObject);
             }
 
+            void Reset()
+            {
+                RefToExtensions.ResetRefTo(property);
+            }
+
             void RefreshDynamic(SerializedObject so)
             {
                 using var localProperty = so.FindProperty(propertyPath);
@@ -147,22 +153,64 @@ namespace SerializeReferenceDropdown.Editor.RefTo
                 var refTypeName = refType == null ? "null" : refType.Name;
                 refLabel.text = $"R:{refTypeName}";
                 refLabel.tooltip = $"Reference \nType: {refType?.Name} \nNamespace: {refType?.Namespace}";
-                refLabel.style.color = isSameType ? new StyleColor(Color.white) : new StyleColor(Color.red);
-
                 objectField.SetValueWithoutNotify(host);
 
-                fixButton.SetDisplayElement(host != null && isSameType == false);
+                var isErrorType = host != null && isSameType == false;
+                if (isErrorType)
+                {
+                    refLabel.AddToClassList("error-bg");
+                }
+                else
+                {
+                    refLabel.RemoveFromClassList("error-bg");
+                }
+
+                fixButton.SetDisplayElement(isErrorType);
                 resetButton.SetDisplayElement(host != null);
                 copyButton.SetDisplayElement(isSameType && host != null);
 
                 var pasteType = RefToContextMenu.GetPasteType(property);
                 pasteButton.SetDisplayElement(pasteType == PasteType.CanPaste);
+                if (pasteType == PasteType.CanPaste)
+                {
+                    var pasteHost = RefToContextMenu.copy.host;
+                    var pasteValue =
+                        ManagedReferenceUtility.GetManagedReference(RefToContextMenu.copy.host,
+                            RefToContextMenu.copy.refId);
+                    pasteButton.tooltip = $"Paste: Host - {pasteHost.name}, Value - {pasteValue.GetType()}";
+                }
             }
 
             void ApplyRefToFromObject(ChangeEvent<Object> evt)
             {
                 var newValue = evt.newValue;
-                if (TryApplyRefToValue(property, newValue, targetType) == false && newValue != null)
+                if (newValue == null)
+                {
+                    Reset();
+                    return;
+                }
+
+                var canUseComponents = hostType.IsAssignableFrom(typeof(MonoBehaviour));
+                if (newValue is GameObject go && canUseComponents)
+                {
+                    var components = go.GetComponents<MonoBehaviour>();
+                    foreach (var component in components)
+                    {
+                        if (TryApplyRefToValue(property, component, targetType))
+                        {
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    if (TryApplyRefToValue(property, newValue, targetType))
+                    {
+                        return;
+                    }
+                }
+
+                if (newValue != null)
                 {
                     objectField.SetValueWithoutNotify(evt.previousValue);
                 }
@@ -175,6 +223,10 @@ namespace SerializeReferenceDropdown.Editor.RefTo
                 if (TryApplyRefToValue(property, prevObject, targetType))
                 {
                     objectField.SetValueWithoutNotify(prevObject);
+                }
+                else
+                {
+                    fixButton.SetDisplayElement(false);
                 }
             }
         }

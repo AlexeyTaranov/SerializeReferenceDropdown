@@ -17,6 +17,11 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             var toType = property.boxedValue?.GetType();
             refToType = null;
             hostType = null;
+            if (toType?.BaseType != null && toType?.BaseType != typeof(System.Object))
+            {
+                toType = toType.BaseType;
+            }
+
             if (IsGenericTypeOf(toType, typeof(RefTo<,>)))
             {
                 refToType = toType.GenericTypeArguments[0];
@@ -86,6 +91,11 @@ namespace SerializeReferenceDropdown.Editor.RefTo
         private static void SetValue(object target, string fieldName, object value)
         {
             var type = target.GetType();
+            if (type.BaseType != null && type.BaseType != typeof(System.Object))
+            {
+                type = type.BaseType;
+            }
+
             var field = type.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
             field?.SetValue(target, value);
         }
@@ -93,6 +103,11 @@ namespace SerializeReferenceDropdown.Editor.RefTo
         private static object GetValue(object target, string fieldName)
         {
             var type = target.GetType();
+            if (type.BaseType != null && type.BaseType != typeof(System.Object))
+            {
+                type = type.BaseType;
+            }
+
             var field = type.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
             return field?.GetValue(target);
         }

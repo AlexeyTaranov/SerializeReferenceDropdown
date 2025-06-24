@@ -3,7 +3,7 @@ using UnityEngine;
 
 #if UNITY_2023_2_OR_NEWER
 [Serializable]
-public sealed class RefTo<TRefType, THostType>
+public class RefTo<TRefType, THostType>
     where TRefType : class
     where THostType : UnityEngine.Object
 {
@@ -36,7 +36,7 @@ public sealed class RefTo<TRefType, THostType>
         return null;
     }
 
-    public RefTo(THostType host, long referenceId)
+    internal RefTo(THostType host, long referenceId)
     {
         _host = host;
         _referenceId = referenceId;
@@ -46,5 +46,15 @@ public sealed class RefTo<TRefType, THostType>
     {
         return new RefTo<TRefType, THostType>(host, _referenceId);
     }
+
+    internal RefTo()
+    {
+    }
+}
+
+[Serializable]
+public sealed class RefTo<TRefType> : RefTo<TRefType, UnityEngine.Object>
+    where TRefType : class
+{
 }
 #endif
