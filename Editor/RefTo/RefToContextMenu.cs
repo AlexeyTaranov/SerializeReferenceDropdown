@@ -17,7 +17,7 @@ namespace SerializeReferenceDropdown.Editor.RefTo
     [InitializeOnLoad]
     public class RefToContextMenu
     {
-        private static (long refId, Object host, Type referenceType) copy;
+        public static (long refId, Object host, Type referenceType) copy;
 
         static RefToContextMenu()
         {
