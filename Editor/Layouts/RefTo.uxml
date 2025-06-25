@@ -5,12 +5,10 @@
     <Style src="/Packages/com.alexeytaranov.serializereferencedropdown/Editor/Layouts/SerializeReferenceToolStyle.uss" />
     <ui:VisualElement>
         <ui:GroupBox class="refto-groupbox-root">
-            <ui:Label text="Property" name="property-name" class="refto-property-name" />
-            <ui:Label text="Label" name="field-name" class="refto-field-name" />
+            <ui:Label text="Property" name="property-name" display-tooltip-when-elided="false" class="refto-property-name" />
             <ui:VisualElement class="refto-space" />
-            <ui:Label text="Label" name="ref-name" class="refto-ref-name" />
+            <ui:Label text="Label" name="ref-name" display-tooltip-when-elided="false" class="refto-ref-name" />
             <ui:VisualElement class="refto-space" />
-            <ui:Label text="Host:" />
             <uie:ObjectField name="host" enabled="true" class="refto-host-object" />
             <ui:VisualElement class="refto-space" />
             <ui:Button name="fix-missing-references" text="Fix" tooltip="Fix Missing References" />

@@ -21,9 +21,10 @@
 }
 
 .refto-property-name {
-    max-width: 100px;
     color: rgb(255, 255, 255);
-    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 80px;
 }
 
 .refto-field-name {
@@ -45,7 +46,9 @@
     background-color: rgb(88, 88, 88);
     padding-right: 6px;
     padding-left: 6px;
-    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 120px;
 }
 
 .refto-groupbox-root {
@@ -67,6 +70,7 @@
 
 .refto-host-object {
     flex-shrink: 1;
+    flex-grow: 1;
 }
 
 .error-bg {
