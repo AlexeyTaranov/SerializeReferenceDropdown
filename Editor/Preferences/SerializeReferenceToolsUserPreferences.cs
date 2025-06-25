@@ -11,9 +11,8 @@ namespace SerializeReferenceDropdown.Editor.Preferences
 
         private const string UserPreferencesPrefKey = "SerializeReferenceDropdown.Editor.UserPreferences";
 
-        [SerializeField] private bool enableCrossReferencesCheck;
+        [SerializeField] private bool enableCrossReferencesCheck = true;
         [SerializeField] private bool enableSearchTool;
-        [SerializeField] private bool copyDataWhenAssignNewType;
         [SerializeField] private int searchToolIntegrationPort = 11000;
 
         public bool EnableCrossReferencesCheck
@@ -26,12 +25,6 @@ namespace SerializeReferenceDropdown.Editor.Preferences
         {
             get => enableSearchTool;
             set => enableSearchTool = value;
-        }
-
-        public bool CopyDataWithNewType
-        {
-            get => copyDataWhenAssignNewType;
-            set => copyDataWhenAssignNewType = value;
         }
 
         public int SearchToolIntegrationPort

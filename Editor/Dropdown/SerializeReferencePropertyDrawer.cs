@@ -125,7 +125,6 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
             void ApplyValueToProperty(object value)
             {
-                var needSaveData = SerializeReferenceToolsUserPreferences.GetOrLoadSettings().CopyDataWithNewType;
                 var targets = property.serializedObject.targetObjects;
 
                 // Multiple object edit.
@@ -135,12 +134,12 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                     using var so = new SerializedObject(target);
                     var targetProperty = so.FindProperty(property.propertyPath);
                     var previousJsonData = string.Empty;
-                    if (needSaveData && targetProperty.managedReferenceValue != null)
+                    if (targetProperty.managedReferenceValue != null)
                     {
                         previousJsonData = JsonUtility.ToJson(targetProperty.managedReferenceValue);
                     }
 
-                    if (needSaveData && value != null)
+                    if (value != null)
                     {
                         JsonUtility.FromJsonOverwrite(previousJsonData, value);
                     }
