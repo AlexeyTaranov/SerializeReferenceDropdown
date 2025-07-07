@@ -46,6 +46,14 @@
                         <uie:ToolbarToggle label="ScriptableObjects" value="true"
                                            name="unity-objects-activate-scriptableobjects" />
                     </uie:Toolbar>
+
+                    <ui:ToggleButtonGroup class="group-margin">
+                        <ui:Button text="Fast" name="unity-objects-fast-check"
+                                   tooltip="Better performance without reference checks" class="maximize-size" />
+                        <ui:Button text="Slow" name="unity-objects-reference-check"
+                                   tooltip="Slower performance: check missing types, cross references"
+                                   class="maximize-size" />
+                    </ui:ToggleButtonGroup>
                     <uie:ToolbarSearchField name="unity-objects-filter-name" class="max-width-auto" />
                 </ui:VisualElement>
                 <ui:VisualElement style="flex-grow: 1;">

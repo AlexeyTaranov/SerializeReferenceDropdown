@@ -52,6 +52,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
         private Action<VisualElement, int> bindItemPrefabComponentDataAction;
 
         private (SearchToolData.UnityObjectReferenceData referenceData, Object unityObject) selectedUnityData;
+        private bool checkUnityObjects;
 
 
         #region Window
@@ -116,6 +117,8 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             rootVisualElement.Q<Button>("edit-missing-type").clicked += () => editMissingType?.Invoke();
             rootVisualElement.Q<Button>("select-props").clicked += () => SetDisplayPropsOrIDs(true);
             rootVisualElement.Q<Button>("select-ids").clicked += () => SetDisplayPropsOrIDs(false);
+            rootVisualElement.Q<Button>("unity-objects-fast-check").clicked += () => SetUnityObjectsCheck(false);
+            rootVisualElement.Q<Button>("unity-objects-reference-check").clicked += () => SetUnityObjectsCheck(true);
             missingTypesButton = rootVisualElement.Q<Button>("missing-types");
             missingTypesButton.SetDisplayElement(false);
             missingTypesButton.clicked += SetDisplayMissingTypes;
@@ -208,6 +211,12 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 listView.selectionType = SelectionType.Single;
             }
 
+            void SetUnityObjectsCheck(bool isActiveChecks)
+            {
+                checkUnityObjects = isActiveChecks;
+                unityObjectsListView.RefreshItems();
+            }
+
             VisualElement MakeUnityObjectItem()
             {
                 var root = new VisualElement();
@@ -238,8 +247,17 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                     var typeImage = assetData is SearchToolData.PrefabData ? prefabIcon : soIcon;
                     typeIcon.image = typeImage;
 
-                    var isHaveCrossReferences = assetData.IsHaveCrossReferences();
                     var fixCrossRefsImage = element.Q<Image>("fix-cross-refs");
+                    var missingTypesImage = element.Q<Image>("missing-types");
+
+                    if (checkUnityObjects == false)
+                    {
+                        fixCrossRefsImage.SetDisplayElement(false);
+                        missingTypesImage.SetDisplayElement(false);
+                        return;
+                    }
+
+                    var isHaveCrossReferences = assetData.IsHaveCrossReferences();
                     fixCrossRefsImage.SetDisplayElement(isHaveCrossReferences);
                     fixCrossRefsImage.image = warningIcon;
 
@@ -250,6 +268,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                     {
                         haveMissingTypes = SerializationUtility.HasManagedReferencesWithMissingTypes(asset);
                     }
+
                     if (asset is GameObject)
                     {
                         using var editingScope = new PrefabUtility.EditPrefabContentsScope(assetData.AssetPath);
@@ -264,7 +283,6 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                         }
                     }
 
-                    var missingTypesImage = element.Q<Image>("missing-types");
                     missingTypesImage.image = errorIcon;
                     missingTypesImage.SetDisplayElement(haveMissingTypes);
                 }
