@@ -244,7 +244,12 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                     fixCrossRefsImage.image = warningIcon;
 
                     var asset = AssetDatabase.LoadAssetAtPath<Object>(assetData.AssetPath);
-                    var hasMissingTypes = SerializationUtility.HasManagedReferencesWithMissingTypes(asset);
+                    bool haveMissingTypes = false;
+                    if (asset.GetType().IsAssignableFrom(typeof(ScriptableObject)) ||
+                        asset.GetType().IsAssignableFrom(typeof(Component)))
+                    {
+                        haveMissingTypes = SerializationUtility.HasManagedReferencesWithMissingTypes(asset);
+                    }
                     if (asset is GameObject)
                     {
                         using var editingScope = new PrefabUtility.EditPrefabContentsScope(assetData.AssetPath);
@@ -253,7 +258,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                         {
                             if (SerializationUtility.HasManagedReferencesWithMissingTypes(component))
                             {
-                                hasMissingTypes = true;
+                                haveMissingTypes = true;
                                 break;
                             }
                         }
@@ -261,7 +266,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
                     var missingTypesImage = element.Q<Image>("missing-types");
                     missingTypesImage.image = errorIcon;
-                    missingTypesImage.SetDisplayElement(hasMissingTypes);
+                    missingTypesImage.SetDisplayElement(haveMissingTypes);
                 }
             }
 
@@ -897,14 +902,14 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
         }
 
 
-        private string GetFilePath()
+        private static string GetFilePath()
         {
             var editorLibraryPath = Path.Combine(Application.dataPath, "../Library");
             var path = Path.Combine(editorLibraryPath, fileName);
             return path;
         }
 
-        private void LoadAssetDatabaseFromFile()
+        private static (SearchToolData data, DateTime fileCreateTime) LoadSearchData()
         {
             var path = GetFilePath();
             if (File.Exists(path))
@@ -919,16 +924,27 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                         }
                     );
                     var creationTime = File.GetCreationTime(path);
-                    ApplyAssetDatabase(searchCachedData, creationTime);
+                    return (searchCachedData, creationTime);
                 }
                 catch (Exception e)
                 {
                     Log.Error(e);
                 }
             }
+
+            return (null, default);
         }
 
-        private void SaveAssetDatabaseToFile(SearchToolData searchToolData)
+        private void LoadAssetDatabaseFromFile()
+        {
+            var (data, time) = LoadSearchData();
+            if (data != null)
+            {
+                ApplyAssetDatabase(data, time);
+            }
+        }
+
+        private static void SaveAssetDatabaseToFile(SearchToolData searchToolData)
         {
             var path = GetFilePath();
             if (File.Exists(path))
@@ -936,9 +952,6 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 File.Delete(path);
             }
 
-            var settings = SerializeReferenceToolsUserPreferences.GetOrLoadSettings();
-            var port = settings.SearchToolIntegrationPort;
-            searchToolData.IntegrationPort = port;
             var json = JsonConvert.SerializeObject(searchToolData, Formatting.Indented);
             File.WriteAllText(path, json);
         }
