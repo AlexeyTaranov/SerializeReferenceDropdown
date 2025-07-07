@@ -52,6 +52,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
         private Action<VisualElement, int> bindItemPrefabComponentDataAction;
 
         private (SearchToolData.UnityObjectReferenceData referenceData, Object unityObject) selectedUnityData;
+        private bool checkUnityObjects;
 
 
         #region Window
@@ -116,6 +117,8 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             rootVisualElement.Q<Button>("edit-missing-type").clicked += () => editMissingType?.Invoke();
             rootVisualElement.Q<Button>("select-props").clicked += () => SetDisplayPropsOrIDs(true);
             rootVisualElement.Q<Button>("select-ids").clicked += () => SetDisplayPropsOrIDs(false);
+            rootVisualElement.Q<Button>("unity-objects-fast-check").clicked += () => SetUnityObjectsCheck(false);
+            rootVisualElement.Q<Button>("unity-objects-reference-check").clicked += () => SetUnityObjectsCheck(true);
             missingTypesButton = rootVisualElement.Q<Button>("missing-types");
             missingTypesButton.SetDisplayElement(false);
             missingTypesButton.clicked += SetDisplayMissingTypes;
@@ -208,6 +211,12 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 listView.selectionType = SelectionType.Single;
             }
 
+            void SetUnityObjectsCheck(bool isActiveChecks)
+            {
+                checkUnityObjects = isActiveChecks;
+                unityObjectsListView.RefreshItems();
+            }
+
             VisualElement MakeUnityObjectItem()
             {
                 var root = new VisualElement();
@@ -238,13 +247,28 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                     var typeImage = assetData is SearchToolData.PrefabData ? prefabIcon : soIcon;
                     typeIcon.image = typeImage;
 
-                    var isHaveCrossReferences = assetData.IsHaveCrossReferences();
                     var fixCrossRefsImage = element.Q<Image>("fix-cross-refs");
+                    var missingTypesImage = element.Q<Image>("missing-types");
+
+                    if (checkUnityObjects == false)
+                    {
+                        fixCrossRefsImage.SetDisplayElement(false);
+                        missingTypesImage.SetDisplayElement(false);
+                        return;
+                    }
+
+                    var isHaveCrossReferences = assetData.IsHaveCrossReferences();
                     fixCrossRefsImage.SetDisplayElement(isHaveCrossReferences);
                     fixCrossRefsImage.image = warningIcon;
 
                     var asset = AssetDatabase.LoadAssetAtPath<Object>(assetData.AssetPath);
-                    var hasMissingTypes = SerializationUtility.HasManagedReferencesWithMissingTypes(asset);
+                    bool haveMissingTypes = false;
+                    if (asset.GetType().IsAssignableFrom(typeof(ScriptableObject)) ||
+                        asset.GetType().IsAssignableFrom(typeof(Component)))
+                    {
+                        haveMissingTypes = SerializationUtility.HasManagedReferencesWithMissingTypes(asset);
+                    }
+
                     if (asset is GameObject)
                     {
                         using var editingScope = new PrefabUtility.EditPrefabContentsScope(assetData.AssetPath);
@@ -253,15 +277,14 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                         {
                             if (SerializationUtility.HasManagedReferencesWithMissingTypes(component))
                             {
-                                hasMissingTypes = true;
+                                haveMissingTypes = true;
                                 break;
                             }
                         }
                     }
 
-                    var missingTypesImage = element.Q<Image>("missing-types");
                     missingTypesImage.image = errorIcon;
-                    missingTypesImage.SetDisplayElement(hasMissingTypes);
+                    missingTypesImage.SetDisplayElement(haveMissingTypes);
                 }
             }
 
@@ -897,14 +920,14 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
         }
 
 
-        private string GetFilePath()
+        private static string GetFilePath()
         {
             var editorLibraryPath = Path.Combine(Application.dataPath, "../Library");
             var path = Path.Combine(editorLibraryPath, fileName);
             return path;
         }
 
-        private void LoadAssetDatabaseFromFile()
+        private static (SearchToolData data, DateTime fileCreateTime) LoadSearchData()
         {
             var path = GetFilePath();
             if (File.Exists(path))
@@ -919,16 +942,27 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                         }
                     );
                     var creationTime = File.GetCreationTime(path);
-                    ApplyAssetDatabase(searchCachedData, creationTime);
+                    return (searchCachedData, creationTime);
                 }
                 catch (Exception e)
                 {
                     Log.Error(e);
                 }
             }
+
+            return (null, default);
         }
 
-        private void SaveAssetDatabaseToFile(SearchToolData searchToolData)
+        private void LoadAssetDatabaseFromFile()
+        {
+            var (data, time) = LoadSearchData();
+            if (data != null)
+            {
+                ApplyAssetDatabase(data, time);
+            }
+        }
+
+        private static void SaveAssetDatabaseToFile(SearchToolData searchToolData)
         {
             var path = GetFilePath();
             if (File.Exists(path))
@@ -936,9 +970,6 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 File.Delete(path);
             }
 
-            var settings = SerializeReferenceToolsUserPreferences.GetOrLoadSettings();
-            var port = settings.SearchToolIntegrationPort;
-            searchToolData.IntegrationPort = port;
             var json = JsonConvert.SerializeObject(searchToolData, Formatting.Indented);
             File.WriteAllText(path, json);
         }

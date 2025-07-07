@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SerializeReferenceDropdown.Editor.Utils;
 
 namespace SerializeReferenceDropdown.Editor.SearchTool
 {

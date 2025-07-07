@@ -27,12 +27,6 @@ namespace SerializeReferenceDropdown.Editor.Preferences
             set => enableSearchTool = value;
         }
 
-        public int SearchToolIntegrationPort
-        {
-            get => searchToolIntegrationPort;
-            set => searchToolIntegrationPort = value;
-        }
-
         public static SerializeReferenceToolsUserPreferences GetOrLoadSettings()
         {
             if (loadedInstance != null)
