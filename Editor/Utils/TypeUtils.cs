@@ -38,6 +38,7 @@ namespace SerializeReferenceDropdown.Editor.Utils
 
             var splitFieldTypename = typeName.Split(' ');
             var assemblyName = splitFieldTypename[0];
+            assemblyName = assemblyName == "Assembly" ? "Assembly-CSharp" : assemblyName;
             var subStringTypeName = splitFieldTypename[1];
             if (splitFieldTypename.Length > 2)
             {

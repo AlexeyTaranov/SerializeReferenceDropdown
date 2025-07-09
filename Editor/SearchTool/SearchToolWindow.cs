@@ -814,6 +814,9 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 return;
             }
 
+            searchData.PrefabsData = searchData.PrefabsData.OrderBy(t => Path.GetFileNameWithoutExtension(t.AssetPath)).ToList();
+            searchData.SOsData = searchData.SOsData.OrderBy(t => Path.GetFileNameWithoutExtension(t.AssetPath)).ToList();
+
             SaveAssetDatabaseToFile(searchData);
             ApplyAssetDatabase(searchData, DateTime.Now);
 
