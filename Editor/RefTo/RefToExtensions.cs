@@ -17,6 +17,11 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             var toType = property.boxedValue?.GetType();
             refToType = null;
             hostType = null;
+            if (toType == null)
+            {
+                return false;
+            }
+
             if (toType?.BaseType != null && toType?.BaseType != typeof(System.Object))
             {
                 toType = toType.BaseType;
