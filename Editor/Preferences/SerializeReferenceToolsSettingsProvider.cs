@@ -35,6 +35,8 @@ namespace SerializeReferenceDropdown.Editor.Preferences
             preferences.EnableCrossReferencesCheck = GUILayout.Toggle(preferences.EnableCrossReferencesCheck,
                 "Enable Cross References Check");
             preferences.EnableSearchTool = GUILayout.Toggle(preferences.EnableSearchTool, "Enable Search Tool");
+            preferences.EnableRiderIntegration =
+                GUILayout.Toggle(preferences.EnableRiderIntegration, "Enable Rider Integration");
             
 
             if (EditorGUI.EndChangeCheck())
