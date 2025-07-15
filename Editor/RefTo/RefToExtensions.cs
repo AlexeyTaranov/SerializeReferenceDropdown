@@ -29,6 +29,12 @@ namespace SerializeReferenceDropdown.Editor.RefTo
                 return true;
             }
 
+            if (IsGenericTypeOf(toType, typeof(RefTo<>)))
+            {
+                refToType = toType.GenericTypeArguments[0];
+                hostType = typeof(UnityEngine.Object);
+            }
+
             return false;
         }
 
