@@ -46,15 +46,51 @@ public class RefTo<TRefType, THostType>
     {
         return new RefTo<TRefType, THostType>(host, _referenceId);
     }
-
-    internal RefTo()
-    {
-    }
 }
 
+//Two different generic types - https://github.com/AlexeyTaranov/SerializeReferenceDropdown/issues/55
 [Serializable]
-public sealed class RefTo<TRefType> : RefTo<TRefType, UnityEngine.Object>
+public sealed class RefTo<TRefType>
     where TRefType : class
 {
+    [SerializeField] private UnityEngine.Object _host;
+    [SerializeField] private long _referenceId;
+
+    private TRefType _cache;
+    private bool _isCached;
+
+    public UnityEngine.Object Host => _host;
+    public long ReferenceId => _referenceId;
+
+    public TRefType Get()
+    {
+        if (_host != null)
+        {
+#if !DISABLE_REFTO_CACHE
+            if (_isCached)
+            {
+                return _cache;
+            }
+#endif
+            var value = UnityEngine.Serialization.ManagedReferenceUtility.GetManagedReference(_host, _referenceId);
+            var castObject = value as TRefType;
+            _cache = castObject;
+            _isCached = true;
+            return value as TRefType;
+        }
+
+        return null;
+    }
+
+    internal RefTo(UnityEngine.Object host, long referenceId)
+    {
+        _host = host;
+        _referenceId = referenceId;
+    }
+
+    public RefTo<TRefType> CopyWithNewHost(UnityEngine.Object host)
+    {
+        return new RefTo<TRefType>(_host, _referenceId);
+    }
 }
 #endif
