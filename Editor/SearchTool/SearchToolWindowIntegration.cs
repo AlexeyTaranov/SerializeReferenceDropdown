@@ -1,10 +1,8 @@
 using System;
-using System.IO;
 using System.IO.Pipes;
-using System.Net;
-using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using SerializeReferenceDropdown.Editor.Preferences;
 using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
 
@@ -19,10 +17,8 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
         [InitializeOnLoadMethod]
         public static void Run()
         {
-            EditorApplication.delayCall = StartServerNewPort;
-
-
-            void StartServerNewPort()
+            var activeIntegration = SerializeReferenceToolsUserPreferences.GetOrLoadSettings().EnableRiderIntegration;
+            if (activeIntegration)
             {
                 serverThread = new Thread(StartServer)
                 {
@@ -30,12 +26,6 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 };
                 serverThread.Start();
             }
-        }
-
-
-        private static void StopServer()
-        {
-            serverThread.Join();
         }
 
 
