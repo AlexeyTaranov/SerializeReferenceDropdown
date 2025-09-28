@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using SerializeReferenceDropdown.Editor.EditReferenceType;
@@ -7,7 +8,7 @@ using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.UIElements;
 using UnityEngine;
-using UnityEngine.Serialization;
+using UnityEngine.Pool;
 using UnityEngine.UIElements;
 
 namespace SerializeReferenceDropdown.Editor.Dropdown
@@ -16,12 +17,14 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
     public partial class SerializeReferencePropertyDrawer : PropertyDrawer
     {
         private StyleColor defaultSelectTypeTextColor;
+
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement();
             if (property.propertyType == SerializedPropertyType.ManagedReference)
             {
                 DrawUIToolkitTypeDropdown(root, property);
+                AddSelfToAllProperties(property);
             }
             else
             {
@@ -29,6 +32,30 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             }
 
             return root;
+        }
+
+        private void AddSelfToAllProperties(SerializedProperty property)
+        {
+            using var pooled = ListPool<SerializeReferencePropertyDrawer>.Get(out var destroyedPropertyDrawers);
+            foreach (var pair in _allPropertyDrawers)
+            {
+                try
+                {
+                    // Need find better solution how to check - is exist or not property drawer
+                    var context = pair.Value.serializedObject.context;
+                }
+                catch (Exception e)
+                {
+                    destroyedPropertyDrawers.Add(pair.Key);
+                }
+            }
+
+            foreach (var propertyDrawer in destroyedPropertyDrawers)
+            {
+                _allPropertyDrawers.Remove(propertyDrawer);
+            }
+
+            _allPropertyDrawers[this] = property;
         }
 
         private void DrawUIToolkitTypeDropdown(VisualElement root, SerializedProperty property)
@@ -45,10 +72,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             defaultSelectTypeTextColor = selectTypeButton.style.color;
 
             var fixCrossRefButton = root.Q<Button>("fix-cross-references");
-            fixCrossRefButton.clickable.clicked += () =>
-            {
-                FixCrossReference(property);
-            };
+            fixCrossRefButton.clickable.clicked += () => { FixCrossReference(property); };
             var openSourceFIleButton = root.Q<Button>("open-source-file");
             openSourceFIleButton.SetDisplayElement(false);
             openSourceFIleButton.clicked += () => { OpenSourceFile(property.managedReferenceValue.GetType()); };
@@ -68,13 +92,40 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             root.TrackSerializedObjectValue(property.serializedObject, RefreshDropdown);
             RefreshDropdown(property.serializedObject);
 
+            var needPingOnFirstShowPropertyDrawer = previousSelection != pingObject && previousSelection != null &&
+                                                    property.managedReferenceId == pingRefId;
+
+            if (needPingOnFirstShowPropertyDrawer)
+            {
+                EditorApplication.delayCall += PingImpl;
+            }
+            _pingSelf = PingNow;
+            
+            void PingNow()
+            {
+                if (pingObject == property.serializedObject.targetObject && property.managedReferenceId == pingRefId)
+                {
+                    PingImpl();
+                }
+            }
+
+            void PingImpl()
+            {
+                var rootElement = root.Q<VisualElement>("root");
+                var pingStyle = "ping-serialize-reference";
+                if (rootElement.ClassListContains(pingStyle) == false)
+                {
+                    rootElement.AddToClassList(pingStyle);
+                    rootElement.RegisterCallbackOnce<TransitionEndEvent>(evt =>
+                        rootElement.RemoveFromClassList(pingStyle));
+                }
+            }
+
             void ShowDropdown()
             {
                 var dropdown = new SerializeReferenceAdvancedDropdown(new AdvancedDropdownState(),
-                    assignableTypes.Select(GetTypeName), index =>
-                    {
-                        WriteNewInstanceByIndexType(index, property, registerUndo: true);
-                    });
+                    assignableTypes.Select(GetTypeName),
+                    index => { WriteNewInstanceByIndexType(index, property, registerUndo: true); });
                 var buttonMatrix = selectTypeButton.worldTransform;
                 var position = new Vector3(buttonMatrix.m03, buttonMatrix.m13, buttonMatrix.m23);
                 var buttonRect = new Rect(position, selectTypeButton.contentRect.size);
@@ -94,7 +145,9 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 {
                     var missingTypes = SerializationUtility.GetManagedReferencesWithMissingTypes(so.targetObject);
                     var thisMissingType = missingTypes.FirstOrDefault(t => t.referenceId == prop.managedReferenceId);
-                    selectedTypeName = string.IsNullOrEmpty(thisMissingType.className) ? "MISSING TYPE" : $"MISSING TYPE: {thisMissingType.className}";
+                    selectedTypeName = string.IsNullOrEmpty(thisMissingType.className)
+                        ? "MISSING TYPE"
+                        : $"MISSING TYPE: {thisMissingType.className}";
                     tooltipText = thisMissingType.GetDetailData();
                     selectTypeButton.AddToClassList("error-bg");
                 }
@@ -102,7 +155,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 {
                     selectTypeButton.RemoveFromClassList("error-bg");
                 }
-                
+
                 selectTypeButton.text = selectedTypeName;
                 selectTypeButton.tooltip = tooltipText;
                 selectTypeButton.style.color = defaultSelectTypeTextColor;
@@ -138,7 +191,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                     }
                 }
             }
-            
+
             void ModifyDirectType()
             {
                 var prop = property.serializedObject.FindProperty(propertyPath);
@@ -164,7 +217,8 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                     }
                     else
                     {
-                        EditReferenceTypeUtils.TryModifyDirectFileReferenceType(path, property.managedReferenceId, typeData,
+                        EditReferenceTypeUtils.TryModifyDirectFileReferenceType(path, property.managedReferenceId,
+                            typeData,
                             data);
                     }
                 });

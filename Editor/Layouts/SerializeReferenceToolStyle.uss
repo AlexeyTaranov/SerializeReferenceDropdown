@@ -24,7 +24,7 @@
     color: rgb(255, 255, 255);
     overflow: hidden;
     text-overflow: ellipsis;
-    width: 80px;
+    width: 80px;    
 }
 
 .refto-field-name {
@@ -48,7 +48,11 @@
     padding-left: 6px;
     overflow: hidden;
     text-overflow: ellipsis;
-    width: 120px;
+    min-width: 20px;
+    width: 80px;    
+    max-width: 180px;
+    flex-grow: 1;
+    flex-shrink: 1;
 }
 
 .refto-groupbox-root {
@@ -69,10 +73,39 @@
 }
 
 .refto-host-object {
-    flex-shrink: 1;
     flex-grow: 1;
+    flex-shrink: 1;
+    width: 20px;
 }
 
 .error-bg {
     background-color: rgb(226, 91, 78);
+}
+
+.ping-serialize-reference {
+    background-color: rgb(0, 255, 2);
+}
+
+.ping-transition {
+    transition-duration: 1s;
+    transition-property: background-color;
+    transition-timing-function: ease-out-sine;
+}
+
+.refto-groupbox-root-overlay {
+    width: 100%;
+    position: absolute;
+    flex-shrink: 1;
+    height: 18px;
+    flex-grow: 1;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-bottom: 1;
+    margin-right: 0;
+    margin-top: 1;
+    background-color: rgba(255, 255, 255, 0);
+    border-top-width: 0;
+    border-bottom-width: 0;
+    margin-left: 120px;
+    padding-right: 120px;
 }

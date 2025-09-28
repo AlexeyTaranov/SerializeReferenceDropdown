@@ -19,7 +19,48 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
         private List<Type> assignableTypes;
         private Rect propertyRect;
 
+        private static Object pingObject;
+        private static Object previousSelection;
+        private static long pingRefId;
+
+        private static Dictionary<SerializeReferencePropertyDrawer, SerializedProperty> _allPropertyDrawers =
+            new Dictionary<SerializeReferencePropertyDrawer, SerializedProperty>();
+
+        private Action _pingSelf;
+
         #region Dropdown
+
+        public static void PingSerializeReference(Object selectionObject, long refId)
+        {
+            previousSelection = Selection.activeObject;
+            Selection.activeObject = selectionObject;
+            pingObject = selectionObject;
+            pingRefId = refId;
+            PingAll();
+
+            EditorApplication.delayCall += () =>
+            {
+                previousSelection = null;
+                pingObject = null;
+                pingRefId = -1;
+            };
+        }
+
+        private static void PingAll()
+        {
+            foreach (var pair in _allPropertyDrawers)
+            {
+                if (pair.Value != null)
+                {
+                    pair.Key.PingSelf();
+                }
+            }
+        }
+
+        private void PingSelf()
+        {
+            _pingSelf.Invoke();
+        }
 
         public static string GetTypeName(Type type)
         {
