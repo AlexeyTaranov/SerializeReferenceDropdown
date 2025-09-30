@@ -18,7 +18,6 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 {
     public class SearchToolWindow : EditorWindow
     {
-        private const string fileName = "SerializeReference_ToolSearch_DataCacheFile.json";
         private static SearchToolWindow instance;
 
         private Type selectedType = typeof(object);
@@ -80,7 +79,12 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             temp = CreateInstance<SearchToolWindowTempSO>();
             tempSO = new SerializedObject(temp);
             CreateUiToolkitLayout();
-            LoadAssetDatabaseFromFile();
+            var (loadedData, time) = SearchToolWindowAssetDatabase.LoadSearchData();
+            if (loadedData != null)
+            {
+                ApplyAssetDatabase(loadedData, time);
+            }
+
             if (selectedType == null)
             {
                 SetNewType(typeof(object));
@@ -765,9 +769,9 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
         private void RefreshAssetDatabaseWithUpdateSelectedUnityObject()
         {
-            FillReferenceDataFromUnityObject(selectedUnityData.unityObject, selectedUnityData.referenceData);
+            SearchToolWindowAssetDatabase.FillReferenceDataFromUnityObject(selectedUnityData.unityObject, selectedUnityData.referenceData);
             AddUnityReferenceData(selectedUnityData.referenceData, selectedUnityData.unityObject);
-            SaveAssetDatabaseToFile(lastSearchData);
+            SearchToolWindowAssetDatabase.SaveAssetDatabaseToFile(lastSearchData);
             unityObjectsListView.RefreshItems();
         }
 
@@ -794,187 +798,10 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
         private void RefreshAssetsDatabase()
         {
-            var searchData = new SearchToolData();
-            var soIterator = new FileIterator<ScriptableObject>(FillScriptableObjects)
+            if (SearchToolWindowAssetDatabase.TryRefreshAssetsDatabase(out var searchData))
             {
-                ProgressBarLabel = "Step 1: Analyze Scriptable Objects",
-                SkipFileExtensions = new List<string>() { ".uss", ".uxml" }
-            };
-            if (soIterator.IterateOnUnityAssetFiles() == IteratorResult.CanceledByUser)
-            {
-                return;
+                ApplyAssetDatabase(searchData, DateTime.Now);
             }
-
-            var prefabIterator = new FileIterator<GameObject>(FillPrefabs)
-            {
-                ProgressBarLabel = "Step 2: Analyze Prefabs"
-            };
-            if (prefabIterator.IterateOnUnityAssetFiles() == IteratorResult.CanceledByUser)
-            {
-                return;
-            }
-
-            searchData.PrefabsData = searchData.PrefabsData.OrderBy(t => Path.GetFileNameWithoutExtension(t.AssetPath)).ToList();
-            searchData.SOsData = searchData.SOsData.OrderBy(t => Path.GetFileNameWithoutExtension(t.AssetPath)).ToList();
-
-            SaveAssetDatabaseToFile(searchData);
-            ApplyAssetDatabase(searchData, DateTime.Now);
-
-            bool FillScriptableObjects(string path)
-            {
-                var so = AssetDatabase.LoadMainAssetAtPath(path);
-                var soData = new SearchToolData.ScriptableObjectData() { AssetPath = path };
-                FillReferenceDataFromUnityObject(so, soData);
-                if (soData.RefIdsData.Any())
-                {
-                    searchData.SOsData.Add(soData);
-                }
-
-                return false;
-            }
-
-            bool FillPrefabs(string path)
-            {
-                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-                if (prefab == null)
-                {
-                    return false;
-                }
-
-                if (PrefabUtility.IsPartOfAnyPrefab(prefab) == false)
-                {
-                    return false;
-                }
-
-                var prefabData = new SearchToolData.PrefabData(path);
-                var components = prefab.GetComponentsInChildren<MonoBehaviour>(true);
-                foreach (var component in components)
-                {
-                    if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(component, out var guid, out var localId))
-                    {
-                        var componentData = new SearchToolData.PrefabComponentData()
-                        {
-                            FileId = localId,
-                        };
-                        FillReferenceDataFromUnityObject(component, componentData);
-                        if (componentData.RefIdsData.Any())
-                        {
-                            prefabData.componentsData.Add(componentData);
-                        }
-                    }
-                }
-
-                if (prefabData.componentsData.FirstOrDefault(t => t.RefIdsData.Any()) != null)
-                {
-                    searchData.PrefabsData.Add(prefabData);
-                }
-
-                return false;
-            }
-        }
-
-        private void FillReferenceDataFromUnityObject(Object unityObject,
-            SearchToolData.UnityObjectReferenceData refData)
-        {
-            refData.RefIdsData = GetReferenceIdsListFromObject();
-            refData.RefPropertiesData = GetReferencePropertiesListFromObject();
-
-            List<SearchToolData.ReferenceIdData> GetReferenceIdsListFromObject()
-            {
-                var ids = ManagedReferenceUtility.GetManagedReferenceIds(unityObject);
-                var referenceList = new List<SearchToolData.ReferenceIdData>();
-                foreach (var id in ids)
-                {
-                    var type = ManagedReferenceUtility.GetManagedReference(unityObject, id)?.GetType();
-                    if (type != null)
-                    {
-                        referenceList.Add(new SearchToolData.ReferenceIdData()
-                        {
-                            objectType = type,
-                            referenceId = id,
-                        });
-                    }
-                }
-
-                return referenceList;
-            }
-
-            List<SearchToolData.ReferencePropertyData> GetReferencePropertiesListFromObject()
-            {
-                var propertiesData = new List<SearchToolData.ReferencePropertyData>();
-                SOUtils.TraverseSO(unityObject, FillPropertiesData);
-                return propertiesData.Distinct().ToList();
-
-                bool FillPropertiesData(SerializedProperty property)
-                {
-                    if (property.managedReferenceValue != null)
-                    {
-                        propertiesData.Add(new SearchToolData.ReferencePropertyData()
-                        {
-                            assignedReferenceId = property.managedReferenceId,
-                            propertyPath = property.propertyPath,
-                            propertyType = property.managedReferenceValue.GetType()
-                        });
-                    }
-
-                    return false;
-                }
-            }
-        }
-
-
-        private static string GetFilePath()
-        {
-            var editorLibraryPath = Path.Combine(Application.dataPath, "../Library");
-            var path = Path.Combine(editorLibraryPath, fileName);
-            return path;
-        }
-
-        private static (SearchToolData data, DateTime fileCreateTime) LoadSearchData()
-        {
-            var path = GetFilePath();
-            if (File.Exists(path))
-            {
-                try
-                {
-                    var json = File.ReadAllText(path);
-                    var searchCachedData = JsonConvert.DeserializeObject<SearchToolData>(json,
-                        new JsonSerializerSettings
-                        {
-                            NullValueHandling = NullValueHandling.Ignore
-                        }
-                    );
-                    var creationTime = File.GetCreationTime(path);
-                    return (searchCachedData, creationTime);
-                }
-                catch (Exception e)
-                {
-                    Log.Error(e);
-                }
-            }
-
-            return (null, default);
-        }
-
-        private void LoadAssetDatabaseFromFile()
-        {
-            var (data, time) = LoadSearchData();
-            if (data != null)
-            {
-                ApplyAssetDatabase(data, time);
-            }
-        }
-
-        private static void SaveAssetDatabaseToFile(SearchToolData searchToolData)
-        {
-            var path = GetFilePath();
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-            }
-
-            var json = JsonConvert.SerializeObject(searchToolData, Formatting.Indented);
-            File.WriteAllText(path, json);
         }
 
         private void ApplyAssetDatabase(SearchToolData searchToolData, DateTime searchDataRefreshTime)
