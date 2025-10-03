@@ -66,18 +66,34 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 SearchProvider provider)
             {
                 var query = context.searchQuery.ToLowerInvariant();
-                var newItems = targetTypes.Where(t => t.FullName.ToLowerInvariant().Contains(query))
-                    .Select(CreateSearchItem);
+                var words = query.Split(' ');
+                var newItems = targetTypes.Where(TargetTypeIsContainsQuery).Select(CreateSearchItem);
                 foreach (var item in newItems)
                 {
                     yield return item;
                 }
 
+                bool TargetTypeIsContainsQuery(Type type)
+                {
+                    var typeInvariant = type.FullName.ToLowerInvariant();
+                    foreach (var word in words)
+                    {
+                        if (typeInvariant.Contains(word) == false)
+                        {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }
+                
+
                 SearchItem CreateSearchItem(Type t)
                 {
-                    var item = new SearchItem(t.FullName)
+                    var itemName = t.FullName;
+                    var item = new SearchItem(itemName)
                     {
-                        label = t.FullName,
+                        label = itemName,
                         thumbnail = (Texture2D)icon,
                         context = context,
                         provider = last.provider,

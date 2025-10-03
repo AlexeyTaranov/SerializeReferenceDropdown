@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using Object = UnityEngine.Object;
 
-namespace SerializeReferenceDropdown.Editor.SearchTool
+namespace SerializeReferenceDropdown.Editor.SearchTool.SearchToolWindow
 {
     public static class SearchToolWindowAssetDatabase
     {

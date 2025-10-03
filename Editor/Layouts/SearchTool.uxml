@@ -1,102 +1,44 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements"
-         xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements"
-         editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd"
-         editor-extension-mode="True">
-    <Style src="/Packages/com.alexeytaranov.serializereferencedropdown/Editor/Layouts/SearchToolStyle.uss" />
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Packages/com.alexeytaranov.serializereferencedropdown/Editor/Layouts/SearchToolStyle.uss?fileID=7433441132597879392&amp;guid=aaabece9a65a94609ba1a1a174428104&amp;type=3#SearchToolStyle" />
     <ui:VisualElement class="search-tool-root extend maximize-size">
-        <ui:VisualElement class="search-tool-group-root group-root">
-            <ui:Label text="Database" name="Label" class="search-tool-group-header-label bold-label" />
-            <ui:VisualElement class="search-tool-label-group property-group">
-                <ui:Label text="Last refresh" class="search-tool-label property-label" />
-                <ui:Button text="Refresh" name="refresh-database" />
-                <ui:Label name="last-search-refresh" text="Date" />
-            </ui:VisualElement>
-            <ui:VisualElement class="property-group">
-                <ui:Label text="Total references" class="search-tool-label property-label" />
-                <ui:Label text="?" name="total-type-references-count" class="search-tool-label property-label" />
-            </ui:VisualElement>
-        </ui:VisualElement>
-        <ui:VisualElement class="search-tool-group-root group-root">
-            <ui:Label text="Type filter" class="search-tool-group-header-label bold-label" />
-            <ui:VisualElement class="property-group">
-                <ui:Label text="Selected type" class="search-tool-label property-label" />
+        <ui:Button text="Refresh DB" name="refresh-database" class="property-label" />
+        <ui:VisualElement>
+            <ui:Foldout text="Type Details" enabled="true" toggle-on-label-click="true" value="false">
+                <ui:VisualElement name="target-type-interfaces-root" class="property-group">
+                    <ui:Label text="Interfaces" class="search-tool-label property-label" />
+                </ui:VisualElement>
+                <ui:VisualElement name="target-type-base-root" class="property-group">
+                    <ui:Label text="Base types" class="search-tool-label property-label" />
+                </ui:VisualElement>
+                <ui:VisualElement name="VisualElement" class="property-group">
+                    <ui:Label text="Filtered references" class="search-tool-label property-label" />
+                    <ui:Label text="?" name="target-type-references-count" class="search-tool-label property-label" />
+                </ui:VisualElement>
+            </ui:Foldout>
+            <ui:VisualElement class="property-group type-selector-overlay">
                 <ui:Button text="Type:" name="target-type" />
                 <ui:Button text="#" name="target-type-open-source" />
                 <ui:Button text="Clear" name="clear-target-type" />
             </ui:VisualElement>
-            <ui:VisualElement name="target-type-interfaces-root" class="property-group">
-                <ui:Label text="Interfaces" class="search-tool-label property-label" />
-            </ui:VisualElement>
-            <ui:VisualElement name="target-type-base-root" class="property-group">
-                <ui:Label text="Base types" class="search-tool-label property-label" />
-            </ui:VisualElement>
-            <ui:VisualElement class="property-group">
-                <ui:Label text="Filtered references" class="search-tool-label property-label" />
-                <ui:Label text="?" name="target-type-references-count" class="search-tool-label property-label" />
-            </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="main-view" class="maximize-size flex-row">
-            <ui:VisualElement name="unity-objects-tab"
-                              class="list-selection list-objects-view list-unity-objects-parent list-size group-margin">
-                <ui:Label text="Unity Objects" name="header-label"
-                          class="header-label search-tool-list-header list-header" />
-                <ui:VisualElement class="group-margin">
-                    <uie:Toolbar>
-                        <uie:ToolbarToggle label="Prefabs" name="unity-objects-activate-prefabs" value="true" />
-                        <uie:ToolbarToggle label="ScriptableObjects" value="true"
-                                           name="unity-objects-activate-scriptableobjects" />
-                    </uie:Toolbar>
-
-                    <ui:ToggleButtonGroup class="group-margin">
-                        <ui:Button text="Fast" name="unity-objects-fast-check"
-                                   tooltip="Better performance without reference checks" class="maximize-size" />
-                        <ui:Button text="Slow" name="unity-objects-reference-check"
-                                   tooltip="Slower performance: check missing types, cross references"
-                                   class="maximize-size" />
+            <ui:VisualElement name="unity-objects-tab" class="list-selection list-objects-view list-unity-objects-parent list-size group-margin">
+                <ui:Label text="Unity Objects" class="header-label search-tool-list-header list-header" />
+                <ui:VisualElement class="tree-top-elements" style="min-height: 30px; height: 30px;">
+                    <ui:ToggleButtonGroup enabled="true" class="group-margin">
+                        <ui:Button text="Fast" name="unity-objects-fast-check" tooltip="Better performance without reference checks" class="maximize-size" style="display: none;" />
+                        <ui:Button text="Slow" name="unity-objects-reference-check" tooltip="Slower performance: check missing types, cross references" class="maximize-size" style="display: none;" />
                     </ui:ToggleButtonGroup>
                     <uie:ToolbarSearchField name="unity-objects-filter-name" class="max-width-auto" />
                 </ui:VisualElement>
-                <ui:VisualElement style="flex-grow: 1;">
-                    <ui:Label text="No assets. Need refresh Database" name="non-unity-objects"
-                              class="non-selected-label search-tool-placeholder maximize-size placeholder" />
-                    <ui:ListView name="unity-objects" fixed-item-height="18" class="list-view-scale maximize-size" />
+                <ui:VisualElement class="maximize-size">
+                    <ui:TreeView name="unity-objects" class="maximize-size dark-border" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement enabled="true" name="unity-object-settings"
-                              class="list-view-scale maximize-size flex-row">
-                <ui:VisualElement name="components-root" enabled="true" class="list-size group-margin maximize-size">
-                    <ui:Label text="Components" name="header-label"
-                              class="header-label search-tool-list-header list-header" />
-                    <ui:ListView name="components" fixed-item-height="18" class="maximize-size" />
-                </ui:VisualElement>
-                <ui:VisualElement class="group-margin maximize-size">
-                    <ui:VisualElement name="ref-props-root" class="maximize-size">
-                        <ui:Label text="Reference Selection" name="header-label"
-                                  class="header-label search-tool-list-header list-header" />
-                        <ui:ToggleButtonGroup class="group-margin">
-                            <ui:Button text="Property Path" name="select-props" class="maximize-size" />
-                            <ui:Button text="Reference ID" name="select-ids" class="maximize-size" />
-                            <ui:Button text="Missing types" name="missing-types" class="maximize-size" />
-                        </ui:ToggleButtonGroup>
-                        <ui:ListView name="ref-props" fixed-item-height="18" class="list-size maximize-size" />
-                        <ui:ListView name="ref-ids" fixed-item-height="18" class="list-size maximize-size" />
-                        <ui:ListView name="ref-missing" fixed-item-height="18" class="list-size maximize-size" />
-                    </ui:VisualElement>
-                </ui:VisualElement>
-                <ui:VisualElement name="edit-data-root" class="group-margin list-size">
-                    <ui:Label text="Data Editor" name="header-label"
-                              class="header-label search-tool-list-header list-header" />
-                    <ui:Label text="Edit property" name="edit-property-label" class="search-tool-label group-margin" />
-                    <uie:PropertyField name="edit-property" />
-                    <ui:Button name="apply-data" text="Apply" />
-                </ui:VisualElement>
-                <ui:VisualElement name="missing-type-root" class="group-margin list-size">
-                    <ui:Label text="Missing Type Data" class="header-label search-tool-list-header list-header" />
-                    <ui:Label text="Missing Type Data" name="missing-type-data" class="search-tool-label group-margin" />
-                    <ui:Button name="edit-missing-type" text="Edit Missing Type" />
-                </ui:VisualElement>
-                <ui:Label text="Select any asset on Unity Objects Tab" name="non-selected-unity-object"
-                          class="non-selected-label search-tool-placeholder maximize-size placeholder" />
+            <ui:VisualElement name="edit-data-root" class="group-margin property-edit-size ">
+                <ui:Label text="Data Editor" class="header-label search-tool-list-header list-header" />
+                <ui:Label text="Edit property" name="edit-property-label" class="search-tool-label group-margin" />
+                <uie:PropertyField name="edit-property" />
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

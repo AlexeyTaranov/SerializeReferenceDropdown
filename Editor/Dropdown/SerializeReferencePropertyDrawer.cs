@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using SerializeReferenceDropdown.Editor.Preferences;
 using SerializeReferenceDropdown.Editor.SearchTool;
+using SerializeReferenceDropdown.Editor.SearchTool.SearchToolWindow;
 using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
 using UnityEngine;
