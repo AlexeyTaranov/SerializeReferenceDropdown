@@ -1,19 +1,12 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements"
-         xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements"
-         editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd"
-         editor-extension-mode="True">
-    <Style src="/Packages/com.alexeytaranov.serializereferencedropdown/Editor/Layouts/SerializeReferenceToolStyle.uss" />
-    <ui:VisualElement>
-        <ui:GroupBox class="refto-groupbox-root">
-            <ui:Label text="Property" name="property-name" display-tooltip-when-elided="false" class="refto-property-name" />
-            <ui:VisualElement class="refto-space" />
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Packages/com.alexeytaranov.serializereferencedropdown/Editor/Layouts/SerializeReferenceToolStyle.uss?fileID=7433441132597879392&amp;guid=a9491872dc0164243a237871a3da5141&amp;type=3#SerializeReferenceToolStyle" />
+    <ui:VisualElement style="flex-grow: 1;">
+        <uie:PropertyField style="overflow: hidden;" />
+        <ui:GroupBox enabled="true" class="refto-groupbox-root refto-groupbox-root-overlay">
             <ui:Label text="Label" name="ref-name" display-tooltip-when-elided="false" class="refto-ref-name" />
-            <ui:VisualElement class="refto-space" />
             <uie:ObjectField name="host" enabled="true" class="refto-host-object" />
-            <ui:VisualElement class="refto-space" />
             <ui:Button name="fix-missing-references" text="Fix" tooltip="Fix Missing References" />
-            <ui:Button name="copy" text="C" tooltip="Copy" />
-            <ui:Button name="paste" text="P" tooltip="Paste" />
+            <ui:Button name="ping" text="&gt;" tooltip="Ping Object" />
             <ui:Button name="reset" text="R" tooltip="Reset" />
         </ui:GroupBox>
     </ui:VisualElement>

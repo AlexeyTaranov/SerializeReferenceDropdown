@@ -70,7 +70,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                 var asmName = typeArray[1];
                 var typeString = $"{asmName} {typeName}";
                 var type = TypeUtils.ExtractTypeFromString(typeString);
-                SearchToolWindow.ShowSearchTypeWindow(type);
+                SearchToolWindow.SearchToolWindow.ShowSearchTypeWindow(type);
             }
         }
     }
