@@ -89,13 +89,12 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             propertyField.BindProperty(property);
 
             var (_, targetType, hostType, _, _) = RefToExtensions.GetInspectorValues(property);
-            
+
             var objectField = root.Q<ObjectField>();
             var propertyPath = property.propertyPath;
             var targetObject = property.serializedObject.targetObject;
 
             var pingButton = root.Q<Button>("ping");
-            var resetButton = root.Q<Button>("reset");
 
             var fixButton = root.Q<Button>("fix-missing-references");
             fixButton.SetDisplayElement(false);
@@ -112,8 +111,6 @@ namespace SerializeReferenceDropdown.Editor.RefTo
                     SerializeReferencePropertyDrawer.PingSerializeReference(host, id);
                 }
             };
-
-            resetButton.clicked += Reset;
 
             root.TrackSerializedObjectValue(property.serializedObject, RefreshDynamic);
 
@@ -135,11 +132,6 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             void Refresh()
             {
                 RefreshDynamic(property.serializedObject);
-            }
-
-            void Reset()
-            {
-                RefToExtensions.ResetRefTo(property);
             }
 
             void RefreshDynamic(SerializedObject so)
@@ -164,7 +156,6 @@ namespace SerializeReferenceDropdown.Editor.RefTo
                 }
 
                 fixButton.SetDisplayElement(isErrorType);
-                resetButton.SetDisplayElement(host != null);
             }
 
             void ApplyRefToFromObject(ChangeEvent<Object> evt)
@@ -172,7 +163,7 @@ namespace SerializeReferenceDropdown.Editor.RefTo
                 var newValue = evt.newValue;
                 if (newValue == null)
                 {
-                    Reset();
+                    RefToExtensions.ResetRefTo(property);
                     return;
                 }
 

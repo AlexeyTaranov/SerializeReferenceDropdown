@@ -7,7 +7,6 @@
             <uie:ObjectField name="host" enabled="true" class="refto-host-object" />
             <ui:Button name="fix-missing-references" text="Fix" tooltip="Fix Missing References" />
             <ui:Button name="ping" text="&gt;" tooltip="Ping Object" />
-            <ui:Button name="reset" text="R" tooltip="Reset" />
         </ui:GroupBox>
     </ui:VisualElement>
 </ui:UXML>
