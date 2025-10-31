@@ -29,7 +29,7 @@ jobs:
       - name: Get package version
         id: version
         run: |
-          version=$(jq -r '.version' SerializeReferenceDropdown/package.json)
+          version=$(jq -r '.version' ./package.json)
           echo "PACKAGE_VERSION=$version" >> $GITHUB_ENV
           echo "Package version: $version"
 
