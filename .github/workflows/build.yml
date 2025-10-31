@@ -35,15 +35,17 @@ jobs:
 
       - name: Create minimal Unity project
         run: |
-          mkdir -p BuildProject/Assets
-          mkdir -p BuildProject/Packages
-          mkdir -p BuildProject/ProjectSettings
+          TMP_PATH=$(mktemp -d)
+          echo "Creating temp Unity project at $TMP_PATH"
+          mkdir -p $TMP_PATH/Assets
+          mkdir -p $TMP_PATH/Packages
+          mkdir -p $TMP_PATH/ProjectSettings
           echo '{
             "dependencies": {
-              "com.alexeytaranov.serializereferencedropdown": "file:../SerializeReferenceDropdown"
-            }
-          }' > BuildProject/Packages/manifest.json
-          echo "m_EditorVersion: ${{ matrix.unity }}" > BuildProject/ProjectSettings/ProjectVersion.txt
+                "com.alexeytaranov.serializereferencedropdown": "file:../"
+              }
+            }' > $TMP_PATH/Packages/manifest.json
+          echo "m_EditorVersion: ${{ matrix.unity }}" > $TMP_PATH/ProjectSettings/ProjectVersion.txt
 
       - name: Cache Unity Library
         uses: actions/cache@v4
@@ -53,11 +55,9 @@ jobs:
 
       - name: Build project
         uses: game-ci/unity-builder@v4
-        env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
           unityVersion: ${{ matrix.unity }}
-          projectPath: BuildProject
+          projectPath: ${{ env.TMP_PROJECT_PATH }}
           targetPlatform: ${{ matrix.targetPlatform }}
           buildName: "SerialReferenceDropdownDemo-${{ env.PACKAGE_VERSION }}"
-          buildPath: build/${{ matrix.targetPlatform }}/${{ env.PACKAGE_VERSION }}          
+          buildPath: build/${{ matrix.targetPlatform }}/${{ env.PACKAGE_VERSION }}        
