@@ -10,6 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        unity: ["2023.1.22f1", "6000.2.10f1"] 
         targetPlatform:
           - StandaloneOSX # Build a macOS standalone (Intel 64-bit).
           - StandaloneWindows # Build a Windows standalone.
@@ -24,13 +25,25 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          lfs: true
 
-      - name: Create temporary project
+      - name: Get package version
+        id: version
         run: |
-          mkdir BuildProject
+          version=$(jq -r '.version' com.alexeytaranov.serializereferencedropdown/package.json)
+          echo "PACKAGE_VERSION=$version" >> $GITHUB_ENV
+          echo "Package version: $version"
+
+      - name: Create minimal Unity project
+        run: |
+          mkdir -p BuildProject/Assets
           mkdir -p BuildProject/Packages
-          echo '{ "dependencies": { "com.alexeytaranov.serializereferencedropdown": "file:../com.alexeytaranov.serializereferencedropdown" } }' > BuildProject/Packages/manifest.json
+          mkdir -p BuildProject/ProjectSettings
+          echo '{
+            "dependencies": {
+              "com.alexeytaranov.serializereferencedropdown": "file:../SerializeReferenceDropdown"
+            }
+          }' > BuildProject/Packages/manifest.json
+          echo "m_EditorVersion: ${{ matrix.unity }}" > BuildProject/ProjectSettings/ProjectVersion.txt
 
       - name: Cache Unity Library
         uses: actions/cache@v4
@@ -43,15 +56,8 @@ jobs:
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
-          projectPath: BuildProject
           unityVersion: ${{ matrix.unity }}
+          projectPath: BuildProject
           targetPlatform: ${{ matrix.targetPlatform }}
-          buildName: BuildProject
-          buildPath: build/${{ matrix.targetPlatform }}
-
-      - name: Build
-        uses: game-ci/unity-builder@v4
-        env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-        with:
-          targetPlatform: ${{ matrix.targetPlatform }}
+          buildName: "SerialReferenceDropdownDemo-${{ env.PACKAGE_VERSION }}"
+          buildPath: build/${{ matrix.targetPlatform }}/${{ env.PACKAGE_VERSION }}          
