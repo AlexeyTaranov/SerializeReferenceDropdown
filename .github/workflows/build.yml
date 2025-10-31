@@ -20,24 +20,37 @@ jobs:
           - WebGL # WebGL.
 
     steps:
-      # Checkout
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           lfs: true
 
-      # Cache
-      - name: Cache
+      - name: Create temporary project
+        run: |
+          mkdir BuildProject
+          mkdir -p BuildProject/Packages
+          echo '{ "dependencies": { "com.alexeytaranov.serializereferencedropdown": "file:../com.alexeytaranov.serializereferencedropdown" } }' > BuildProject/Packages/manifest.json
+
+      - name: Cache Unity Library
         uses: actions/cache@v4
         with:
-          path: Library
-          key: Library-${{ matrix.targetPlatform }}
-          restore-keys: Library-
+          path: BuildProject/Library
+          key: Library-${{ matrix.unity }}-${{ matrix.targetPlatform }}
 
-      # Build
+      - name: Build project
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        with:
+          projectPath: BuildProject
+          unityVersion: ${{ matrix.unity }}
+          targetPlatform: ${{ matrix.targetPlatform }}
+          buildName: BuildProject
+          buildPath: build/${{ matrix.targetPlatform }}
+
       - name: Build
-        uses: game-ci/unity-builder@v2
+        uses: game-ci/unity-builder@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
