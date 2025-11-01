@@ -9,9 +9,8 @@ public class RefTo<TRefType, THostType>
 {
     [SerializeField] private THostType _host;
     [SerializeField] private long _referenceId;
-
-    private TRefType _cache;
-    private bool _isCached;
+    
+    private WeakReference<TRefType> _cache;
 
     public THostType Host => _host;
     public long ReferenceId => _referenceId;
@@ -20,16 +19,17 @@ public class RefTo<TRefType, THostType>
     {
         if (_host != null)
         {
-#if!DISABLE_REFTO_CACHE
-            if (_isCached)
+#if !DISABLE_REFTO_CACHE
+            if (_cache?.TryGetTarget(out var cache) == true)
             {
-                return _cache;
+                return cache;
             }
 #endif
             var value = UnityEngine.Serialization.ManagedReferenceUtility.GetManagedReference(_host, _referenceId);
             var castObject = value as TRefType;
-            _cache = castObject;
-            _isCached = true;
+#if !DISABLE_REFTO_CACHE
+            _cache = new WeakReference<TRefType>(castObject);
+#endif
             return value as TRefType;
         }
 
@@ -56,8 +56,7 @@ public sealed class RefTo<TRefType>
     [SerializeField] private UnityEngine.Object _host;
     [SerializeField] private long _referenceId;
 
-    private TRefType _cache;
-    private bool _isCached;
+    private WeakReference<TRefType> _cache;
 
     public UnityEngine.Object Host => _host;
     public long ReferenceId => _referenceId;
@@ -67,15 +66,16 @@ public sealed class RefTo<TRefType>
         if (_host != null)
         {
 #if !DISABLE_REFTO_CACHE
-            if (_isCached)
+            if (_cache?.TryGetTarget(out var cache) == true)
             {
-                return _cache;
+                return cache;
             }
 #endif
             var value = UnityEngine.Serialization.ManagedReferenceUtility.GetManagedReference(_host, _referenceId);
             var castObject = value as TRefType;
-            _cache = castObject;
-            _isCached = true;
+#if !DISABLE_REFTO_CACHE
+            _cache = new WeakReference<TRefType>(castObject);
+#endif
             return value as TRefType;
         }
 
