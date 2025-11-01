@@ -41,9 +41,10 @@ jobs:
           mkdir -p $TMP_PATH/Assets
           mkdir -p $TMP_PATH/Packages
           mkdir -p $TMP_PATH/ProjectSettings
+          cp -r .git $TMP_PATH/
           echo '{
             "dependencies": {
-              "com.alexeytaranov.serializereferencedropdown": "file:../"
+                "com.alexeytaranov.serializereferencedropdown": "file:../"
             }
           }' > $TMP_PATH/Packages/manifest.json
           echo "m_EditorVersion: ${{ matrix.unity }}" > $TMP_PATH/ProjectSettings/ProjectVersion.txt
