@@ -18,7 +18,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # важно, чтобы теги и история были доступны
+          fetch-depth: 0  # нужно для тегов и истории
 
       - name: Install jq
         run: sudo apt-get install -y jq
@@ -45,16 +45,7 @@ jobs:
           echo "new_version=$new_version" >> $GITHUB_OUTPUT
           echo "Version bumped to $new_version"
 
-      - name: Commit and tag new version
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "actions@github.com"
-          git add package.json
-          git commit -m "chore: release v${{ steps.bump_version.outputs.new_version }}"
-          git tag -a "v${{ steps.bump_version.outputs.new_version }}" -m "Release ${{ steps.bump_version.outputs.new_version }}"
-          git push origin master --tags
-
-      - name: Generate changelog
+      - name: Generate changelog text
         id: changelog
         run: |
           last_tag=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
@@ -68,16 +59,42 @@ jobs:
           echo "$log" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Create GitHub release
+      - name: Update CHANGELOG.md
+        run: |
+          VERSION=${{ steps.bump_version.outputs.new_version }}
+          DATE=$(date +'%Y-%m-%d')
+          CHANGELOG="## v$VERSION - $DATE
+
+${{ steps.changelog.outputs.log }}
+
+"
+          # prepend to existing changelog or create new
+          if [ -f CHANGELOG.md ]; then
+            echo -e "$CHANGELOG$(cat CHANGELOG.md)" > CHANGELOG.md
+          else
+            echo -e "# Changelog\n\n$CHANGELOG" > CHANGELOG.md
+          fi
+
+      - name: Commit version bump and changelog
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "actions@github.com"
+          git add package.json CHANGELOG.md
+          git commit -m "chore: release v${{ steps.bump_version.outputs.new_version }}"
+          git tag -a "v${{ steps.bump_version.outputs.new_version }}" -m "Release ${{ steps.bump_version.outputs.new_version }}"
+          git push origin master --tags
+
+      - name: Create draft GitHub release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.bump_version.outputs.new_version }}
           name: Release ${{ steps.bump_version.outputs.new_version }}
           body: |
-            Unity package **com.alexeytaranov.serializereferencedropdown**
+            🧩 Unity package **com.alexeytaranov.serializereferencedropdown**
             Version: ${{ steps.bump_version.outputs.new_version }}
 
             ### Changelog
             ${{ steps.changelog.outputs.log }}
+          draft: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
