@@ -69,3 +69,4 @@ jobs:
           targetPlatform: ${{ matrix.targetPlatform }}
           buildName: "SerialReferenceDropdownDemo-${{ env.PACKAGE_VERSION }}"
           buildPath: build/${{ matrix.targetPlatform }}/${{ env.PACKAGE_VERSION }}
+          allowDirtyBuild: true
