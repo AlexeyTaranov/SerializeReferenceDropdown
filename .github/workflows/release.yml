@@ -58,6 +58,9 @@ jobs:
           else
             log=$(git log $last_tag..HEAD --pretty=format:"- %s (%h)")
           fi
+
+          log=$(echo "$log" | grep -v -E "Merge (pull request|branch)" || true)
+
           echo "$log" > changelog.txt
           echo "log<<EOF" >> $GITHUB_OUTPUT
           echo "$log" >> $GITHUB_OUTPUT
