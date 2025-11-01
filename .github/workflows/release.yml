@@ -1,0 +1,83 @@
+name: Release Unity Package
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump type (patch/minor/major)"
+        required: false
+        default: "patch"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # важно, чтобы теги и история были доступны
+
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Get current version
+        id: get_version
+        run: |
+          version=$(jq -r '.version' package.json)
+          echo "current_version=$version" >> $GITHUB_OUTPUT
+          echo "Current version: $version"
+
+      - name: Bump version
+        id: bump_version
+        run: |
+          bump="${{ github.event.inputs.bump || 'patch' }}"
+          version=$(jq -r '.version' package.json)
+          IFS='.' read -r major minor patch <<< "$version"
+          case "$bump" in
+            major) new_version="$((major + 1)).0.0" ;;
+            minor) new_version="$major.$((minor + 1)).0" ;;
+            *)     new_version="$major.$minor.$((patch + 1))" ;;
+          esac
+          jq ".version = \"$new_version\"" package.json > tmp.json && mv tmp.json package.json
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+          echo "Version bumped to $new_version"
+
+      - name: Commit and tag new version
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "actions@github.com"
+          git add package.json
+          git commit -m "chore: release v${{ steps.bump_version.outputs.new_version }}"
+          git tag -a "v${{ steps.bump_version.outputs.new_version }}" -m "Release ${{ steps.bump_version.outputs.new_version }}"
+          git push origin master --tags
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          last_tag=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          echo "Last tag: $last_tag"
+          if [ -z "$last_tag" ]; then
+            log=$(git log --pretty=format:"- %s (%h)")
+          else
+            log=$(git log $last_tag..HEAD --pretty=format:"- %s (%h)")
+          fi
+          echo "log<<EOF" >> $GITHUB_OUTPUT
+          echo "$log" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.bump_version.outputs.new_version }}
+          name: Release ${{ steps.bump_version.outputs.new_version }}
+          body: |
+            Unity package **com.alexeytaranov.serializereferencedropdown**
+            Version: ${{ steps.bump_version.outputs.new_version }}
+
+            ### Changelog
+            ${{ steps.changelog.outputs.log }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
