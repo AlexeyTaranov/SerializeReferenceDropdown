@@ -124,7 +124,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             void ShowDropdown()
             {
                 var dropdown = new SerializeReferenceAdvancedDropdown(new AdvancedDropdownState(),
-                    assignableTypes.Select(GetTypeName),
+                    assignableTypes,
                     index => { WriteNewInstanceByIndexType(index, property, registerUndo: true); });
                 var buttonMatrix = selectTypeButton.worldTransform;
                 var position = new Vector3(buttonMatrix.m03, buttonMatrix.m13, buttonMatrix.m23);

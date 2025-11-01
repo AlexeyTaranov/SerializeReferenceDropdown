@@ -1,26 +1,23 @@
 # SerializeReferenceDropdown
 
-## (Unity) Editor dropdown for [SerializeReference](https://docs.unity3d.com/ScriptReference/SerializeReference.html "SerializeReference") Attribute. RefTo (Reference to SerializeReference).
+[![Unity 2019+](https://img.shields.io/badge/Unity-2023%2B-blue.svg)](#)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+
+## Unity Editor dropdown for [SerializeReference](https://docs.unity3d.com/ScriptReference/SerializeReference.html "SerializeReference") Attribute.
+### RefTo (Reference to SerializeReference).
+
 
 ### Features:
-- Select type for Serialize Reference
-- Copy/Paste context menu
-- Generic Serialize References
-- RefTo type: References to Serialize Reference
-- Keep Data with new type
-- Fix cross references (WIP)
-- Open source file
-- Search Tool (WIP)
-- Rider Integration (WIP)
-- Check\Fix missing type (TODO)
-- Indirect rename types (TODO)
-
-WIP Features - available in preferences.
-
-### Requirements:
-
-#### Minimal:
-- Unity 2019+
+- [Select type for Serialize Reference](#select-type-for-serialize-reference)
+- [Copy Paste context menu](#copypaste-context-menu)
+- [Generic Serialize References](#generics)
+- [Keep Data with new type](#keep-data-with-new-type)
+- [Fix cross references](#fix-cross-references)
+- [Open source file](#open-source-file)
+- [RefTo type: References to Serialize Reference](#refto-type-references-to-serialize-reference)
+- [Search Tool](#search-tool) 
+- [Rider Integration](#rider-integration)
 
 #### Recommended: 
 - Unity 2023+
@@ -52,7 +49,7 @@ null the missing type will be preserved.
 https://github.com/AlexeyTaranov/SerializeReferenceDropdown.git
 ```
 
-## Select type for Serialize Reference:
+## Select type for Serialize Reference
 
 https://github.com/user-attachments/assets/43a6446d-1b4c-48d4-ab4b-de53dd3ba6ab
 
@@ -99,7 +96,8 @@ public class Rectangle : IShape
 
 https://github.com/user-attachments/assets/96cb3d58-b9c1-4874-8048-fc55442b4446
 
-## Generics (Unity 2023.2+)
+## Generics
+#### Unity 2023.2+
 
 You can use generics . Unspecified arguments need select in additional window.
 
@@ -139,6 +137,18 @@ public class GenericKeyValuePair<TKeyData, TValueData> : ISimpleGenericData<TKey
 
 </details>
 
+## Keep Data with new type
+
+https://github.com/user-attachments/assets/aa641d95-ae4a-4e6c-92a3-4ec6554833de
+
+## Fix cross references
+
+https://github.com/user-attachments/assets/196cc3fe-0866-490c-99eb-14108a57f50f
+
+## Open source file
+
+https://github.com/user-attachments/assets/e7a5fe26-6df1-4c03-8688-a07b8219c41d
+
 ## RefTo type: References to Serialize Reference
 
 This class support references to Serialize References!
@@ -156,24 +166,13 @@ public void Execute()
     var sampleString = _refShape.Get()?.ToString();
 }    
 ```
-## Keep Data with new type
 
-https://github.com/user-attachments/assets/aa641d95-ae4a-4e6c-92a3-4ec6554833de
-
-## Fix cross references (WIP)
-
-https://github.com/user-attachments/assets/196cc3fe-0866-490c-99eb-14108a57f50f
-
-## Open source file
-
-https://github.com/user-attachments/assets/e7a5fe26-6df1-4c03-8688-a07b8219c41d
-
-## Search Tool (WIP)
+## Search Tool
 
 https://github.com/user-attachments/assets/fbf5460c-5ef8-4fde-b888-7943ac12378e
 
 
-##  Rider Integration (WIP)
+##  Rider Integration
 
 Rider plugin available here - https://github.com/AlexeyTaranov/SerializeReferenceDropdownIntegration
 

@@ -7,6 +7,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
     public class SerializeReferenceAdvancedDropdown : AdvancedDropdown
     {
         private readonly IEnumerable<string> typeNames;
+        private readonly IEnumerable<Type> types;
 
         private readonly Dictionary<AdvancedDropdownItem, int> itemAndIndexes =
             new Dictionary<AdvancedDropdownItem, int>();
@@ -21,18 +22,45 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             onSelectedTypeIndex = onSelectedNewType;
         }
 
+        public SerializeReferenceAdvancedDropdown(AdvancedDropdownState state, IEnumerable<Type> types,
+            Action<int> onSelectedNewType) :
+            base(state)
+        {
+            this.types = types;
+            onSelectedTypeIndex = onSelectedNewType;
+        }
+
         protected override AdvancedDropdownItem BuildRoot()
         {
             var root = new AdvancedDropdownItem("Types");
             itemAndIndexes.Clear();
 
             var index = 0;
-            foreach (var typeName in typeNames)
+            if (types != null)
             {
-                var item = new AdvancedDropdownItem(typeName);
-                itemAndIndexes.Add(item, index);
-                root.AddChild(item);
-                index++;
+                foreach (var type in types)
+                {
+                    var name = SerializeReferencePropertyDrawer.GetTypeName(type);
+                    if (type != null)
+                    {
+                        name += $" ({type.Namespace})";
+                    }
+
+                    var item = new AdvancedDropdownItem(name);
+                    itemAndIndexes.Add(item, index);
+                    root.AddChild(item);
+                    index++;
+                }
+            }
+            else
+            {
+                foreach (var typeName in typeNames)
+                {
+                    var item = new AdvancedDropdownItem(typeName);
+                    itemAndIndexes.Add(item, index);
+                    root.AddChild(item);
+                    index++;
+                }
             }
 
             return root;
