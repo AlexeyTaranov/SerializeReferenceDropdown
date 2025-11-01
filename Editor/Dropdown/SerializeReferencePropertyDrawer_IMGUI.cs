@@ -62,7 +62,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             if (EditorGUI.DropdownButton(dropdownRect, dropdownTypeContent, FocusType.Keyboard, style))
             {
                 var dropdown = new SerializeReferenceAdvancedDropdown(new AdvancedDropdownState(),
-                    assignableTypes.Select(GetTypeName),
+                    assignableTypes,
                     index => WriteNewInstanceByIndexType(index, property, registerUndo: true));
                 dropdown.Show(dropdownRect);
             }
