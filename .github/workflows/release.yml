@@ -22,7 +22,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # нужно для тегов и истории
+          fetch-depth: 0
 
       - name: Install jq
         run: sudo apt-get install -y jq
@@ -53,12 +53,12 @@ jobs:
         id: changelog
         run: |
           last_tag=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          echo "Last tag: $last_tag"
           if [ -z "$last_tag" ]; then
             log=$(git log --pretty=format:"- %s (%h)")
           else
             log=$(git log $last_tag..HEAD --pretty=format:"- %s (%h)")
           fi
+          echo "$log" > changelog.txt
           echo "log<<EOF" >> $GITHUB_OUTPUT
           echo "$log" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -67,16 +67,13 @@ jobs:
         run: |
           VERSION=${{ steps.bump_version.outputs.new_version }}
           DATE=$(date +'%Y-%m-%d')
-          CHANGELOG="## v$VERSION - $DATE
-
-${{ steps.changelog.outputs.log }}
-
-"
+          echo "## v$VERSION - $DATE" > new_changelog.md
+          cat changelog.txt >> new_changelog.md
+          echo "" >> new_changelog.md
           if [ -f CHANGELOG.md ]; then
-            echo -e "$CHANGELOG$(cat CHANGELOG.md)" > CHANGELOG.md
-          else
-            echo -e "# Changelog\n\n$CHANGELOG" > CHANGELOG.md
+            cat CHANGELOG.md >> new_changelog.md
           fi
+          mv new_changelog.md CHANGELOG.md
 
       - name: Create PR with version bump
         uses: peter-evans/create-pull-request@v6
