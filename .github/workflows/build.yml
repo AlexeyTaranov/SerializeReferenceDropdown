@@ -55,14 +55,13 @@ jobs:
           path: ${{ env.TMP_PROJECT_PATH }}/Library
           key: Library-${{ matrix.unity }}-${{ matrix.targetPlatform }}
 
-      # 🔹 Важно — активация Unity перед билдом
-      - name: Activate Unity
-        uses: game-ci/unity-activate@v3
-        with:
-          unityLicense: ${{ secrets.UNITY_LICENSE }}
 
       - name: Build project
         uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           unityVersion: ${{ matrix.unity }}
           projectPath: ${{ env.TMP_PROJECT_PATH }}
