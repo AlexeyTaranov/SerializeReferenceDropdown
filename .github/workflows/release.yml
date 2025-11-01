@@ -10,6 +10,10 @@ on:
         required: false
         default: "patch"
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -68,21 +72,28 @@ jobs:
 ${{ steps.changelog.outputs.log }}
 
 "
-          # prepend to existing changelog or create new
           if [ -f CHANGELOG.md ]; then
             echo -e "$CHANGELOG$(cat CHANGELOG.md)" > CHANGELOG.md
           else
             echo -e "# Changelog\n\n$CHANGELOG" > CHANGELOG.md
           fi
 
-      - name: Commit version bump and changelog
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "actions@github.com"
-          git add package.json CHANGELOG.md
-          git commit -m "chore: release v${{ steps.bump_version.outputs.new_version }}"
-          git tag -a "v${{ steps.bump_version.outputs.new_version }}" -m "Release ${{ steps.bump_version.outputs.new_version }}"
-          git push origin master --tags
+      - name: Create PR with version bump
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore: release v${{ steps.bump_version.outputs.new_version }}"
+          branch: "release/v${{ steps.bump_version.outputs.new_version }}"
+          title: "Release v${{ steps.bump_version.outputs.new_version }}"
+          body: |
+            This PR updates:
+            - **package.json**
+            - **CHANGELOG.md**
+
+            After merging, a new draft GitHub release will be created automatically.
+          labels: release
+          add-paths: |
+            package.json
+            CHANGELOG.md
 
       - name: Create draft GitHub release
         uses: softprops/action-gh-release@v2
