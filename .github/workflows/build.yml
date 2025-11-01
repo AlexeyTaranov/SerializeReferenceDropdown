@@ -3,6 +3,7 @@ name: Build
 on:
   pull_request: {}
   push: { branches: [master] }
+
 jobs:
   build:
     name: ${{ matrix.targetPlatform }}
@@ -10,15 +11,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        unity: ["2023.1.12f1"] 
+        unity: ["2023.1.12f1"]
         targetPlatform:
-          - StandaloneOSX # Build a macOS standalone (Intel 64-bit).
-          - StandaloneWindows # Build a Windows standalone.
-          - StandaloneWindows64 # Build a Windows 64-bit standalone.
-          - StandaloneLinux64 # Build a Linux 64-bit standalone.
-          - iOS # Build an iOS player.
-          - Android # Build an Android .apk standalone app.
-          - WebGL # WebGL.
+          - StandaloneOSX
+          - StandaloneWindows
+          - StandaloneWindows64
+          - StandaloneLinux64
+          - iOS
+          - Android
+          - WebGL
 
     steps:
       - name: Checkout
@@ -42,26 +43,29 @@ jobs:
           mkdir -p $TMP_PATH/ProjectSettings
           echo '{
             "dependencies": {
-                "com.alexeytaranov.serializereferencedropdown": "file:../"
-              }
-            }' > $TMP_PATH/Packages/manifest.json
+              "com.alexeytaranov.serializereferencedropdown": "file:../"
+            }
+          }' > $TMP_PATH/Packages/manifest.json
           echo "m_EditorVersion: ${{ matrix.unity }}" > $TMP_PATH/ProjectSettings/ProjectVersion.txt
+          echo "TMP_PROJECT_PATH=$TMP_PATH" >> $GITHUB_ENV
 
       - name: Cache Unity Library
         uses: actions/cache@v4
         with:
-          path: BuildProject/Library
+          path: ${{ env.TMP_PROJECT_PATH }}/Library
           key: Library-${{ matrix.unity }}-${{ matrix.targetPlatform }}
+
+      # 🔹 Важно — активация Unity перед билдом
+      - name: Activate Unity
+        uses: game-ci/unity-activate@v3
+        with:
+          unityLicense: ${{ secrets.UNITY_LICENSE }}
 
       - name: Build project
         uses: game-ci/unity-builder@v4
-        env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           unityVersion: ${{ matrix.unity }}
           projectPath: ${{ env.TMP_PROJECT_PATH }}
           targetPlatform: ${{ matrix.targetPlatform }}
           buildName: "SerialReferenceDropdownDemo-${{ env.PACKAGE_VERSION }}"
-          buildPath: build/${{ matrix.targetPlatform }}/${{ env.PACKAGE_VERSION }}        
+          buildPath: build/${{ matrix.targetPlatform }}/${{ env.PACKAGE_VERSION }}
