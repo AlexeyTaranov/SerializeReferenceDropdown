@@ -1,3 +1,16 @@
+## v1.2.3 - 2025-11-01
+- chore: release v1.2.2 (fb65d5c)
+- Update release.yml (577b443)
+- Improve changelog generation in release.yml (ab466bf)
+- Merge remote-tracking branch 'origin/master' into dev (ef7e6ce)
+- Draft release github action with pull request (7e1f9c0)
+- Draft release github action (039d11c)
+- Release package github action (f465f8e)
+- Dropdown - show namespaces (b145b08)
+- RefTo - cache with weak reference (990e580)
+- New readme (0f5b93f)
+- 1.2.1 RefTo - the reset button has been removed (31efbd8)
+
 ## v1.2.2 - 2025-11-01
 - Update release.yml (577b443)
 - Improve changelog generation in release.yml (ab466bf)
