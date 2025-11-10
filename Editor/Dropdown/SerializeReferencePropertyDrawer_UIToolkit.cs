@@ -116,7 +116,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 if (rootElement.ClassListContains(pingStyle) == false)
                 {
                     rootElement.AddToClassList(pingStyle);
-                    rootElement.RegisterCallbackOnce<TransitionEndEvent>(TransitionEndEventOnce);
+                    rootElement.RegisterCallback<TransitionEndEvent>(TransitionEndEventOnce);
                 }
 
                 void TransitionEndEventOnce(TransitionEndEvent evt)
