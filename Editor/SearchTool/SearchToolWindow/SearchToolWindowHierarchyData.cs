@@ -67,7 +67,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool.SearchToolWindow
                 var components = prefab.GetComponentsInChildren<MonoBehaviour>(true);
                 foreach (var component in components)
                 {
-                    if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(component, out var guid, out var localId))
+                    if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(component, out var guid, out long localId))
                     {
                         if (FileId == localId)
                         {
