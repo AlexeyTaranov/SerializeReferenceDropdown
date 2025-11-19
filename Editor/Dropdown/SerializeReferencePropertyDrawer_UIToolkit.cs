@@ -66,6 +66,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             var propertyField = root.Q<PropertyField>();
             propertyField.BindProperty(property);
             var propertyPath = property.propertyPath;
+            var targetObject = property.serializedObject.targetObject;
 
             var selectTypeButton = root.Q<Button>("type-select");
             selectTypeButton.clickable.clicked += ShowDropdown;
@@ -73,11 +74,19 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
             var fixCrossRefButton = root.Q<Button>("fix-cross-references");
             fixCrossRefButton.clickable.clicked += () => { FixCrossReference(property); };
+
             var openSourceFIleButton = root.Q<Button>("open-source-file");
             openSourceFIleButton.SetDisplayElement(false);
             openSourceFIleButton.clicked += () => { OpenSourceFile(property.managedReferenceValue.GetType()); };
 
             var modifyDirectType = root.Q<Button>("modify-direct-type");
+            var assetPath = AssetDatabase.GetAssetPath(targetObject);
+            if (string.IsNullOrEmpty(assetPath))
+            {
+                assetPath = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(targetObject);
+            }
+
+            modifyDirectType.SetDisplayElement(string.IsNullOrEmpty(assetPath) == false);
             modifyDirectType.clicked += ModifyDirectType;
 
             var showSearchToolButton = root.Q<Button>("show-search-tool");
@@ -99,8 +108,9 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             {
                 EditorApplication.delayCall += PingImpl;
             }
+
             _pingSelf = PingNow;
-            
+
             void PingNow()
             {
                 if (pingObject == property.serializedObject.targetObject && property.managedReferenceId == pingRefId)
@@ -207,26 +217,14 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                     ClassName = type.Name,
                     Namespace = type.Namespace
                 };
-                EditReferenceTypeWindow.ShowWindow(typeData, data =>
-                {
-                    var obj = property.serializedObject.targetObject;
-                    var path = AssetDatabase.GetAssetPath(obj);
-                    if (string.IsNullOrEmpty(path))
+                EditReferenceTypeWindow.ShowWindow(typeData,
+                    data =>
                     {
-                        path = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(obj);
-                    }
-
-                    if (string.IsNullOrEmpty(path))
-                    {
-                        Log.Error($"Can't find path for this object type: {obj.name}");
-                    }
-                    else
-                    {
-                        EditReferenceTypeUtils.TryModifyDirectFileReferenceType(path, property.managedReferenceId,
-                            typeData,
-                            data);
-                    }
-                });
+                        EditReferenceTypeUtils.TryModifyDirectFileReferenceType(assetPath, property.managedReferenceId,
+                            typeData, data);
+                        property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
+                        property.serializedObject.Update();
+                    });
             }
         }
     }
