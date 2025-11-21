@@ -1,3 +1,8 @@
+## v1.2.5 - 2025-11-21
+- chore: release v1.2.4 (05550d8)
+- Meta for changelog (014fd7e)
+- Show modify direct type only on editable assets (7b59bde)
+
 ## v1.2.4 - 2025-11-21
 - Meta for changelog (014fd7e)
 - Show modify direct type only on editable assets (7b59bde)
