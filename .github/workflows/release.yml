@@ -34,7 +34,26 @@ jobs:
           echo "current_version=$version" >> $GITHUB_OUTPUT
           echo "Current version: $version"
 
+      - name: Check for new commits since last tag
+        id: check_commits
+        run: |
+          last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$last_tag" ]; then
+            commits=$(git log --pretty=format:"%h")
+          else
+            commits=$(git log $last_tag..HEAD --pretty=format:"%h")
+          fi
+
+          if [ -z "$commits" ]; then
+            echo "no_new_commits=true" >> $GITHUB_OUTPUT
+            echo "No new commits since last release."
+          else
+            echo "no_new_commits=false" >> $GITHUB_OUTPUT
+            echo "New commits detected, proceeding with release."
+          fi
+
       - name: Bump version
+        if: steps.check_commits.outputs.no_new_commits == 'false'
         id: bump_version
         run: |
           bump="${{ github.event.inputs.bump || 'patch' }}"
@@ -50,6 +69,7 @@ jobs:
           echo "Version bumped to $new_version"
 
       - name: Generate changelog text
+        if: steps.check_commits.outputs.no_new_commits == 'false'
         id: changelog
         run: |
           last_tag=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
@@ -67,6 +87,7 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Update CHANGELOG.md
+        if: steps.check_commits.outputs.no_new_commits == 'false'
         run: |
           VERSION=${{ steps.bump_version.outputs.new_version }}
           DATE=$(date +'%Y-%m-%d')
@@ -79,6 +100,7 @@ jobs:
           mv new_changelog.md CHANGELOG.md
 
       - name: Create PR with version bump
+        if: steps.check_commits.outputs.no_new_commits == 'false'
         uses: peter-evans/create-pull-request@v6
         with:
           commit-message: "chore: release v${{ steps.bump_version.outputs.new_version }}"
@@ -96,6 +118,7 @@ jobs:
             CHANGELOG.md
 
       - name: Create draft GitHub release
+        if: steps.check_commits.outputs.no_new_commits == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.bump_version.outputs.new_version }}
