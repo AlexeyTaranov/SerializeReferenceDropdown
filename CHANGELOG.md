@@ -1,3 +1,7 @@
+## v1.2.4 - 2025-11-21
+- Meta for changelog (014fd7e)
+- Show modify direct type only on editable assets (7b59bde)
+
 ## v1.2.3 - 2025-11-10
 - Fix method (3253c0b)
 - Fix support for Unity 2022 (08bf8bf)
