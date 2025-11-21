@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using SerializeReferenceDropdown.Editor.Preferences;
-using SerializeReferenceDropdown.Editor.SearchTool;
 using SerializeReferenceDropdown.Editor.SearchTool.SearchToolWindow;
 using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
@@ -28,6 +27,12 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             new Dictionary<SerializeReferencePropertyDrawer, SerializedProperty>();
 
         private Action _pingSelf;
+
+        private static void DropCaches()
+        {
+            targetObjectAndSerializeReferencePaths.Clear();
+            targetObjectAndMissingPaths.Clear();
+        }
 
         #region Dropdown
 
@@ -202,6 +207,66 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
         #endregion
 
 
+        #region Missing Types
+
+        //TODO: need to find better solution
+        private static readonly Dictionary<Object, IReadOnlyList<(string propertyPath, long refId)>>
+            targetObjectAndMissingPaths =
+                new Dictionary<Object, IReadOnlyList<(string propertyPath, long refId)>>();
+
+        private bool TryGetMissingType(SerializedProperty property, string assetPath,
+            out ManagedReferenceMissingType missingType)
+        {
+            var checkObject = property.serializedObject.targetObject;
+            missingType = default;
+            var haveMissingTypes = SerializationUtility.HasManagedReferencesWithMissingTypes(checkObject);
+            if (haveMissingTypes == false)
+            {
+                return false;
+            }
+
+            var missingTypes = SerializationUtility.GetManagedReferencesWithMissingTypes(checkObject);
+            var missingFromUnity = GetMissingType(property.managedReferenceId);
+            if (missingFromUnity != null)
+            {
+                missingType = missingFromUnity.Value;
+                return true;
+            }
+
+            if (targetObjectAndMissingPaths.TryGetValue(checkObject, out var missingPropertyPaths) == false)
+            {
+                missingPropertyPaths = MissingTypeUtils.GetMissingPropertyPaths(property, assetPath);
+                targetObjectAndMissingPaths[checkObject] = missingPropertyPaths;
+            }
+
+            var missingIdFromYaml =
+                missingPropertyPaths.FirstOrDefault(t => t.propertyPath == property.propertyPath).refId;
+            var missingTypeFromYaml = GetMissingType(missingIdFromYaml);
+            if (missingTypeFromYaml != null)
+            {
+                missingType = missingTypeFromYaml.Value;
+                return true;
+            }
+
+            return false;
+
+            ManagedReferenceMissingType? GetMissingType(long id)
+            {
+                foreach (var missingType in missingTypes)
+                {
+                    if (missingType.referenceId == id)
+                    {
+                        return missingType;
+                    }
+                }
+
+                return null;
+            }
+        }
+
+        #endregion
+
+
         #region CrossReferences
 
         //TODO: need to find better solution
@@ -290,7 +355,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             }
         }
 
-        public static void FixCrossReference(SerializedProperty property)
+        private static void FixCrossReference(SerializedProperty property)
         {
             SOUtils.RegisterUndo(property, "Fix cross references");
 
@@ -301,6 +366,8 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             JsonUtility.FromJsonOverwrite(json, property.managedReferenceValue);
             property.serializedObject.ApplyModifiedProperties();
             property.serializedObject.Update();
+
+            DropCaches();
         }
 
         #endregion

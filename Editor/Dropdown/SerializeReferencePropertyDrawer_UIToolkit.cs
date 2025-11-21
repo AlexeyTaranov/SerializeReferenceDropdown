@@ -1,9 +1,9 @@
 using System;
 using System.IO;
-using System.Linq;
 using SerializeReferenceDropdown.Editor.EditReferenceType;
 using SerializeReferenceDropdown.Editor.Preferences;
 using SerializeReferenceDropdown.Editor.Utils;
+using SerializeReferenceDropdown.Editor.YAMLEdit;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.UIElements;
@@ -86,10 +86,12 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 assetPath = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(targetObject);
             }
 
-            modifyDirectType.SetDisplayElement(string.IsNullOrEmpty(assetPath) == false);
+            var showSearchToolButton = root.Q<Button>("show-search-tool");
+
+            var canModifyDirectType = string.IsNullOrEmpty(assetPath) == false;
+            modifyDirectType.SetDisplayElement(canModifyDirectType);
             modifyDirectType.clicked += ModifyDirectType;
 
-            var showSearchToolButton = root.Q<Button>("show-search-tool");
             showSearchToolButton.SetDisplayElement(false);
             showSearchToolButton.clicked += () =>
             {
@@ -149,21 +151,20 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
             void RefreshDropdown(SerializedObject so)
             {
+                if (so == null)
+                {
+                    return;
+                }
+
                 var prop = so.FindProperty(propertyPath);
                 var selectedType = TypeUtils.ExtractTypeFromString(prop.managedReferenceFullTypename);
                 var selectedTypeName = GetTypeName(selectedType);
                 var tooltipText = $"Type Full Name: {selectedType?.FullName}";
-                var nullTypeId = -2;
-                var isNullValue = prop.managedReferenceId == nullTypeId || prop.managedReferenceId == 0;
-                var isHaveMissingType = selectedType == null && isNullValue == false;
-                if (isHaveMissingType)
+                var isMissingType = TryGetMissingType(property, assetPath, out var missingType);
+                if (isMissingType)
                 {
-                    var missingTypes = SerializationUtility.GetManagedReferencesWithMissingTypes(so.targetObject);
-                    var thisMissingType = missingTypes.FirstOrDefault(t => t.referenceId == prop.managedReferenceId);
-                    selectedTypeName = string.IsNullOrEmpty(thisMissingType.className)
-                        ? "MISSING TYPE"
-                        : $"MISSING TYPE: {thisMissingType.className}";
-                    tooltipText = thisMissingType.GetDetailData();
+                    selectedTypeName = $"MISSING TYPE: {missingType.className}";
+                    tooltipText = missingType.GetDetailData();
                     selectTypeButton.AddToClassList("error-bg");
                 }
                 else
@@ -180,7 +181,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 var activeSearchTool = SerializeReferenceToolsUserPreferences.GetOrLoadSettings().EnableSearchTool;
                 showSearchToolButton.SetDisplayElement(selectedType != null && activeSearchTool);
                 fixCrossRefButton.SetDisplayElement(false);
-                modifyDirectType.SetDisplayElement(selectedType != null);
+                modifyDirectType.SetDisplayElement(isMissingType || canModifyDirectType);
 
                 if (IsHaveSameOtherSerializeReference(property, out var isNewElement))
                 {
@@ -202,6 +203,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                             property.managedReferenceValue = savedValue;
                             property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
                             property.serializedObject.Update();
+                            DropCaches();
                         }
                     }
                 }
@@ -210,21 +212,43 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             void ModifyDirectType()
             {
                 var prop = property.serializedObject.FindProperty(propertyPath);
-                var type = prop.managedReferenceValue.GetType();
-                var typeData = new TypeData()
+                var targetUnityObject = property.serializedObject.targetObject;
+                if (TryGetMissingType(property, assetPath, out var missingType))
                 {
-                    AssemblyName = type.Assembly.GetName().Name,
-                    ClassName = type.Name,
-                    Namespace = type.Namespace
-                };
-                EditReferenceTypeWindow.ShowWindow(typeData,
-                    data =>
+                    var typeData = new TypeData()
                     {
-                        EditReferenceTypeUtils.TryModifyDirectFileReferenceType(assetPath, property.managedReferenceId,
-                            typeData, data);
-                        property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
-                        property.serializedObject.Update();
-                    });
+                        AssemblyName = missingType.assemblyName,
+                        ClassName = missingType.className,
+                        Namespace = missingType.namespaceName
+                    };
+                    ShowModifyWindow(typeData, missingType.referenceId);
+                }
+                else if (prop.managedReferenceValue != null)
+                {
+                    var type = prop.managedReferenceValue.GetType();
+                    var typeData = new TypeData()
+                    {
+                        AssemblyName = type.Assembly.GetName().Name,
+                        ClassName = type.Name,
+                        Namespace = type.Namespace
+                    };
+                    ShowModifyWindow(typeData, property.managedReferenceId);
+                }
+
+                void ShowModifyWindow(TypeData typeData, long refId)
+                {
+                    EditReferenceTypeWindow.ShowWindow(typeData,
+                        newData =>
+                        {
+                            AssetDatabase.TryGetGUIDAndLocalFileIdentifier(targetObject, out var guid,
+                                out long localId);
+                            if (YamlEditUnityObject.TryModifyReferenceInFile(assetPath, localId, refId, newData))
+                            {
+                                AssetDatabase.ImportAsset(assetPath);
+                                DropCaches();
+                            }
+                        });
+                }
             }
         }
     }
