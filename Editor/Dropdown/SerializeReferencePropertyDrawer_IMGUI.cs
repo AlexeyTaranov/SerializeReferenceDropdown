@@ -1,4 +1,3 @@
-using System.Linq;
 using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;

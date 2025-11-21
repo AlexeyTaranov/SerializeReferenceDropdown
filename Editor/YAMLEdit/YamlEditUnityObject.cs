@@ -1,0 +1,73 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using SerializeReferenceDropdown.Editor.EditReferenceType;
+using SerializeReferenceDropdown.Editor.Utils;
+using YamlDotNet.Core;
+using YamlDotNet.RepresentationModel;
+
+namespace SerializeReferenceDropdown.Editor.YAMLEdit
+{
+    public class YamlEditUnityObject
+    {
+        public static bool TryModifyReferenceInFile(string assetPath, long fileId, long rid, TypeData newValue)
+        {
+            try
+            {
+                var allLines = File.ReadAllLines(assetPath);
+                var sb = new StringBuilder();
+                allLines.ForEach(t => sb.AppendLine(t));
+                var refIdsNode = FindRefIdsNode(sb.ToString());
+                if (TryModifyTypeInLineByNode(refIdsNode, ref allLines))
+                {
+                    File.WriteAllLines(assetPath, allLines);
+                    return true;
+                }
+
+                return false;
+            }
+            catch (Exception e)
+            {
+                Log.DevError(e);
+                return false;
+            }
+
+            YamlNode FindRefIdsNode(string text)
+            {
+                var parser = new Parser(new StringReader(text));
+                var yaml = new YamlStream();
+                yaml.Load(parser);
+
+                var localObjectAnchor = new AnchorName(fileId.ToString());
+                var doc = yaml.Documents.FirstOrDefault(t => t.RootNode.Anchor == localObjectAnchor);
+                var yamlPath = Path.Combine("MonoBehaviour", "references", "RefIds");
+                var referenceNode = doc?.RootNode.ReadNodeByPath(yamlPath);
+                return referenceNode;
+            }
+
+            bool TryModifyTypeInLineByNode(YamlNode targetNode, ref string[] allLines)
+            {
+                var startLine = targetNode.Start.Line;
+                var endLine = targetNode.End.Line;
+                endLine = startLine == endLine ? allLines.Length - 1 : endLine;
+                var ridText = $"rid: {rid}";
+                for (long i = startLine - 1; i < endLine; i++)
+                {
+                    var line = allLines[i];
+                    if (line.Contains(ridText) && i + 1 < endLine)
+                    {
+                        var nextLine = allLines[i + 1];
+                        var newType = newValue.BuildSRTypeStr();
+                        var modifiedLine = Regex.Replace(nextLine, @"\{.*?\}", "{ " + newType + " }");
+                        allLines[i + 1] = modifiedLine;
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+    }
+}
