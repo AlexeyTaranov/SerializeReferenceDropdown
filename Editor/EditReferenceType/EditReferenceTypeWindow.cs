@@ -1,20 +1,12 @@
 using System;
 using System.IO;
 using SerializeReferenceDropdown.Editor.Utils;
+using SerializeReferenceDropdown.Editor.YAMLEdit;
 using UnityEditor;
 using UnityEngine.UIElements;
 
 namespace SerializeReferenceDropdown.Editor.EditReferenceType
 {
-    public struct TypeData
-    {
-        public string AssemblyName;
-        public string Namespace;
-        public string ClassName;
-        
-        public string BuildSRTypeStr() => $"class: {ClassName}, ns: {Namespace}, asm: {AssemblyName}";
-    }
-    
     public class EditReferenceTypeWindow : EditorWindow
     {
         private static EditReferenceTypeWindow instance;
