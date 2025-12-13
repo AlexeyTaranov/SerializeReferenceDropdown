@@ -169,5 +169,41 @@ namespace SerializeReferenceDropdown.Editor.Utils
 
             return systemObjectTypes;
         }
+
+        public static List<Type> GetAssignableSerializeReferenceTypes(SerializedProperty property)
+        {
+            var propertyType = ExtractTypeFromString(property.managedReferenceFieldTypename);
+            return GetAssignableSerializeReferenceTypes(propertyType);
+        }
+        
+        public static List<Type> GetAssignableSerializeReferenceTypes(Type propertyType)
+        {
+            var derivedTypes = TypeCache.GetTypesDerivedFrom(propertyType);
+            var nonUnityTypes = derivedTypes.Where(IsAssignableNonUnityType).ToList();
+            nonUnityTypes.Insert(0, null);
+            if (propertyType.IsGenericType && propertyType.IsInterface)
+            {
+                var allTypes = GetAllTypesInCurrentDomain().Where(IsAssignableNonUnityType)
+                    .Where(t => t.IsGenericType);
+
+                var assignableGenericTypes = allTypes.Where(IsImplementedGenericInterfacesFromGenericProperty);
+                nonUnityTypes.AddRange(assignableGenericTypes);
+            }
+
+            return nonUnityTypes;
+
+            bool IsAssignableNonUnityType(Type type)
+            {
+                return IsFinalAssignableType(type) && !type.IsSubclassOf(typeof(UnityEngine.Object));
+            }
+
+            bool IsImplementedGenericInterfacesFromGenericProperty(Type type)
+            {
+                var interfaces = type.GetInterfaces().Where(t => t.IsGenericType);
+                var isImplementedInterface = interfaces.Any(t =>
+                    t.GetGenericTypeDefinition() == propertyType.GetGenericTypeDefinition());
+                return isImplementedInterface;
+            }
+        }
     }
 }

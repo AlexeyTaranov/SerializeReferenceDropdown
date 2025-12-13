@@ -5,8 +5,7 @@ using UnityEngine;
 
 namespace SerializeReferenceDropdown.Editor.Dropdown
 {
-    [CustomPropertyDrawer(typeof(SerializeReferenceDropdownAttribute))]
-    public partial class SerializeReferencePropertyDrawer : PropertyDrawer
+    public partial class SerializeReferencePropertyDrawer
     {
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
@@ -62,7 +61,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             {
                 var dropdown = new SerializeReferenceAdvancedDropdown(new AdvancedDropdownState(),
                     assignableTypes,
-                    index => WriteNewInstanceByIndexType(index, property, registerUndo: true));
+                    type => WriteNewInstanceByType(type, property, propertyRect, registerUndo: true));
                 dropdown.Show(dropdownRect);
             }
 

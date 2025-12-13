@@ -1,4 +1,3 @@
-#if UNITY_2023_2_OR_NEWER
 using System;
 using UnityEditor;
 using UnityEngine;
@@ -124,4 +123,3 @@ namespace SerializeReferenceDropdown.Editor.RefTo
         }
     }
 }
-#endif

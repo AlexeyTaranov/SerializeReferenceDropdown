@@ -1,4 +1,3 @@
-#if UNITY_2023_2_OR_NEWER
 using System;
 using System.Reflection;
 using SerializeReferenceDropdown.Editor.Utils;
@@ -149,4 +148,3 @@ namespace SerializeReferenceDropdown.Editor.RefTo
         }
     }
 }
-#endif

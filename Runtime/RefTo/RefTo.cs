@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 
-#if UNITY_2023_2_OR_NEWER
 [Serializable]
 public class RefTo<TRefType, THostType>
     where TRefType : class
@@ -9,7 +8,7 @@ public class RefTo<TRefType, THostType>
 {
     [SerializeField] private THostType _host;
     [SerializeField] private long _referenceId;
-    
+
     private WeakReference<TRefType> _cache;
 
     public THostType Host => _host;
@@ -93,4 +92,3 @@ public sealed class RefTo<TRefType>
         return new RefTo<TRefType>(_host, _referenceId);
     }
 }
-#endif

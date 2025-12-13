@@ -141,9 +141,9 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             }
         }
 
-        private void WriteNewInstanceByIndexType(int typeIndex, SerializedProperty property, bool registerUndo)
+        public static void WriteNewInstanceByType(Type newType,
+            SerializedProperty property, Rect propertyRect, bool registerUndo)
         {
-            var newType = assignableTypes[typeIndex];
             var propertyType = TypeUtils.ExtractTypeFromString(property.managedReferenceFieldTypename);
 
             if (newType?.IsGenericType == true)
