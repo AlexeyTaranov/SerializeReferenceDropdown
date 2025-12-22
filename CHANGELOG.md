@@ -1,3 +1,7 @@
+## v1.2.6 - 2025-12-22
+- Update README with new image and remove old link (b27c7f4)
+- Add check for new commits before release process (bfcb6fb)
+
 ## v1.2.5 - 2025-11-21
 - Merge remote-tracking branch 'origin/master' into dev (a0fe243)
 - YAML Unity Object - check missing types, modify type in yaml for fix missing references (0fa4fc9)
