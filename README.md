@@ -176,4 +176,5 @@ https://github.com/user-attachments/assets/fbf5460c-5ef8-4fde-b888-7943ac12378e
 
 Rider plugin available here - https://github.com/AlexeyTaranov/SerializeReferenceDropdownIntegration
 
-https://github.com/user-attachments/assets/c50cb516-50c1-4663-ab71-b3fd3ad6ce2d
+<img width="436" height="208" alt="528988697-e26e63d6-ef0b-433d-a4e1-e3c8077411d8" src="https://github.com/user-attachments/assets/c21de35c-8f6d-4224-9a5f-00b824037a94" />
+
