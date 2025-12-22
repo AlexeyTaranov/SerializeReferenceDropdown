@@ -15,6 +15,8 @@
 - [Keep Data with new type](#keep-data-with-new-type)
 - [Fix cross references](#fix-cross-references)
 - [Open source file](#open-source-file)
+- [Highlight Missing Types](#highlight-missing-types)
+- [Modify Type Name YAML](#modify-type-name-yaml)
 - [RefTo type: References to Serialize Reference](#refto-type-references-to-serialize-reference)
 - [Search Tool](#search-tool) 
 - [Rider Integration](#rider-integration)
@@ -148,6 +150,18 @@ https://github.com/user-attachments/assets/196cc3fe-0866-490c-99eb-14108a57f50f
 ## Open source file
 
 https://github.com/user-attachments/assets/e7a5fe26-6df1-4c03-8688-a07b8219c41d
+
+## Highlight Missing Types
+<img width="550" height="100" alt="image" src="https://github.com/user-attachments/assets/b94d17aa-9c36-498c-bf94-0a2e08f80686" />
+
+WIP: ScriptableObject - OK, everything else - broken.
+
+Bug - https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-129100
+
+## Modify Type Name YAML
+You can modify type inside file - avoid Unity API. Perfect for fix missing references.
+
+https://github.com/user-attachments/assets/e0c60c15-8619-4d29-a5c2-551eecb3b67a
 
 ## RefTo type: References to Serialize Reference
 
