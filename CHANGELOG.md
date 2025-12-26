@@ -1,3 +1,11 @@
+## v1.2.6 - 2025-12-26
+- Show nested types with parent class name (8858657)
+- Update README with new sections (e8d2532)
+- Update README with new image and remove old link (b27c7f4)
+- Manual references for dlls in asmdef (4ec6e29)
+- RefTo refactored (2888050)
+- Add check for new commits before release process (bfcb6fb)
+
 ## v1.2.5 - 2025-11-21
 - Merge remote-tracking branch 'origin/master' into dev (a0fe243)
 - YAML Unity Object - check missing types, modify type in yaml for fix missing references (0fa4fc9)
