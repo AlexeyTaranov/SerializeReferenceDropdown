@@ -1,0 +1,21 @@
+{
+    "name": "RefToPropertyEditor",
+    "rootNamespace": "",
+    "references": [
+        "SerializeReferenceDropdownEditor",
+        "RefTo"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_2023_2_OR_NEWER"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -3,13 +3,21 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using SerializeReferenceDropdown.Editor.EditReferenceType;
 using SerializeReferenceDropdown.Editor.Utils;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
 namespace SerializeReferenceDropdown.Editor.YAMLEdit
 {
+    public struct TypeData
+    {
+        public string AssemblyName;
+        public string Namespace;
+        public string ClassName;
+
+        public string BuildSRTypeStr() => $"class: {ClassName}, ns: {Namespace}, asm: {AssemblyName}";
+    }
+
     public class YamlEditUnityObject
     {
         public static bool TryModifyReferenceInFile(string assetPath, long fileId, long rid, TypeData newValue)

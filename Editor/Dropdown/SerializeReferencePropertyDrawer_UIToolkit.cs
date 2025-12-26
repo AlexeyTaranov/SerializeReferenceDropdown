@@ -13,8 +13,7 @@ using UnityEngine.UIElements;
 
 namespace SerializeReferenceDropdown.Editor.Dropdown
 {
-    [CustomPropertyDrawer(typeof(SerializeReferenceDropdownAttribute))]
-    public partial class SerializeReferencePropertyDrawer : PropertyDrawer
+    public partial class SerializeReferencePropertyDrawer
     {
         private StyleColor defaultSelectTypeTextColor;
 
@@ -142,7 +141,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             {
                 var dropdown = new SerializeReferenceAdvancedDropdown(new AdvancedDropdownState(),
                     assignableTypes,
-                    index => { WriteNewInstanceByIndexType(index, property, registerUndo: true); });
+                    type => { WriteNewInstanceByType(type, property, propertyRect, registerUndo: true); });
                 var buttonMatrix = selectTypeButton.worldTransform;
                 var position = new Vector3(buttonMatrix.m03, buttonMatrix.m13, buttonMatrix.m23);
                 var buttonRect = new Rect(position, selectTypeButton.contentRect.size);
@@ -212,7 +211,6 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             void ModifyDirectType()
             {
                 var prop = property.serializedObject.FindProperty(propertyPath);
-                var targetUnityObject = property.serializedObject.targetObject;
                 if (TryGetMissingType(property, assetPath, out var missingType))
                 {
                     var typeData = new TypeData()

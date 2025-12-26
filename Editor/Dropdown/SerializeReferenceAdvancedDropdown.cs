@@ -22,12 +22,12 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             onSelectedTypeIndex = onSelectedNewType;
         }
 
-        public SerializeReferenceAdvancedDropdown(AdvancedDropdownState state, IEnumerable<Type> types,
-            Action<int> onSelectedNewType) :
+        public SerializeReferenceAdvancedDropdown(AdvancedDropdownState state, IReadOnlyList<Type> types,
+            Action<Type> onSelectedNewType) :
             base(state)
         {
             this.types = types;
-            onSelectedTypeIndex = onSelectedNewType;
+            onSelectedTypeIndex = i => onSelectedNewType.Invoke(types[i]);
         }
 
         protected override AdvancedDropdownItem BuildRoot()

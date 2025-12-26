@@ -90,6 +90,18 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 return genericName;
             }
 
+            if (type.IsNested)
+            {
+                var typeName = type.FullName;
+                var lastDot = typeName?.LastIndexOf('.');
+                if (lastDot > 0)
+                {
+                    typeName = typeName.Substring(lastDot.Value + 1);
+                }
+
+                return ObjectNames.NicifyVariableName(typeName);
+            }
+
             return ObjectNames.NicifyVariableName(type.Name);
         }
 
@@ -141,9 +153,9 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             }
         }
 
-        private void WriteNewInstanceByIndexType(int typeIndex, SerializedProperty property, bool registerUndo)
+        public static void WriteNewInstanceByType(Type newType,
+            SerializedProperty property, Rect propertyRect, bool registerUndo)
         {
-            var newType = assignableTypes[typeIndex];
             var propertyType = TypeUtils.ExtractTypeFromString(property.managedReferenceFieldTypename);
 
             if (newType?.IsGenericType == true)
