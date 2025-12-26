@@ -90,6 +90,18 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 return genericName;
             }
 
+            if (type.IsNested)
+            {
+                var typeName = type.FullName;
+                var lastDot = typeName?.LastIndexOf('.');
+                if (lastDot > 0)
+                {
+                    typeName = typeName.Substring(lastDot.Value + 1);
+                }
+
+                return ObjectNames.NicifyVariableName(typeName);
+            }
+
             return ObjectNames.NicifyVariableName(type.Name);
         }
 
