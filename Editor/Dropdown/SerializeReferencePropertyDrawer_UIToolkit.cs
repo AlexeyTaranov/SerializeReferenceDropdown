@@ -162,7 +162,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
                 var isMissingType = false;
 
-                if (string.IsNullOrEmpty(assetPath))
+                if (!string.IsNullOrEmpty(assetPath))
                 {
                     isMissingType = TryGetMissingType(property, assetPath, out var missingType);
 
