@@ -159,14 +159,22 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 var selectedType = TypeUtils.ExtractTypeFromString(prop.managedReferenceFullTypename);
                 var selectedTypeName = GetTypeName(selectedType);
                 var tooltipText = $"Type Full Name: {selectedType?.FullName}";
-                var isMissingType = TryGetMissingType(property, assetPath, out var missingType);
-                if (isMissingType)
+
+                var isMissingType = false;
+
+                if (!string.IsNullOrEmpty(assetPath))
                 {
-                    selectedTypeName = $"MISSING TYPE: {missingType.className}";
-                    tooltipText = missingType.GetDetailData();
-                    selectTypeButton.AddToClassList("error-bg");
+                    isMissingType = TryGetMissingType(property, assetPath, out var missingType);
+
+                    if (isMissingType)
+                    {
+                        selectedTypeName = $"MISSING TYPE: {missingType.className}";
+                        tooltipText = missingType.GetDetailData();
+                        selectTypeButton.AddToClassList("error-bg");
+                    }
                 }
-                else
+                
+                if (!isMissingType)
                 {
                     selectTypeButton.RemoveFromClassList("error-bg");
                 }
