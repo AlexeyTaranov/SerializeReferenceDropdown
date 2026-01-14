@@ -9,6 +9,19 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
     [CustomPropertyDrawer(typeof(SerializeReferenceDropdownAttribute))]
     public partial class SerializeReferencePropertyDrawer : PropertyDrawer
     {
+        private PropertyDrawerIMGUI imguiImpl;
+
+        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+        {
+            return EditorGUI.GetPropertyHeight(property, label, true);
+        }
+
+        public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
+        {
+            imguiImpl ??= new PropertyDrawerIMGUI(PropertyDrawerTypesUtils.GetAssignableTypes(property));
+            imguiImpl.OnGUI(rect, property, label);
+        }
+
         private const string NullName = "null";
         private List<Type> assignableTypes;
         private Rect propertyRect;
