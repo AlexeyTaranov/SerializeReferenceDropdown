@@ -20,12 +20,14 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
         private readonly SerializedProperty property;
         private readonly VisualElement root;
         private readonly IReadOnlyList<Type> assignableTypes;
+        private readonly SerializeReferenceDropdownAttribute srdAttribute;
         private readonly string assetPath;
 
         private Button selectTypeButton;
         private Button openSourceFIleButton;
         private Button showSearchToolButton;
         private Button fixCrossRefButton;
+        private Button modifyDirectType;
 
         private StyleColor defaultSelectTypeTextColor;
 
@@ -42,11 +44,12 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
         private Object targetObject => property.serializedObject.targetObject;
 
         public PropertyDrawerUIToolkit(SerializedProperty property, IReadOnlyList<Type> assignableTypes,
-            VisualElement root)
+            VisualElement root, SerializeReferenceDropdownAttribute srdAttribute)
         {
             this.property = property;
             this.assignableTypes = assignableTypes;
             this.root = root;
+            this.srdAttribute = srdAttribute;
             assetPath = AssetDatabase.GetAssetPath(targetObject);
             if (string.IsNullOrEmpty(assetPath))
             {
@@ -139,11 +142,8 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 PropertyDrawerTypesUtils.OpenSourceFile(property.managedReferenceValue.GetType());
             };
 
-            var modifyDirectType = root.Q<Button>("modify-direct-type");
+            modifyDirectType = root.Q<Button>("modify-direct-type");
             showSearchToolButton = root.Q<Button>("show-search-tool");
-
-            var canModifyDirectType = string.IsNullOrEmpty(assetPath) == false;
-            modifyDirectType.SetDisplayElement(canModifyDirectType);
             modifyDirectType.clicked += ModifyDirectType;
 
             showSearchToolButton.SetDisplayElement(false);
@@ -197,10 +197,16 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             var tooltipText = $"Type Full Name: {selectedType?.FullName}";
             var isMissingType =
                 PropertyDrawerTypesUtils.TryGetMissingType(property, assetPath, out var missingType);
+            var nullIsError = srdAttribute.Flags.HasFlag(SRDFlags.NotNull) && selectedType == null;
             if (isMissingType)
             {
                 selectedTypeName = $"MISSING TYPE: {missingType.className}";
                 tooltipText = missingType.GetDetailData();
+            }
+
+            var needShowErrorStyle = isMissingType || nullIsError;
+            if (needShowErrorStyle)
+            {
                 selectTypeButton.AddToClassList("error-bg");
             }
             else
@@ -211,6 +217,9 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             selectTypeButton.text = selectedTypeName;
             selectTypeButton.tooltip = tooltipText;
             selectTypeButton.style.color = defaultSelectTypeTextColor;
+            
+            var canModifyDirectType = string.IsNullOrEmpty(assetPath) == false;
+            modifyDirectType.SetDisplayElement(canModifyDirectType && selectedType != null);
 
             openSourceFIleButton.SetDisplayElement(property.managedReferenceValue != null);
 
@@ -284,7 +293,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                     });
             }
         }
-        
+
         private void PingNow()
         {
             if (pingObject == property.serializedObject.targetObject &&

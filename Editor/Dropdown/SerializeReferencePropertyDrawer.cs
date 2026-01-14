@@ -1,4 +1,6 @@
-﻿using UnityEditor;
+﻿using System;
+using System.Collections.Generic;
+using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -11,6 +13,19 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
         private PropertyDrawerIMGUI imguiImpl;
         private PropertyDrawerUIToolkit uiToolkitImpl;
 
+        private IReadOnlyList<Type> GetAssignableTypes(SerializedProperty property)
+        {
+            var srdAttribute = (SerializeReferenceDropdownAttribute)attribute;
+            var notNull = srdAttribute.Flags.HasFlag(SRDFlags.NotNull);
+            var types = PropertyDrawerTypesUtils.GetAssignableTypes(property);
+            if (notNull)
+            {
+                types.RemoveAt(0);
+            }
+
+            return types;
+        }
+
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             return EditorGUI.GetPropertyHeight(property, label, true);
@@ -18,7 +33,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
         public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
         {
-            imguiImpl ??= new PropertyDrawerIMGUI(PropertyDrawerTypesUtils.GetAssignableTypes(property));
+            imguiImpl ??= new PropertyDrawerIMGUI(GetAssignableTypes(property));
             imguiImpl.OnGUI(rect, property, label);
         }
 
@@ -27,8 +42,8 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             var root = new VisualElement();
             if (property.propertyType == SerializedPropertyType.ManagedReference)
             {
-                uiToolkitImpl = new PropertyDrawerUIToolkit(property,
-                    PropertyDrawerTypesUtils.GetAssignableTypes(property), root);
+                var srdAttribute = (SerializeReferenceDropdownAttribute)attribute;
+                uiToolkitImpl = new PropertyDrawerUIToolkit(property, GetAssignableTypes(property), root, srdAttribute);
                 uiToolkitImpl.CreateUIToolkitLayout();
             }
             else
