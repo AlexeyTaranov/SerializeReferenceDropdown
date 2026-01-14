@@ -40,7 +40,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             {
                 foreach (var type in types)
                 {
-                    var name = SerializeReferencePropertyDrawer.GetTypeName(type);
+                    var name = PropertyDrawerTypesUtils.GetTypeName(type);
                     if (type != null)
                     {
                         name += $" ({type.Namespace})";

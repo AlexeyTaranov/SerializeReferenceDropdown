@@ -72,11 +72,14 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             defaultSelectTypeTextColor = selectTypeButton.style.color;
 
             var fixCrossRefButton = root.Q<Button>("fix-cross-references");
-            fixCrossRefButton.clickable.clicked += () => { FixCrossReference(property); };
+            fixCrossRefButton.clickable.clicked += () => { PropertyDrawerCrossReferences.FixCrossReference(property); };
 
             var openSourceFIleButton = root.Q<Button>("open-source-file");
             openSourceFIleButton.SetDisplayElement(false);
-            openSourceFIleButton.clicked += () => { OpenSourceFile(property.managedReferenceValue.GetType()); };
+            openSourceFIleButton.clicked += () =>
+            {
+                PropertyDrawerTypesUtils.OpenSourceFile(property.managedReferenceValue.GetType());
+            };
 
             var modifyDirectType = root.Q<Button>("modify-direct-type");
             var assetPath = AssetDatabase.GetAssetPath(targetObject);
@@ -95,10 +98,10 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             showSearchToolButton.clicked += () =>
             {
                 var type = TypeUtils.ExtractTypeFromString(property.managedReferenceFullTypename);
-                ShowSearchTool(type);
+                PropertyDrawerTypesUtils.ShowSearchTool(type);
             };
 
-            assignableTypes ??= GetAssignableTypes(property);
+            assignableTypes ??= PropertyDrawerTypesUtils.GetAssignableTypes(property);
             root.TrackSerializedObjectValue(property.serializedObject, RefreshDropdown);
             RefreshDropdown(property.serializedObject);
 
@@ -141,7 +144,11 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             {
                 var dropdown = new SerializeReferenceAdvancedDropdown(new AdvancedDropdownState(),
                     assignableTypes,
-                    type => { WriteNewInstanceByType(type, property, propertyRect, registerUndo: true); });
+                    type =>
+                    {
+                        PropertyDrawerTypesUtils.WriteNewInstanceByType(type, property, propertyRect,
+                            registerUndo: true);
+                    });
                 var buttonMatrix = selectTypeButton.worldTransform;
                 var position = new Vector3(buttonMatrix.m03, buttonMatrix.m13, buttonMatrix.m23);
                 var buttonRect = new Rect(position, selectTypeButton.contentRect.size);
@@ -157,9 +164,10 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
                 var prop = so.FindProperty(propertyPath);
                 var selectedType = TypeUtils.ExtractTypeFromString(prop.managedReferenceFullTypename);
-                var selectedTypeName = GetTypeName(selectedType);
+                var selectedTypeName = PropertyDrawerTypesUtils.GetTypeName(selectedType);
                 var tooltipText = $"Type Full Name: {selectedType?.FullName}";
-                var isMissingType = TryGetMissingType(property, assetPath, out var missingType);
+                var isMissingType =
+                    PropertyDrawerTypesUtils.TryGetMissingType(property, assetPath, out var missingType);
                 if (isMissingType)
                 {
                     selectedTypeName = $"MISSING TYPE: {missingType.className}";
@@ -182,10 +190,10 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 fixCrossRefButton.SetDisplayElement(false);
                 modifyDirectType.SetDisplayElement(isMissingType || canModifyDirectType);
 
-                if (IsHaveSameOtherSerializeReference(property, out var isNewElement))
+                if (PropertyDrawerCrossReferences.IsHaveSameOtherSerializeReference(property, out var isNewElement))
                 {
                     fixCrossRefButton.SetDisplayElement(true);
-                    var color = GetColorForEqualSerializeReference(property);
+                    var color = PropertyDrawerCrossReferences.GetColorForEqualSerializeReference(property);
                     selectTypeButton.style.color = color;
                     if (isNewElement)
                     {
@@ -202,7 +210,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                             property.managedReferenceValue = savedValue;
                             property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
                             property.serializedObject.Update();
-                            DropCaches();
+                            PropertyDrawerGlobalCaches.DropCaches();
                         }
                     }
                 }
@@ -211,7 +219,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             void ModifyDirectType()
             {
                 var prop = property.serializedObject.FindProperty(propertyPath);
-                if (TryGetMissingType(property, assetPath, out var missingType))
+                if (PropertyDrawerTypesUtils.TryGetMissingType(property, assetPath, out var missingType))
                 {
                     var typeData = new TypeData()
                     {
@@ -243,7 +251,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                             if (YamlEditUnityObject.TryModifyReferenceInFile(assetPath, localId, refId, newData))
                             {
                                 AssetDatabase.ImportAsset(assetPath);
-                                DropCaches();
+                                PropertyDrawerGlobalCaches.DropCaches();
                             }
                         });
                 }

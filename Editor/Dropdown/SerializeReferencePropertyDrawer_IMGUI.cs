@@ -35,9 +35,9 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
         private void DrawIMGUITypeDropdown(Rect rect, SerializedProperty property, GUIContent label)
         {
             const float fixButtonWidth = 40f;
-            assignableTypes ??= GetAssignableTypes(property);
+            assignableTypes ??= PropertyDrawerTypesUtils.GetAssignableTypes(property);
 
-            var isHaveOtherReference = IsHaveSameOtherSerializeReference(property, out _);
+            var isHaveOtherReference = PropertyDrawerCrossReferences.IsHaveSameOtherSerializeReference(property, out _);
 
             var referenceType = TypeUtils.ExtractTypeFromString(property.managedReferenceFullTypename);
 
@@ -46,13 +46,13 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             EditorGUI.EndDisabledGroup();
 
             var dropdownTypeContent = new GUIContent(
-                text: GetTypeName(referenceType),
-                tooltip: GetTypeTooltip(referenceType));
+                text: PropertyDrawerTypesUtils.GetTypeName(referenceType),
+                tooltip: PropertyDrawerTypesUtils.GetTypeTooltip(referenceType));
 
             var style = EditorStyles.miniPullDown;
             if (isHaveOtherReference)
             {
-                var uniqueColor = GetColorForEqualSerializeReference(property);
+                var uniqueColor = PropertyDrawerCrossReferences.GetColorForEqualSerializeReference(property);
                 style = new GUIStyle(EditorStyles.miniPullDown)
                     { normal = new GUIStyleState() { textColor = uniqueColor } };
             }
@@ -61,7 +61,8 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             {
                 var dropdown = new SerializeReferenceAdvancedDropdown(new AdvancedDropdownState(),
                     assignableTypes,
-                    type => WriteNewInstanceByType(type, property, propertyRect, registerUndo: true));
+                    type => PropertyDrawerTypesUtils.WriteNewInstanceByType(type, property, propertyRect,
+                        registerUndo: true));
                 dropdown.Show(dropdownRect);
             }
 
@@ -69,7 +70,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             {
                 if (GUI.Button(GetFixCrossReferencesRect(dropdownRect), "Fix"))
                 {
-                    FixCrossReference(property);
+                    PropertyDrawerCrossReferences.FixCrossReference(property);
                 }
             }
 
