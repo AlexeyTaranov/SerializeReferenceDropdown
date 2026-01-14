@@ -197,19 +197,22 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 return true;
             }
 
-            if (PropertyDrawerGlobalCaches.targetObjectAndMissingPaths.TryGetValue(checkObject, out var missingPropertyPaths) == false)
+            if (string.IsNullOrEmpty(assetPath) == false)
             {
-                missingPropertyPaths = MissingTypeUtils.GetMissingPropertyPaths(property, assetPath);
-                PropertyDrawerGlobalCaches.targetObjectAndMissingPaths[checkObject] = missingPropertyPaths;
-            }
-
-            var missingIdFromYaml =
-                missingPropertyPaths.FirstOrDefault(t => t.propertyPath == property.propertyPath).refId;
-            var missingTypeFromYaml = GetMissingType(missingIdFromYaml);
-            if (missingTypeFromYaml != null)
-            {
-                missingType = missingTypeFromYaml.Value;
-                return true;
+                if (PropertyDrawerGlobalCaches.targetObjectAndMissingPaths.TryGetValue(checkObject, out var missingPropertyPaths) == false)
+                {
+                    missingPropertyPaths = MissingTypeUtils.GetMissingPropertyPaths(property, assetPath);
+                    PropertyDrawerGlobalCaches.targetObjectAndMissingPaths[checkObject] = missingPropertyPaths;
+                }
+                
+                var missingIdFromYaml =
+                    missingPropertyPaths.FirstOrDefault(t => t.propertyPath == property.propertyPath).refId;
+                var missingTypeFromYaml = GetMissingType(missingIdFromYaml);
+                if (missingTypeFromYaml != null)
+                {
+                    missingType = missingTypeFromYaml.Value;
+                    return true;
+                }
             }
 
             return false;
