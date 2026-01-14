@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using SerializeReferenceDropdown.Editor.EditReferenceType;
 using SerializeReferenceDropdown.Editor.Preferences;
@@ -10,32 +11,39 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.Pool;
 using UnityEngine.UIElements;
+using Object = UnityEngine.Object;
 
 namespace SerializeReferenceDropdown.Editor.Dropdown
 {
-    public partial class SerializeReferencePropertyDrawer
+    public class PropertyDrawerUIToolkit
     {
+        private readonly SerializedProperty property;
+        private readonly VisualElement root;
+        private readonly IReadOnlyList<Type> assignableTypes;
+
         private StyleColor defaultSelectTypeTextColor;
 
-        public override VisualElement CreatePropertyGUI(SerializedProperty property)
-        {
-            var root = new VisualElement();
-            if (property.propertyType == SerializedPropertyType.ManagedReference)
-            {
-                DrawUIToolkitTypeDropdown(root, property);
-                AddSelfToAllProperties(property);
-            }
-            else
-            {
-                root.Add(new PropertyField(property));
-            }
+        private static Dictionary<PropertyDrawerUIToolkit, SerializedProperty> _allPropertyDrawers =
+            new Dictionary<PropertyDrawerUIToolkit, SerializedProperty>();
 
-            return root;
+        private static Object pingObject;
+        private static Object previousSelection;
+        private static long pingRefId;
+
+        private Action _pingSelf;
+
+        public PropertyDrawerUIToolkit(SerializedProperty property, IReadOnlyList<Type> assignableTypes,
+            VisualElement root)
+        {
+            this.property = property;
+            this.assignableTypes = assignableTypes;
+            this.root = root;
+            AddSelfToAllProperties();
         }
 
-        private void AddSelfToAllProperties(SerializedProperty property)
+        private void AddSelfToAllProperties()
         {
-            using var pooled = ListPool<SerializeReferencePropertyDrawer>.Get(out var destroyedPropertyDrawers);
+            using var pooled = ListPool<PropertyDrawerUIToolkit>.Get(out var destroyedPropertyDrawers);
             foreach (var pair in _allPropertyDrawers)
             {
                 try
@@ -57,7 +65,40 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             _allPropertyDrawers[this] = property;
         }
 
-        private void DrawUIToolkitTypeDropdown(VisualElement root, SerializedProperty property)
+
+        public static void PingSerializeReference(Object selectionObject, long refId)
+        {
+            previousSelection = Selection.activeObject;
+            Selection.activeObject = selectionObject;
+            pingObject = selectionObject;
+            pingRefId = refId;
+            PropertyDrawerUIToolkit.PingAll();
+
+            EditorApplication.delayCall += () =>
+            {
+                previousSelection = null;
+                pingObject = null;
+                pingRefId = -1;
+            };
+        }
+
+        public static void PingAll()
+        {
+            foreach (var pair in _allPropertyDrawers)
+            {
+                if (pair.Value != null)
+                {
+                    pair.Key.PingSelf();
+                }
+            }
+        }
+
+        private void PingSelf()
+        {
+            _pingSelf.Invoke();
+        }
+
+        public void CreateUIToolkitLayout()
         {
             var treeAssetPath = Path.Combine(Paths.PackageLayouts, "SerializeReferenceDropdown.uxml");
             var visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(treeAssetPath);
@@ -101,12 +142,13 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 PropertyDrawerTypesUtils.ShowSearchTool(type);
             };
 
-            assignableTypes ??= PropertyDrawerTypesUtils.GetAssignableTypes(property);
             root.TrackSerializedObjectValue(property.serializedObject, RefreshDropdown);
             RefreshDropdown(property.serializedObject);
-
-            var needPingOnFirstShowPropertyDrawer = previousSelection != pingObject && previousSelection != null &&
-                                                    property.managedReferenceId == pingRefId;
+            
+            var needPingOnFirstShowPropertyDrawer =
+                previousSelection != pingObject &&
+                previousSelection != null &&
+                property.managedReferenceId == pingRefId;
 
             if (needPingOnFirstShowPropertyDrawer)
             {
@@ -117,7 +159,8 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
             void PingNow()
             {
-                if (pingObject == property.serializedObject.targetObject && property.managedReferenceId == pingRefId)
+                if (pingObject == property.serializedObject.targetObject &&
+                    property.managedReferenceId == pingRefId)
                 {
                     PingImpl();
                 }
@@ -142,6 +185,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
             void ShowDropdown()
             {
+                var propertyRect = propertyField.contentRect;
                 var dropdown = new SerializeReferenceAdvancedDropdown(new AdvancedDropdownState(),
                     assignableTypes,
                     type =>

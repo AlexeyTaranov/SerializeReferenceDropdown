@@ -59,7 +59,7 @@ namespace SerializeReferenceDropdown.Editor.RefTo
                 if (host != null)
                 {
                     EditorGUIUtility.PingObject(host);
-                    SerializeReferencePropertyDrawer.PingSerializeReference(host, id);
+                    PropertyDrawerUIToolkit.PingSerializeReference(host, id);
                 }
             };
 

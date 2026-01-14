@@ -73,7 +73,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool.SearchToolWindow
         
         private void OpenTargetTypeSourceFile()
         {
-            SerializeReferencePropertyDrawer.OpenSourceFile(selectedType);
+            PropertyDrawerTypesUtils.OpenSourceFile(selectedType);
         }
 
         private void ShowAssignableTypes()

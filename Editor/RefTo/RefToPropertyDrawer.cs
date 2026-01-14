@@ -61,7 +61,7 @@ namespace SerializeReferenceDropdown.Editor.RefTo
                             {
                                 using var so1 = new SerializedObject(o);
                                 using var modifyProperty1 = so1.FindProperty(modifyPropertyPath);
-                                SerializeReferencePropertyDrawer.WriteNewInstanceByType(type, modifyProperty1,
+                                PropertyDrawerTypesUtils.WriteNewInstanceByType(type, modifyProperty1,
                                     propertyFieldRect, registerUndo: true);
                                 EditorApplication.delayCall += () =>
                                 {

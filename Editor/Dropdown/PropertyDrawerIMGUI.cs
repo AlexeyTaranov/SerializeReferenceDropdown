@@ -9,11 +9,11 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 {
     public class PropertyDrawerIMGUI
     {
-        private readonly List<Type> assignableTypes;
+        private readonly IReadOnlyList<Type> assignableTypes;
         
         private Rect propertyRect;
 
-        public PropertyDrawerIMGUI(List<Type> assignableTypes)
+        public PropertyDrawerIMGUI(IReadOnlyList<Type> assignableTypes)
         {
             this.assignableTypes = assignableTypes;
         }

@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEditor;
+﻿using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
-using Object = UnityEngine.Object;
+using UnityEngine.UIElements;
 
 namespace SerializeReferenceDropdown.Editor.Dropdown
 {
     [CustomPropertyDrawer(typeof(SerializeReferenceDropdownAttribute))]
-    public partial class SerializeReferencePropertyDrawer : PropertyDrawer
+    public class SerializeReferencePropertyDrawer : PropertyDrawer
     {
         private PropertyDrawerIMGUI imguiImpl;
+        private PropertyDrawerUIToolkit uiToolkitImpl;
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
@@ -22,49 +22,21 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             imguiImpl.OnGUI(rect, property, label);
         }
 
-        private const string NullName = "null";
-        private List<Type> assignableTypes;
-        private Rect propertyRect;
-
-        private static Object pingObject;
-        private static Object previousSelection;
-        private static long pingRefId;
-
-        private static Dictionary<SerializeReferencePropertyDrawer, SerializedProperty> _allPropertyDrawers =
-            new Dictionary<SerializeReferencePropertyDrawer, SerializedProperty>();
-
-        private Action _pingSelf;
-
-        public static void PingSerializeReference(Object selectionObject, long refId)
+        public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
-            previousSelection = Selection.activeObject;
-            Selection.activeObject = selectionObject;
-            pingObject = selectionObject;
-            pingRefId = refId;
-            PingAll();
-
-            EditorApplication.delayCall += () =>
+            var root = new VisualElement();
+            if (property.propertyType == SerializedPropertyType.ManagedReference)
             {
-                previousSelection = null;
-                pingObject = null;
-                pingRefId = -1;
-            };
-        }
-
-        private static void PingAll()
-        {
-            foreach (var pair in _allPropertyDrawers)
-            {
-                if (pair.Value != null)
-                {
-                    pair.Key.PingSelf();
-                }
+                uiToolkitImpl = new PropertyDrawerUIToolkit(property,
+                    PropertyDrawerTypesUtils.GetAssignableTypes(property), root);
+                uiToolkitImpl.CreateUIToolkitLayout();
             }
-        }
+            else
+            {
+                root.Add(new PropertyField(property));
+            }
 
-        private void PingSelf()
-        {
-            _pingSelf.Invoke();
+            return root;
         }
     }
 }
