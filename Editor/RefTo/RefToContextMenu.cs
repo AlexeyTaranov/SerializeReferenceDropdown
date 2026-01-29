@@ -59,7 +59,7 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             return property.isArray == false && RefToExtensions.TryGetRefType(property, out _, out _);
         }
 
-        public static PasteType GetPasteType(SerializedProperty property)
+        private static PasteType GetPasteType(SerializedProperty property)
         {
             if (copy.host == null)
             {
@@ -104,12 +104,7 @@ namespace SerializeReferenceDropdown.Editor.RefTo
             copy = (id, host, type);
         }
 
-        public static void CopyDirectValues((long refId, Object host, Type referenceType) tuple)
-        {
-            copy = tuple;
-        }
-
-        public static void PasteToProperty(SerializedProperty pasteProperty)
+        private static void PasteToProperty(SerializedProperty pasteProperty)
         {
             if (copy.host != null)
             {

@@ -2,59 +2,99 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using SerializeReferenceDropdown.Editor.Dropdown;
 using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
-using UnityEngine.Pool;
 using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
 
 namespace SerializeReferenceDropdown.Editor.RefTo
 {
-    public partial class RefToPropertyDrawer
+    public class RefToPropertyDrawerUIToolkit
     {
-        private static Dictionary<SerializedObject, Action>
-            _dirtyRefreshes = new Dictionary<SerializedObject, Action>();
+        private static VisualTreeAsset _visualTreeAsset;
+        private static IEnumerable<FieldInfo> _refToCreateFields;
 
-        public override VisualElement CreatePropertyGUI(SerializedProperty property)
+        private static VisualTreeAsset VisualTreeAsset
+        {
+            get
+            {
+                if (_visualTreeAsset == null)
+                {
+                    var treeAssetPath = Path.Combine(Paths.PackageLayouts, "RefTo.uxml");
+                    _visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(treeAssetPath);
+                }
+                return _visualTreeAsset;
+            }
+        }
+
+        private static IEnumerable<FieldInfo> RefToCreateFields =>
+            _refToCreateFields ??= TypeCache.GetFieldsWithAttribute<RefToCreateOnDragToFieldAttribute>();
+
+        public VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var root = new VisualElement();
-            using var pooled = ListPool<SerializedObject>.Get(out var destroyList);
-            _dirtyRefreshes.Where(t => t.Key != null).ForEach(t => destroyList.Add(t.Key));
-            destroyList.ForEach(t => _dirtyRefreshes.Remove(t));
             DrawUIToolkit(root, property);
             return root;
         }
 
         private void DrawUIToolkit(VisualElement root, SerializedProperty property)
         {
-            var treeAssetPath = Path.Combine(Paths.PackageLayouts, "RefTo.uxml");
-            var visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(treeAssetPath);
-            root.Add(visualTreeAsset.Instantiate());
+            root.Add(VisualTreeAsset.Instantiate());
             var propertyField = root.Q<PropertyField>();
             propertyField.BindProperty(property);
 
             var (_, refToTargetType, hostType, _, _) = RefToExtensions.GetInspectorValues(property);
-
-            var objectField = root.Q<ObjectField>();
             var propertyPath = property.propertyPath;
             var targetObject = property.serializedObject.targetObject;
-            var refToCreateFields = TypeCache.GetFieldsWithAttribute<RefToCreateOnDragToFieldAttribute>();
             var boxedType = property.boxedValue?.GetType();
-            var needCreateOnDragToField = refToCreateFields.Any(t => t.FieldType == boxedType);
+            var needCreateOnDragToField = RefToCreateFields.Any(t => t.FieldType == boxedType);
 
+            var objectField = root.Q<ObjectField>();
             var pingButton = root.Q<Button>("ping");
-
             var fixButton = root.Q<Button>("fix-missing-references");
-            fixButton.SetDisplayElement(false);
-            fixButton.clicked += FixMissingReference;
+            var refLabel = root.Q<Label>("ref-name");
 
-            pingButton.clicked += () =>
+            objectField.objectType = hostType;
+
+            SetupPingButton(pingButton, targetObject, propertyPath);
+            SetupFixButton(fixButton, property, refToTargetType, objectField);
+            SetupObjectField(objectField, property, refToTargetType, hostType, propertyField, needCreateOnDragToField);
+
+            root.TrackSerializedObjectValue(property.serializedObject, RefreshDynamic);
+            RefreshDynamic(property.serializedObject);
+
+            void RefreshDynamic(SerializedObject so)
+            {
+                using var localProperty = so.FindProperty(propertyPath);
+                if (localProperty == null)
+                {
+                    return;
+                }
+
+                var (refType, _, _, host, isSameType) = RefToExtensions.GetInspectorValues(localProperty);
+                var refTypeName = refType == null ? "null" : refType.Name;
+                refLabel.text = refTypeName;
+                refLabel.tooltip = $"Reference \nType: {refType?.Name} \nNamespace: {refType?.Namespace}";
+                objectField.SetValueWithoutNotify(host);
+
+                var isErrorType = host != null && isSameType == false;
+                refLabel.EnableInClassList("error-bg", isErrorType);
+                fixButton.SetDisplayElement(isErrorType);
+            }
+        }
+
+        private void SetupPingButton(Button button, Object targetObject, string propertyPath)
+        {
+            button.clicked += () =>
             {
                 using var localSo = new SerializedObject(targetObject);
                 using var localProperty = localSo.FindProperty(propertyPath);
+                if (localProperty == null) return;
+
                 var (host, id) = RefToExtensions.GetRefToFieldsFromProperty(localProperty);
                 if (host != null)
                 {
@@ -62,54 +102,31 @@ namespace SerializeReferenceDropdown.Editor.RefTo
                     PropertyDrawerUIToolkit.PingSerializeReference(host, id);
                 }
             };
+        }
 
-            root.TrackSerializedObjectValue(property.serializedObject, RefreshDynamic);
-
-            objectField.objectType = hostType;
-            objectField.RegisterValueChangedCallback(ApplyRefToFromObject);
-            if (_dirtyRefreshes.TryGetValue(property.serializedObject, out var action))
+        private void SetupFixButton(Button button, SerializedProperty property, Type refToTargetType,
+            ObjectField objectField)
+        {
+            button.SetDisplayElement(false);
+            button.clicked += () =>
             {
-                action += Refresh;
-                _dirtyRefreshes[property.serializedObject] = action;
-            }
-            else
-            {
-                _dirtyRefreshes.Add(property.serializedObject, Refresh);
-            }
-
-            Refresh();
-
-
-            void Refresh()
-            {
-                RefreshDynamic(property.serializedObject);
-            }
-
-            void RefreshDynamic(SerializedObject so)
-            {
-                using var localProperty = so.FindProperty(propertyPath);
-
-                var (refType, _, _, host, isSameType) = RefToExtensions.GetInspectorValues(localProperty);
-                var refLabel = root.Q<Label>("ref-name");
-                var refTypeName = refType == null ? "null" : refType.Name;
-                refLabel.text = refTypeName;
-                refLabel.tooltip = $"Reference \nType: {refType?.Name} \nNamespace: {refType?.Namespace}";
-                objectField.SetValueWithoutNotify(host);
-
-                var isErrorType = host != null && isSameType == false;
-                if (isErrorType)
+                var prevObject = objectField.value;
+                objectField.SetValueWithoutNotify(null);
+                if (RefToDrawerUtils.TryApplyRefToValue(property, prevObject, refToTargetType))
                 {
-                    refLabel.AddToClassList("error-bg");
+                    objectField.SetValueWithoutNotify(prevObject);
                 }
                 else
                 {
-                    refLabel.RemoveFromClassList("error-bg");
+                    button.SetDisplayElement(false);
                 }
+            };
+        }
 
-                fixButton.SetDisplayElement(isErrorType);
-            }
-
-            void ApplyRefToFromObject(ChangeEvent<Object> evt)
+        private void SetupObjectField(ObjectField objectField, SerializedProperty property, Type refToTargetType,
+            Type hostType, PropertyField propertyField, bool needCreateOnDragToField)
+        {
+            objectField.RegisterValueChangedCallback(evt =>
             {
                 var newValue = evt.newValue;
                 if (newValue == null)
@@ -118,8 +135,8 @@ namespace SerializeReferenceDropdown.Editor.RefTo
                     return;
                 }
 
-                var assignedNewValue = UnityObjectIterator(newValue, hostType,
-                    o => TryApplyRefToValue(property, o, refToTargetType));
+                var assignedNewValue = RefToDrawerUtils.UnityObjectIterator(newValue, hostType,
+                    o => RefToDrawerUtils.TryApplyRefToValue(property, o, refToTargetType));
                 if (assignedNewValue)
                 {
                     return;
@@ -130,7 +147,8 @@ namespace SerializeReferenceDropdown.Editor.RefTo
                     var fieldMatrix = objectField.worldTransform;
                     var position = new Vector3(fieldMatrix.m03, fieldMatrix.m13, fieldMatrix.m23);
                     var dropdownRect = new Rect(position, objectField.contentRect.size);
-                    if (TryApplyNewInstanceToDragObject(refToTargetType, hostType, property, newValue, dropdownRect,
+                    if (RefToDrawerUtils.TryApplyNewInstanceToDragObject(refToTargetType, hostType, property, newValue,
+                            dropdownRect,
                             propertyField.contentRect))
                     {
                         return;
@@ -141,21 +159,7 @@ namespace SerializeReferenceDropdown.Editor.RefTo
                 {
                     objectField.SetValueWithoutNotify(evt.previousValue);
                 }
-            }
-
-            void FixMissingReference()
-            {
-                var prevObject = objectField.value;
-                objectField.SetValueWithoutNotify(null);
-                if (TryApplyRefToValue(property, prevObject, refToTargetType))
-                {
-                    objectField.SetValueWithoutNotify(prevObject);
-                }
-                else
-                {
-                    fixButton.SetDisplayElement(false);
-                }
-            }
+            });
         }
     }
 }
