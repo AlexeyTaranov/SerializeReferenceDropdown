@@ -24,10 +24,18 @@ namespace SerializeReferenceDropdown.Editor.YAMLEdit
         {
             try
             {
+                if (string.IsNullOrEmpty(assetPath) || !File.Exists(assetPath))
+                {
+                    return false;
+                }
+
                 var allLines = File.ReadAllLines(assetPath);
-                var sb = new StringBuilder();
-                allLines.ForEach(t => sb.AppendLine(t));
-                var refIdsNode = FindRefIdsNode(sb.ToString());
+                var refIdsNode = FindRefIdsNode(File.ReadAllText(assetPath));
+                if (refIdsNode == null)
+                {
+                    return false;
+                }
+
                 if (TryModifyTypeInLineByNode(refIdsNode, ref allLines))
                 {
                     File.WriteAllLines(assetPath, allLines);
