@@ -28,6 +28,11 @@ namespace SerializeReferenceDropdown.Editor.YAMLEdit
                 var sb = new StringBuilder();
                 allLines.ForEach(t => sb.AppendLine(t));
                 var refIdsNode = FindRefIdsNode(sb.ToString());
+                if (refIdsNode == null)
+                {
+                    return false;
+                }
+
                 if (TryModifyTypeInLineByNode(refIdsNode, ref allLines))
                 {
                     File.WriteAllLines(assetPath, allLines);
