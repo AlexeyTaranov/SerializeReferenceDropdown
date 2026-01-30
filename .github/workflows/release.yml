@@ -73,7 +73,7 @@ jobs:
           path: UnityProject/artifacts
 
       - name: Test Summary
-        uses: test-summary/action-test-summary@v2
+        uses: test-summary/action@v2
         if: always()
         with:
           paths: UnityProject/artifacts/*.xml
