@@ -14,6 +14,10 @@ permissions:
   contents: write
   pull-requests: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: Run Unity Tests 🧪
@@ -29,6 +33,14 @@ jobs:
           echo '{"dependencies": {"com.alexeytaranov.serializereferencedropdown": "file:../../"}}' > TEST_PROJECT/Packages/manifest.json
           echo "m_EditorVersion: 2022.3.10f1" > TEST_PROJECT/ProjectSettings/ProjectVersion.txt
 
+      - name: Cache Library
+        uses: actions/cache@v3
+        with:
+          path: TEST_PROJECT/Library
+          key: Library-${{ hashFiles('TEST_PROJECT/Packages/manifest.json') }}
+          restore-keys: |
+            Library-
+
       - name: Run Unity Tests
         uses: game-ci/unity-test-runner@v4
         env:
@@ -40,6 +52,13 @@ jobs:
           unityVersion: 2022.3.10f1
           testMode: EditMode
           githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Test Results
+          path: TEST_PROJECT/artifacts
 
   release:
     needs: test
