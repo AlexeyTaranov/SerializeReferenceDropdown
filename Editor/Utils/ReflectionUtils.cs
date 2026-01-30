@@ -25,7 +25,7 @@ namespace SerializeReferenceDropdown.Editor.Utils
                 {
                     isNextPropertyArrayIndex = false;
                     int arrayIndex = ParseArrayIndex(propName);
-                    var targetAsArray = (object[])target;
+                    var targetAsArray = (System.Collections.IList)target;
                     target = targetAsArray[arrayIndex];
                 }
                 else

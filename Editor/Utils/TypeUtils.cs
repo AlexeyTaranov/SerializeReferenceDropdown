@@ -45,9 +45,21 @@ namespace SerializeReferenceDropdown.Editor.Utils
                 subStringTypeName = typeName.Substring(assemblyName.Length + 1);
             }
 
-            var assembly = Assembly.Load(assemblyName);
-            var targetType = assembly.GetType(subStringTypeName);
-            return targetType;
+            try
+            {
+                var assembly = Assembly.Load(assemblyName);
+                if (assembly != null)
+                {
+                    return assembly.GetType(subStringTypeName);
+                }
+            }
+            catch (Exception)
+            {
+                // Assembly not found or invalid name
+                return null;
+            }
+
+            return null;
         }
 
         public static bool IsFinalAssignableType(Type type)
@@ -138,7 +150,7 @@ namespace SerializeReferenceDropdown.Editor.Utils
         }
 
         private static IReadOnlyList<Type> systemObjectTypes;
-        
+
         public static IReadOnlyList<Type> GetAllSystemObjectTypes()
         {
             if (systemObjectTypes == null)
@@ -175,7 +187,7 @@ namespace SerializeReferenceDropdown.Editor.Utils
             var propertyType = ExtractTypeFromString(property.managedReferenceFieldTypename);
             return GetAssignableSerializeReferenceTypes(propertyType);
         }
-        
+
         public static List<Type> GetAssignableSerializeReferenceTypes(Type propertyType)
         {
             var derivedTypes = TypeCache.GetTypesDerivedFrom(propertyType);

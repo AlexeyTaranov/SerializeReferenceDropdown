@@ -12,12 +12,17 @@ namespace SerializeReferenceDropdown.Editor.Utils
     {
         public static string GetDetailData(this ManagedReferenceMissingType missingTypeData)
         {
+            return FormatDetailData(missingTypeData.assemblyName, missingTypeData.namespaceName, missingTypeData.className, missingTypeData.referenceId, missingTypeData.serializedData);
+        }
+
+        public static string FormatDetailData(string assemblyName, string namespaceName, string className, long referenceId, string serializedData)
+        {
             var sb = new StringBuilder();
-            sb.AppendLine($"ASM: {missingTypeData.assemblyName}");
-            sb.AppendLine($"Namespace: {missingTypeData.namespaceName}");
-            sb.AppendLine($"Class: {missingTypeData.className}");
-            sb.AppendLine($"RefID: {missingTypeData.referenceId}");
-            sb.AppendFormat("\n{0}", missingTypeData.serializedData);
+            sb.AppendLine($"ASM: {assemblyName}");
+            sb.AppendLine($"Namespace: {namespaceName}");
+            sb.AppendLine($"Class: {className}");
+            sb.AppendLine($"RefID: {referenceId}");
+            sb.AppendFormat("\n{0}", serializedData);
             return sb.ToString();
         }
 
