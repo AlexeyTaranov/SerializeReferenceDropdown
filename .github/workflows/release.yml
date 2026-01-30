@@ -28,16 +28,28 @@ jobs:
 
       - name: Setup Unity Test Project
         run: |
-          mkdir -p Packages
-          mkdir -p ProjectSettings
-          echo '{"dependencies": {"com.unity.test-framework": "1.1.33", "com.unity.nuget.newtonsoft-json": "3.2.0", "com.alexeytaranov.serializereferencedropdown": "file:../"}}' > Packages/manifest.json
-          echo "m_EditorVersion: 2022.3.10f1" > ProjectSettings/ProjectVersion.txt
+          mkdir -p UnityProject/Packages/com.alexeytaranov.serializereferencedropdown
+          mkdir -p UnityProject/ProjectSettings
+          mkdir -p UnityProject/Assets
+          
+          # Copy package contents
+          cp -r Editor UnityProject/Packages/com.alexeytaranov.serializereferencedropdown/
+          cp -r Runtime UnityProject/Packages/com.alexeytaranov.serializereferencedropdown/
+          cp -r Tests UnityProject/Packages/com.alexeytaranov.serializereferencedropdown/
+          cp -r Samples~ UnityProject/Packages/com.alexeytaranov.serializereferencedropdown/ || true
+          cp package.json UnityProject/Packages/com.alexeytaranov.serializereferencedropdown/
+          
+          # Create manifest
+          echo '{"dependencies": {"com.unity.test-framework": "1.1.33", "com.unity.nuget.newtonsoft-json": "3.2.0", "com.alexeytaranov.serializereferencedropdown": "file:com.alexeytaranov.serializereferencedropdown"}}' > UnityProject/Packages/manifest.json
+          
+          # Set version
+          echo "m_EditorVersion: 2022.3.10f1" > UnityProject/ProjectSettings/ProjectVersion.txt
 
       - name: Cache Library
         uses: actions/cache@v3
         with:
-          path: Library
-          key: Library-${{ hashFiles('Packages/manifest.json') }}
+          path: UnityProject/Library
+          key: Library-${{ hashFiles('UnityProject/Packages/manifest.json') }}
           restore-keys: |
             Library-
 
@@ -48,7 +60,7 @@ jobs:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          projectPath: .
+          projectPath: UnityProject
           unityVersion: 2022.3.10f1
           testMode: EditMode
           githubToken: ${{ secrets.GITHUB_TOKEN }}
@@ -58,7 +70,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Test Results
-          path: artifacts
+          path: UnityProject/artifacts
+
+      - name: Test Summary
+        uses: test-summary/action-test-summary@v2
+        if: always()
+        with:
+          paths: UnityProject/artifacts/*.xml
 
   release:
     needs: test
@@ -117,6 +135,7 @@ jobs:
             minor) new_version="$major.$((minor + 1)).0" ;;
             *)     new_version="$major.$minor.$((patch + 1))" ;;
           esac
+          # Ensure directories exist and wrap jq call
           jq ".version = \"$new_version\"" package.json > tmp.json && mv tmp.json package.json
           echo "new_version=$new_version" >> $GITHUB_OUTPUT
           echo "Version bumped to $new_version"
