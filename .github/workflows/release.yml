@@ -28,16 +28,16 @@ jobs:
 
       - name: Setup Unity Test Project
         run: |
-          mkdir -p TEST_PROJECT/Packages
-          mkdir -p TEST_PROJECT/ProjectSettings
-          echo '{"dependencies": {"com.unity.test-framework": "1.1.33", "com.unity.nuget.newtonsoft-json": "3.2.0", "com.alexeytaranov.serializereferencedropdown": "file:../../"}}' > TEST_PROJECT/Packages/manifest.json
-          echo "m_EditorVersion: 2022.3.10f1" > TEST_PROJECT/ProjectSettings/ProjectVersion.txt
+          mkdir -p Packages
+          mkdir -p ProjectSettings
+          echo '{"dependencies": {"com.unity.test-framework": "1.1.33", "com.unity.nuget.newtonsoft-json": "3.2.0", "com.alexeytaranov.serializereferencedropdown": "file:../"}}' > Packages/manifest.json
+          echo "m_EditorVersion: 2022.3.10f1" > ProjectSettings/ProjectVersion.txt
 
       - name: Cache Library
         uses: actions/cache@v3
         with:
-          path: TEST_PROJECT/Library
-          key: Library-${{ hashFiles('TEST_PROJECT/Packages/manifest.json') }}
+          path: Library
+          key: Library-${{ hashFiles('Packages/manifest.json') }}
           restore-keys: |
             Library-
 
@@ -48,7 +48,7 @@ jobs:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          projectPath: TEST_PROJECT
+          projectPath: .
           unityVersion: 2022.3.10f1
           testMode: EditMode
           githubToken: ${{ secrets.GITHUB_TOKEN }}
@@ -58,7 +58,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Test Results
-          path: TEST_PROJECT/artifacts
+          path: artifacts
 
   release:
     needs: test
