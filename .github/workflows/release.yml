@@ -22,6 +22,13 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Setup Unity Test Project
+        run: |
+          mkdir -p TEST_PROJECT/Packages
+          mkdir -p TEST_PROJECT/ProjectSettings
+          echo '{"dependencies": {"com.alexeytaranov.serializereferencedropdown": "file:../../"}}' > TEST_PROJECT/Packages/manifest.json
+          echo "m_EditorVersion: 2022.3.10f1" > TEST_PROJECT/ProjectSettings/ProjectVersion.txt
+
       - name: Run Unity Tests
         uses: game-ci/unity-test-runner@v4
         env:
@@ -29,6 +36,8 @@ jobs:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
+          projectPath: TEST_PROJECT
+          unityVersion: 2022.3.10f1
           testMode: EditMode
           githubToken: ${{ secrets.GITHUB_TOKEN }}
 
