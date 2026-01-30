@@ -37,6 +37,13 @@ jobs:
       - name: Check for new commits since last tag
         id: check_commits
         run: |
+          last_commit_msg=$(git log -1 --pretty=%s)
+          if [[ "$last_commit_msg" == "chore: release"* ]]; then
+            echo "Skipping release: Last commit was a release."
+            echo "no_new_commits=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
           last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           if [ -z "$last_tag" ]; then
             commits=$(git log --pretty=format:"%h")
