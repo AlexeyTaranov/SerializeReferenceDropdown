@@ -30,7 +30,7 @@ jobs:
         run: |
           mkdir -p TEST_PROJECT/Packages
           mkdir -p TEST_PROJECT/ProjectSettings
-          echo '{"dependencies": {"com.alexeytaranov.serializereferencedropdown": "file:../../"}}' > TEST_PROJECT/Packages/manifest.json
+          echo '{"dependencies": {"com.unity.test-framework": "1.1.33", "com.unity.nuget.newtonsoft-json": "3.2.0", "com.alexeytaranov.serializereferencedropdown": "file:../../"}}' > TEST_PROJECT/Packages/manifest.json
           echo "m_EditorVersion: 2022.3.10f1" > TEST_PROJECT/ProjectSettings/ProjectVersion.txt
 
       - name: Cache Library
