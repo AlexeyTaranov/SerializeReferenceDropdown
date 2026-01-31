@@ -35,8 +35,13 @@ jobs:
           touch UnityProject/Assets/.gitkeep
           
           # Copy current package to the Packages folder of the test project
+          # Use rsync to copy everything including .meta files, excluding the test project itself and git metadata
           mkdir -p UnityProject/Packages/com.alexeytaranov.serializereferencedropdown
-          cp -r Editor Runtime Tests package.json UnityProject/Packages/com.alexeytaranov.serializereferencedropdown/
+          rsync -a . UnityProject/Packages/com.alexeytaranov.serializereferencedropdown/ --exclude UnityProject --exclude .git --exclude .github
+          
+          # Debug: List copied files to verify DLL existence
+          echo "Listing copied package files:"
+          find UnityProject/Packages/com.alexeytaranov.serializereferencedropdown -name "YamlDotNet.dll*"
           
           # Create manifest with only standard dependencies
           cat <<EOF > UnityProject/Packages/manifest.json
