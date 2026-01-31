@@ -1,3 +1,19 @@
+## v1.2.8 - 2026-01-31
+- Fix YamlDotNet for platofrm tests (2) (879633b)
+- Fix YamlDotNet for platofrm tests (ebfb395)
+- YamlDotNet - .netstandard 2.0 dll (21d67f2)
+- Editor asmdef - auto references (c86f144)
+- Update YamlDotNet dll location (0e76e7c)
+- Tests for utils (46f09b4)
+- Editor Tests: YAML Edit Unity Object (eb8fd66)
+- Refactored implementation into different classes (cf359ac)
+- Check missing types with YAML only on exist files (6758ae1)
+- [UI Toolkit]Editor flags - Not Null (5ce7a43)
+- Refactored - UI Toolkit implementation removed local functions (6c37756)
+- Refactored - UI Toolkit implementation moved to different class (40683c3)
+- Refactored - IMGUI implementation moved to different class (e8e1ed0)
+- Refactored - common property drawer logic moved to different static classes (74ba8f8)
+
 ## v1.2.7 - 2026-01-12
 - Fix (c6b3903)
 - Fix empty assetPath (30a816a)
