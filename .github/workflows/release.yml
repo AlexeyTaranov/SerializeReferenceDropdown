@@ -28,18 +28,21 @@ jobs:
 
       - name: Setup Unity Test Project
         run: |
-          mkdir -p UnityProject/Packages/com.alexeytaranov.serializereferencedropdown
+          mkdir -p UnityProject/Packages
           mkdir -p UnityProject/ProjectSettings
           mkdir -p UnityProject/Assets
           touch UnityProject/Assets/.gitkeep
           
-          # Copy package contents inclusive of .meta files
-          # Using rsync to copy everything except the target UnityProject directory
-          rsync -av --exclude='UnityProject' --exclude='.git' --exclude='.github' . UnityProject/Packages/com.alexeytaranov.serializereferencedropdown/
-          
-          # Create manifest
-          # We don't need to explicitly link the package if it's already in the Packages/ folder
-          echo '{"dependencies": {"com.unity.test-framework": "1.1.33", "com.unity.nuget.newtonsoft-json": "3.2.0"}}' > UnityProject/Packages/manifest.json
+          # Create manifest linking the package as a file dependency
+          # The package is in the root, so file:../.. points to the package root from UnityProject/Packages/
+          cat <<EOF > UnityProject/Packages/manifest.json
+          {
+            "dependencies": {
+              "com.unity.test-framework": "1.1.33",
+              "com.unity.nuget.newtonsoft-json": "3.2.0"
+            }
+          }
+          EOF
           
           # Set version
           echo "m_EditorVersion: 2022.3.10f1" > UnityProject/ProjectSettings/ProjectVersion.txt
