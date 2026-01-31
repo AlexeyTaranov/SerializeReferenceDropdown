@@ -34,12 +34,14 @@ jobs:
           mkdir -p UnityProject/Assets
           touch UnityProject/Assets/.gitkeep
           
-          # Create manifest linking the package as a file dependency
-          # The package is in the root, so file:../.. points to the package root from UnityProject/Packages/
+          # Copy current package to the Packages folder of the test project
+          mkdir -p UnityProject/Packages/com.alexeytaranov.serializereferencedropdown
+          cp -r Editor Runtime Tests package.json UnityProject/Packages/com.alexeytaranov.serializereferencedropdown/
+          
+          # Create manifest with only standard dependencies
           cat <<EOF > UnityProject/Packages/manifest.json
           {
             "dependencies": {
-              "com.alexeytaranov.serializereferencedropdown": "file:../..",
               "com.unity.test-framework": "1.1.33",
               "com.unity.nuget.newtonsoft-json": "3.2.0"
             }
@@ -53,7 +55,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: UnityProject/Library
-          key: Library-${{ hashFiles('UnityProject/Packages/manifest.json') }}
+          key: Library-${{ hashFiles('UnityProject/Packages/manifest.json', 'package.json', 'Editor/**', 'Runtime/**') }}
           restore-keys: |
             Library-
 
