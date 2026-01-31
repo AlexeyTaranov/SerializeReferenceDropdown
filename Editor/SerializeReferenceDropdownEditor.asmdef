@@ -4,22 +4,8 @@
     "references": [
         "UnityEditor.UI",
         "UnityEngine.UI",
-        "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner",
         "SerializeReferenceDropdownRuntime"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": true,
-    "precompiledReferences": [
-        "YamlDotNet.dll",
-        "Newtonsoft.Json.dll"
-    ],
-    "autoReferenced": false,
-    "defineConstraints": [],
-    "versionDefines": [],
-    "noEngineReferences": false
+    "includePlatforms": ["Editor"],
+    "autoReferenced": true
 }
