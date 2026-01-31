@@ -30,13 +30,15 @@ jobs:
         run: |
           mkdir -p UnityProject/Packages/com.alexeytaranov.serializereferencedropdown
           mkdir -p UnityProject/ProjectSettings
+          mkdir -p UnityProject/Assets
           
           # Copy package contents inclusive of .meta files
           # Using rsync to copy everything except the target UnityProject directory
           rsync -av --exclude='UnityProject' --exclude='.git' --exclude='.github' . UnityProject/Packages/com.alexeytaranov.serializereferencedropdown/
           
           # Create manifest
-          echo '{"dependencies": {"com.unity.test-framework": "1.1.33", "com.unity.nuget.newtonsoft-json": "3.2.0", "com.alexeytaranov.serializereferencedropdown": "file:com.alexeytaranov.serializereferencedropdown"}}' > UnityProject/Packages/manifest.json
+          # We don't need to explicitly link the package if it's already in the Packages/ folder
+          echo '{"dependencies": {"com.unity.test-framework": "1.1.33", "com.unity.nuget.newtonsoft-json": "3.2.0"}}' > UnityProject/Packages/manifest.json
           
           # Set version
           echo "m_EditorVersion: 2022.3.10f1" > UnityProject/ProjectSettings/ProjectVersion.txt
@@ -56,7 +58,7 @@ jobs:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          projectPath: UnityProject
+          projectPath: ${{ github.workspace }}/UnityProject
           unityVersion: 2022.3.10f1
           testMode: EditMode
           githubToken: ${{ secrets.GITHUB_TOKEN }}
