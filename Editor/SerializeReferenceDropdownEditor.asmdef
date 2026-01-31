@@ -1,11 +1,7 @@
 {
     "name": "SerializeReferenceDropdownEditor",
-    "rootNamespace": "SerializeReferenceDropdown",
-    "references": [
-        "UnityEditor.UI",
-        "UnityEngine.UI",
-        "SerializeReferenceDropdownRuntime"
-    ],
     "includePlatforms": ["Editor"],
-    "autoReferenced": true
+    "references": [
+        "SerializeReferenceDropdownRuntime"
+    ]
 }

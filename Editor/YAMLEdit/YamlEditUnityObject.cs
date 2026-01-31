@@ -1,9 +1,9 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using SerializeReferenceDropdown.Editor.Utils;
+using YamlDotNet;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
