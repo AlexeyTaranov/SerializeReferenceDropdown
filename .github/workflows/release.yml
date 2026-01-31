@@ -23,44 +23,43 @@ jobs:
   test:
     name: Run Unity Tests 🧪
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Setup Unity Test Project
         run: |
+          mkdir -p UnityProject/Assets
           mkdir -p UnityProject/Packages
           mkdir -p UnityProject/ProjectSettings
-          mkdir -p UnityProject/Assets
-          touch UnityProject/Assets/.gitkeep
-          
-          # Copy current package to the Packages folder of the test project
-          # Use rsync to copy everything including .meta files, excluding the test project itself and git metadata
+
+          # Copy package into Packages folder
           mkdir -p UnityProject/Packages/com.alexeytaranov.serializereferencedropdown
-          rsync -a . UnityProject/Packages/com.alexeytaranov.serializereferencedropdown/ --exclude UnityProject --exclude .git --exclude .github
-          
-          # Debug: List copied files to verify DLL existence
-          echo "Listing copied package files:"
-          find UnityProject/Packages/com.alexeytaranov.serializereferencedropdown -name "YamlDotNet.dll*"
-          
-          # Create manifest with only standard dependencies
+          rsync -a . UnityProject/Packages/com.alexeytaranov.serializereferencedropdown/ \
+            --exclude UnityProject \
+            --exclude .git \
+            --exclude .github
+
+          # Register package & dependencies
           cat <<EOF > UnityProject/Packages/manifest.json
           {
             "dependencies": {
+              "com.alexeytaranov.serializereferencedropdown": "file:com.alexeytaranov.serializereferencedropdown",
               "com.unity.test-framework": "1.1.33",
               "com.unity.nuget.newtonsoft-json": "3.2.0"
             }
           }
           EOF
-          
-          # Set version
+
+          # Unity version
           echo "m_EditorVersion: 2022.3.10f1" > UnityProject/ProjectSettings/ProjectVersion.txt
 
       - name: Cache Library
         uses: actions/cache@v3
         with:
           path: UnityProject/Library
-          key: Library-${{ hashFiles('UnityProject/Packages/manifest.json', 'package.json', 'Editor/**', 'Runtime/**') }}
+          key: Library-${{ hashFiles('UnityProject/Packages/manifest.json') }}
           restore-keys: |
             Library-
 
@@ -75,7 +74,6 @@ jobs:
           unityVersion: 2022.3.10f1
           testMode: EditMode
           githubToken: ${{ secrets.GITHUB_TOKEN }}
-          coverageOptions: generateAdditionalMetrics;generateHtmlReport;generateBadgeReport;dontClear
 
       - name: Upload Test Results
         if: always()
@@ -83,12 +81,6 @@ jobs:
         with:
           name: Test Results
           path: UnityProject/artifacts
-
-      - name: Test Summary
-        uses: test-summary/action@v2
-        if: always()
-        with:
-          paths: UnityProject/artifacts/*.xml
 
   release:
     needs: test
@@ -115,7 +107,6 @@ jobs:
         run: |
           last_commit_msg=$(git log -1 --pretty=%s)
           if [[ "$last_commit_msg" == "chore: release"* ]]; then
-            echo "Skipping release: Last commit was a release."
             echo "no_new_commits=true" >> $GITHUB_OUTPUT
             exit 0
           fi
@@ -129,10 +120,8 @@ jobs:
 
           if [ -z "$commits" ]; then
             echo "no_new_commits=true" >> $GITHUB_OUTPUT
-            echo "No new commits since last release."
           else
             echo "no_new_commits=false" >> $GITHUB_OUTPUT
-            echo "New commits detected, proceeding with release."
           fi
 
       - name: Bump version
@@ -147,10 +136,9 @@ jobs:
             minor) new_version="$major.$((minor + 1)).0" ;;
             *)     new_version="$major.$minor.$((patch + 1))" ;;
           esac
-          # Ensure directories exist and wrap jq call
+
           jq ".version = \"$new_version\"" package.json > tmp.json && mv tmp.json package.json
           echo "new_version=$new_version" >> $GITHUB_OUTPUT
-          echo "Version bumped to $new_version"
 
       - name: Generate changelog text
         if: steps.check_commits.outputs.no_new_commits == 'false'
@@ -175,12 +163,15 @@ jobs:
         run: |
           VERSION=${{ steps.bump_version.outputs.new_version }}
           DATE=$(date +'%Y-%m-%d')
+
           echo "## v$VERSION - $DATE" > new_changelog.md
           cat changelog.txt >> new_changelog.md
           echo "" >> new_changelog.md
+
           if [ -f CHANGELOG.md ]; then
             cat CHANGELOG.md >> new_changelog.md
           fi
+
           mv new_changelog.md CHANGELOG.md
 
       - name: Create PR with version bump
@@ -194,8 +185,6 @@ jobs:
             This PR updates:
             - **package.json**
             - **CHANGELOG.md**
-
-            After merging, a new draft GitHub release will be created automatically.
           labels: release
           add-paths: |
             package.json
