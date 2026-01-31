@@ -13,6 +13,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  checks: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -38,6 +39,7 @@ jobs:
           cat <<EOF > UnityProject/Packages/manifest.json
           {
             "dependencies": {
+              "com.alexeytaranov.serializereferencedropdown": "file:../..",
               "com.unity.test-framework": "1.1.33",
               "com.unity.nuget.newtonsoft-json": "3.2.0"
             }
@@ -66,6 +68,7 @@ jobs:
           unityVersion: 2022.3.10f1
           testMode: EditMode
           githubToken: ${{ secrets.GITHUB_TOKEN }}
+          coverageOptions: generateAdditionalMetrics;generateHtmlReport;generateBadgeReport;dontClear
 
       - name: Upload Test Results
         if: always()
