@@ -115,9 +115,9 @@ jobs:
 
           last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           if [ -z "$last_tag" ]; then
-            commits=$(git log --pretty=format:"%h")
+            commits=$(git log --pretty=format:"%h" -- Editor Runtime Samples~ Tests)
           else
-            commits=$(git log $last_tag..HEAD --pretty=format:"%h")
+            commits=$(git log $last_tag..HEAD --pretty=format:"%h" -- Editor Runtime Samples~ Tests)
           fi
 
           if [ -z "$commits" ]; then
@@ -151,9 +151,9 @@ jobs:
         run: |
           last_tag=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
           if [ -z "$last_tag" ]; then
-            log=$(git log --pretty=format:"- %s (%h)")
+            log=$(git log --pretty=format:"- %s (%h)" -- Editor Runtime Samples~ Tests)
           else
-            log=$(git log $last_tag..HEAD --pretty=format:"- %s (%h)")
+            log=$(git log $last_tag..HEAD --pretty=format:"- %s (%h)" -- Editor Runtime Samples~ Tests)
           fi
 
           log=$(echo "$log" | grep -v -E "Merge (pull request|branch)" || true)
