@@ -31,6 +31,7 @@ jobs:
           mkdir -p UnityProject/Packages/com.alexeytaranov.serializereferencedropdown
           mkdir -p UnityProject/ProjectSettings
           mkdir -p UnityProject/Assets
+          touch UnityProject/Assets/.gitkeep
           
           # Copy package contents inclusive of .meta files
           # Using rsync to copy everything except the target UnityProject directory
@@ -58,7 +59,7 @@ jobs:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          projectPath: ${{ github.workspace }}/UnityProject
+          projectPath: UnityProject
           unityVersion: 2022.3.10f1
           testMode: EditMode
           githubToken: ${{ secrets.GITHUB_TOKEN }}
