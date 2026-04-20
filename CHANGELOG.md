@@ -1,3 +1,7 @@
+## v1.2.9 - 2026-04-20
+- chore: release v1.2.8 (688cf2c)
+- Cache types only when required in SearchTool (89b7ab7)
+
 ## v1.2.8 - 2026-04-20
 - Cache types only when required in SearchTool (89b7ab7)
 
