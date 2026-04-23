@@ -89,6 +89,6 @@ public sealed class RefTo<TRefType>
 
     public RefTo<TRefType> CopyWithNewHost(UnityEngine.Object host)
     {
-        return new RefTo<TRefType>(_host, _referenceId);
+        return new RefTo<TRefType>(host, _referenceId);
     }
 }
