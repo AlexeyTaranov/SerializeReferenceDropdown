@@ -1,3 +1,7 @@
+## v1.2.10 - 2026-04-23
+- chore: release v1.2.9 (bb88e07)
+- Fix RefTo host (663b798)
+
 ## v1.2.9 - 2026-04-23
 - Fix RefTo host (663b798)
 
