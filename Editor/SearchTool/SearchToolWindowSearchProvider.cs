@@ -38,18 +38,6 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
         internal static SearchProvider CreateProvider()
         {
             var icon = EditorGUIUtility.IconContent("cs Script Icon").image;
-            if (targetTypes == null)
-            {
-                var typesList = new List<Type>();
-                var allTypes = TypeUtils.GetAllTypesInCurrentDomain();
-                var interfaces = allTypes.Where(t => (t.IsInterface || t.IsAbstract) && t.IsGenericType == false);
-                var nonUnityObjectTypes =
-                    allTypes.Where(t =>
-                        t.IsClass && t.IsSubclassOf(typeof(UnityEngine.Object)) == false);
-                typesList.AddRange(interfaces);
-                typesList.AddRange(nonUnityObjectTypes);
-                targetTypes = typesList;
-            }
 
             return new SearchProvider(providerId, "Search Target Type")
             {
@@ -65,6 +53,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
             IEnumerable<SearchItem> FetchItems(SearchContext context, List<SearchItem> items,
                 SearchProvider provider)
             {
+                CacheTypes();
                 var query = context.searchQuery.ToLowerInvariant();
                 var words = query.Split(' ');
                 var newItems = targetTypes.Where(TargetTypeIsContainsQuery).Select(CreateSearchItem);
@@ -86,7 +75,22 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
                     return true;
                 }
-                
+
+                void CacheTypes()
+                {
+                    if (targetTypes == null)
+                    {
+                        var typesList = new List<Type>();
+                        var allTypes = TypeUtils.GetAllTypesInCurrentDomain();
+                        var interfaces = allTypes.Where(t => (t.IsInterface || t.IsAbstract) && t.IsGenericType == false);
+                        var nonUnityObjectTypes =
+                            allTypes.Where(t =>
+                                t.IsClass && t.IsSubclassOf(typeof(UnityEngine.Object)) == false);
+                        typesList.AddRange(interfaces);
+                        typesList.AddRange(nonUnityObjectTypes);
+                        targetTypes = typesList;
+                    }
+                }
 
                 SearchItem CreateSearchItem(Type t)
                 {

@@ -1,3 +1,9 @@
+## v1.2.9 - 2026-04-23
+- Fix RefTo host (663b798)
+
+## v1.2.8 - 2026-04-20
+- Cache types only when required in SearchTool (89b7ab7)
+
 ## v1.2.7 - 2026-01-12
 - Fix (c6b3903)
 - Fix empty assetPath (30a816a)
