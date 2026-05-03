@@ -13,7 +13,6 @@ namespace SerializeReferenceDropdown.Editor.Preferences
 
         [SerializeField] private bool enableCrossReferencesCheck = true;
         [SerializeField] private bool enableSearchTool;
-        [SerializeField] private bool enableRiderIntegration;
 
         public bool EnableCrossReferencesCheck
         {
@@ -25,12 +24,6 @@ namespace SerializeReferenceDropdown.Editor.Preferences
         {
             get => enableSearchTool;
             set => enableSearchTool = value;
-        }
-
-        public bool EnableRiderIntegration
-        {
-            get => enableRiderIntegration;
-            set => enableRiderIntegration = value;
         }
 
         public static SerializeReferenceToolsUserPreferences GetOrLoadSettings()
