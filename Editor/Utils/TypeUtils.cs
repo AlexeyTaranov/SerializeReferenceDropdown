@@ -36,30 +36,34 @@ namespace SerializeReferenceDropdown.Editor.Utils
                 return null;
             }
 
-            var splitFieldTypename = typeName.Split(' ');
-            var assemblyName = splitFieldTypename[0];
-            assemblyName = assemblyName == "Assembly" ? "Assembly-CSharp" : assemblyName;
-            var subStringTypeName = splitFieldTypename[1];
-            if (splitFieldTypename.Length > 2)
+            var assemblyNameEndIndex = typeName.IndexOf(' ');
+            if (assemblyNameEndIndex < 0)
             {
-                subStringTypeName = typeName.Substring(assemblyName.Length + 1);
+                return Type.GetType(typeName, false);
             }
+
+            var assemblyName = typeName.Substring(0, assemblyNameEndIndex);
+            assemblyName = assemblyName == "Assembly" ? "Assembly-CSharp" : assemblyName;
+            var subStringTypeName = typeName.Substring(assemblyNameEndIndex + 1);
 
             try
             {
                 var assembly = Assembly.Load(assemblyName);
                 if (assembly != null)
                 {
-                    return assembly.GetType(subStringTypeName);
+                    var type = assembly.GetType(subStringTypeName);
+                    if (type != null)
+                    {
+                        return type;
+                    }
                 }
             }
             catch (Exception)
             {
                 // Assembly not found or invalid name
-                return null;
             }
 
-            return null;
+            return Type.GetType($"{subStringTypeName}, {assemblyName}", false);
         }
 
         public static bool IsFinalAssignableType(Type type)

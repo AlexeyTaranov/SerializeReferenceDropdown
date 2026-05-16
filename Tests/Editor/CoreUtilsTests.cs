@@ -16,6 +16,14 @@ namespace SerializeReferenceDropdown.Editor.Tests
         }
 
         [Test]
+        public void ExtractTypeFromString_GenericString_ReturnsConstructedType()
+        {
+            var typeString = $"{typeof(GenericData<>).Assembly.GetName().Name} {typeof(GenericData<>).FullName}[[System.Int32, mscorlib]]";
+            var type = TypeUtils.ExtractTypeFromString(typeString);
+            Assert.AreEqual(typeof(GenericData<int>), type);
+        }
+
+        [Test]
         public void ExtractTypeFromString_InvalidString_ReturnsNull()
         {
             var typeString = "InvalidAssembly InvalidType";
@@ -56,6 +64,13 @@ namespace SerializeReferenceDropdown.Editor.Tests
             Assert.AreEqual("Button", prettyName);
         }
 
+        [Test]
+        public void PrettifyTypeName_GenericType_ShowsGenericArguments()
+        {
+            var prettyName = PropertyDrawerTypesUtils.GetTypeName(typeof(GenericData<int>));
+            Assert.AreEqual("Generic Data<int>", prettyName);
+        }
+
         private class TestScriptableObject : ScriptableObject
         {
             [SerializeReference] public ITestInterface Reference;
@@ -64,5 +79,6 @@ namespace SerializeReferenceDropdown.Editor.Tests
         private interface ITestInterface { }
         private abstract class AbstractClass : ITestInterface { }
         private class ConcreteClass : ITestInterface { }
+        private class GenericData<T> { }
     }
 }

@@ -12,12 +12,35 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
     public static class PropertyDrawerTypesUtils
     {
         private const string NullName = "null";
+        private static readonly Dictionary<Type, string> BuiltInTypeNames = new Dictionary<Type, string>
+        {
+            { typeof(bool), "bool" },
+            { typeof(byte), "byte" },
+            { typeof(sbyte), "sbyte" },
+            { typeof(char), "char" },
+            { typeof(decimal), "decimal" },
+            { typeof(double), "double" },
+            { typeof(float), "float" },
+            { typeof(int), "int" },
+            { typeof(uint), "uint" },
+            { typeof(long), "long" },
+            { typeof(ulong), "ulong" },
+            { typeof(object), "object" },
+            { typeof(short), "short" },
+            { typeof(ushort), "ushort" },
+            { typeof(string), "string" },
+        };
 
         public static string GetTypeName(Type type)
         {
             if (type == null)
             {
                 return NullName;
+            }
+
+            if (BuiltInTypeNames.TryGetValue(type, out var builtInTypeName))
+            {
+                return builtInTypeName;
             }
 
             var typesWithNames = TypeCache.GetTypesWithAttribute(typeof(SerializeReferenceDropdownNameAttribute));
@@ -29,9 +52,9 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
             if (type.IsGenericType)
             {
-                var genericNames = type.GenericTypeArguments.Select(t => t.Name);
-                var genericParamNames = " [" + string.Join(",", genericNames) + "]";
-                var genericName = ObjectNames.NicifyVariableName(type.Name) + genericParamNames;
+                var genericNames = type.GetGenericArguments().Select(GetTypeName);
+                var genericParamNames = "<" + string.Join(", ", genericNames) + ">";
+                var genericName = ObjectNames.NicifyVariableName(GetGenericTypeNameWithoutArity(type)) + genericParamNames;
                 return genericName;
             }
 
@@ -48,6 +71,13 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             }
 
             return ObjectNames.NicifyVariableName(type.Name);
+        }
+
+        private static string GetGenericTypeNameWithoutArity(Type type)
+        {
+            var name = type.Name;
+            var arityIndex = name.IndexOf('`');
+            return arityIndex < 0 ? name : name.Substring(0, arityIndex);
         }
 
         public static string GetTypeTooltip(Type type)
