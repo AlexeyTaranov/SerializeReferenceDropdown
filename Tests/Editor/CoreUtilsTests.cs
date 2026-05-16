@@ -117,6 +117,43 @@ namespace SerializeReferenceDropdown.Editor.Tests
         }
 
         [Test]
+        public void AreGenericArgumentsValid_ClassNewConstraint_ValidatesArgument()
+        {
+            Assert.IsTrue(TypeUtils.AreGenericArgumentsValid(typeof(ClassNewConstraintGeneric<>),
+                new[] { typeof(ReferenceConstraintValue) }));
+            Assert.IsFalse(TypeUtils.AreGenericArgumentsValid(typeof(ClassNewConstraintGeneric<>),
+                new[] { typeof(string) }));
+            Assert.IsFalse(TypeUtils.AreGenericArgumentsValid(typeof(ClassNewConstraintGeneric<>),
+                new[] { typeof(int) }));
+        }
+
+        [Test]
+        public void AreGenericArgumentsValid_StructConstraint_ValidatesArgument()
+        {
+            Assert.IsTrue(TypeUtils.AreGenericArgumentsValid(typeof(StructConstraintGeneric<>),
+                new[] { typeof(int) }));
+            Assert.IsFalse(TypeUtils.AreGenericArgumentsValid(typeof(StructConstraintGeneric<>),
+                new[] { typeof(string) }));
+        }
+
+        [Test]
+        public void AreGenericArgumentsValid_InterfaceConstraint_ValidatesArgument()
+        {
+            Assert.IsTrue(TypeUtils.AreGenericArgumentsValid(typeof(InterfaceConstraintGeneric<>),
+                new[] { typeof(ConcreteClass) }));
+            Assert.IsFalse(TypeUtils.AreGenericArgumentsValid(typeof(InterfaceConstraintGeneric<>),
+                new[] { typeof(string) }));
+        }
+
+        [Test]
+        public void GetConcreteGenericType_ConstraintMismatch_ReturnsNull()
+        {
+            var type = TypeUtils.GetConcreteGenericType(typeof(IGenericTarget<int>), typeof(ClassNewConstraintGeneric<>));
+
+            Assert.IsNull(type);
+        }
+
+        [Test]
         public void PrettifyTypeName_RemovesNamespaces()
         {
             var prettyName = PropertyDrawerTypesUtils.GetTypeName(typeof(UnityEngine.UIElements.Button));
@@ -146,5 +183,12 @@ namespace SerializeReferenceDropdown.Editor.Tests
         private class PartialGeneric<TFree, TTarget> : IGenericTarget<TTarget> { }
         private class GenericBase<T> { }
         private class GenericBaseChild<T> : GenericBase<T> { }
+        public class ReferenceConstraintValue : ITestInterface
+        {
+            public ReferenceConstraintValue() { }
+        }
+        private class ClassNewConstraintGeneric<T> : IGenericTarget<T> where T : class, new() { }
+        private class StructConstraintGeneric<T> where T : struct { }
+        private class InterfaceConstraintGeneric<T> where T : ITestInterface { }
     }
 }

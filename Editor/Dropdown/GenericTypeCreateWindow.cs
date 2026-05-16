@@ -79,6 +79,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                     targetTypes = typesCollection.Where(t => systemObjectTypes.Contains(t)).ToArray();
                 }
 
+                targetTypes = targetTypes.Where(t => TypeUtils.IsGenericArgumentValid(genericParam, t)).ToArray();
                 typesForParameters.Add(targetTypes);
                 var names = targetTypes.Select(GetTypeName).ToArray();
                 typeNamesForParameters.Add(names);
@@ -148,6 +149,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
                 var parameterTypeLabel = new TextElement { text = paramName };
                 var makeArrayToggle = new Toggle("Make Array Type");
+                makeArrayToggle.RegisterValueChangedCallback(_ => RefreshGenerateGenericButton());
 
                 var group = new Box();
                 group.style.flexDirection = FlexDirection.Row;
@@ -176,25 +178,9 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
         private void GenerateGenericType()
         {
-            var parameterTypes = new Type[selectedIndexes.Length];
-            for (int i = 0; i < parameterTypes.Length; i++)
+            if (TryGetSelectedParameterTypes(out var parameterTypes) == false)
             {
-                Type type;
-                if (specifiedTypesFromProperty[i] != null)
-                {
-                    type = specifiedTypesFromProperty[i];
-                }
-                else
-                {
-                    var typeIndex = selectedIndexes[i];
-                    type = typesForParameters[i][typeIndex];
-                    if (type.IsArray == false && makeArrayTypeToggles[i].value)
-                    {
-                        type = type.MakeArrayType();
-                    }
-                }
-
-                parameterTypes[i] = type;
+                return;
             }
 
             var newGenericType = inputGenericType.MakeGenericType(parameterTypes);
@@ -250,10 +236,38 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
         private void RefreshGenerateGenericButton()
         {
-            var specifiedTypesCount = specifiedTypesFromProperty.Count(t => t != null);
-            var selectedIndexesCount = selectedIndexes.Count(t => t != InvalidIndex);
-            var isSelectedAllTypes = (specifiedTypesCount + selectedIndexesCount) == selectedIndexes.Length;
-            generateGenericTypeButton.SetEnabled(isSelectedAllTypes);
+            var canGenerateGenericType = TryGetSelectedParameterTypes(out var parameterTypes) &&
+                                         TypeUtils.AreGenericArgumentsValid(inputGenericType, parameterTypes);
+            generateGenericTypeButton.SetEnabled(canGenerateGenericType);
+        }
+
+        private bool TryGetSelectedParameterTypes(out Type[] parameterTypes)
+        {
+            parameterTypes = new Type[selectedIndexes.Length];
+            for (int i = 0; i < parameterTypes.Length; i++)
+            {
+                if (specifiedTypesFromProperty[i] != null)
+                {
+                    parameterTypes[i] = specifiedTypesFromProperty[i];
+                    continue;
+                }
+
+                var typeIndex = selectedIndexes[i];
+                if (typeIndex == InvalidIndex)
+                {
+                    return false;
+                }
+
+                var type = typesForParameters[i][typeIndex];
+                if (type.IsArray == false && makeArrayTypeToggles[i].value)
+                {
+                    type = type.MakeArrayType();
+                }
+
+                parameterTypes[i] = type;
+            }
+
+            return true;
         }
     }
 }

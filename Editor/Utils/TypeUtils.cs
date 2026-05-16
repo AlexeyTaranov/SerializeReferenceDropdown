@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
 using UnityEditor;
 using UnityEditor.Compilation;
@@ -119,7 +120,8 @@ namespace SerializeReferenceDropdown.Editor.Utils
                 return null;
             }
 
-            if (genericArguments.Any(t => t == null || t.IsAbstract || t.IsInterface))
+            if (genericArguments.Any(t => t == null || t.IsAbstract || t.IsInterface) ||
+                AreGenericArgumentsValid(genericType, genericArguments) == false)
             {
                 return null;
             }
@@ -228,6 +230,111 @@ namespace SerializeReferenceDropdown.Editor.Utils
             }
 
             return sourceType == targetType;
+        }
+
+        public static bool AreGenericArgumentsValid(Type genericType, IReadOnlyList<Type> genericArguments)
+        {
+            if (genericType?.IsGenericType != true)
+            {
+                return false;
+            }
+
+            var genericParameters = genericType.GetGenericArguments();
+            if (genericParameters.Length != genericArguments.Count)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < genericParameters.Length; i++)
+            {
+                if (IsGenericArgumentValid(genericParameters[i], genericArguments[i]) == false)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public static bool IsGenericArgumentValid(Type genericParameter, Type genericArgument)
+        {
+            if (genericParameter?.IsGenericParameter != true || genericArgument == null)
+            {
+                return false;
+            }
+
+            var attributes = genericParameter.GenericParameterAttributes;
+            var specialConstraints = attributes & GenericParameterAttributes.SpecialConstraintMask;
+            if (specialConstraints.HasFlag(GenericParameterAttributes.ReferenceTypeConstraint) &&
+                genericArgument.IsValueType)
+            {
+                return false;
+            }
+
+            if (specialConstraints.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint) &&
+                (genericArgument.IsValueType == false || Nullable.GetUnderlyingType(genericArgument) != null))
+            {
+                return false;
+            }
+
+            if (specialConstraints.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint) &&
+                HasDefaultConstructor(genericArgument) == false)
+            {
+                return false;
+            }
+
+            var constraints = genericParameter.GetGenericParameterConstraints();
+            foreach (var constraint in constraints)
+            {
+                if (SatisfiesGenericConstraint(constraint, genericArgument) == false)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+
+            bool HasDefaultConstructor(Type type)
+            {
+                return type.IsValueType || type.GetConstructor(Type.EmptyTypes) != null;
+            }
+
+            bool SatisfiesGenericConstraint(Type constraint, Type argument)
+            {
+                if (constraint.IsAssignableFrom(argument))
+                {
+                    return true;
+                }
+
+                if (constraint.IsGenericType == false)
+                {
+                    return false;
+                }
+
+                var constraintDefinition = constraint.GetGenericTypeDefinition();
+                return argument.GetInterfaces().Any(IsMatchingGenericConstraint) ||
+                       IsMatchingBaseGenericConstraint(argument.BaseType);
+
+                bool IsMatchingGenericConstraint(Type type)
+                {
+                    return type.IsGenericType && type.GetGenericTypeDefinition() == constraintDefinition;
+                }
+
+                bool IsMatchingBaseGenericConstraint(Type type)
+                {
+                    while (type != null)
+                    {
+                        if (IsMatchingGenericConstraint(type))
+                        {
+                            return true;
+                        }
+
+                        type = type.BaseType;
+                    }
+
+                    return false;
+                }
+            }
         }
 
         private static Type[] GetBuiltInUnitySerializeTypes()
