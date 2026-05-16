@@ -193,12 +193,68 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
 
         public static void OpenSourceFile(Type type)
         {
+            if (type == null)
+            {
+                return;
+            }
+
             var (filePath, lineNumber, columnNumber) = CodeAnalysis.GetSourceFileLocation(type);
 
             if (string.IsNullOrEmpty(filePath) == false)
             {
                 var asset = AssetDatabase.LoadMainAssetAtPath(filePath);
                 AssetDatabase.OpenAsset(asset, lineNumber, columnNumber);
+            }
+        }
+
+        public static void ShowOpenSourceFileMenu(SerializedProperty property, Rect buttonRect)
+        {
+            var menu = new GenericMenu();
+            var typeItems = GetOpenSourceFileTypeItems(property);
+            foreach (var typeItem in typeItems)
+            {
+                menu.AddItem(new GUIContent(typeItem.menuPath), false, () => OpenSourceFile(typeItem.type));
+            }
+
+            if (typeItems.Count == 0)
+            {
+                menu.AddDisabledItem(new GUIContent("No type"));
+            }
+
+            menu.DropDown(buttonRect);
+        }
+
+        private static List<(string menuPath, Type type)> GetOpenSourceFileTypeItems(SerializedProperty property)
+        {
+            var typeItems = new List<(string menuPath, Type type)>();
+            var addedTypes = new HashSet<Type>();
+            var fieldType = TypeUtils.ExtractTypeFromString(property.managedReferenceFieldTypename);
+            var valueType = TypeUtils.ExtractTypeFromString(property.managedReferenceFullTypename);
+
+            AddTypeItem("Field", fieldType);
+            AddTypeItem("Value", valueType);
+
+            return typeItems;
+
+            void AddTypeItem(string labelPrefix, Type type)
+            {
+                if (type == null || addedTypes.Add(type) == false)
+                {
+                    return;
+                }
+
+                typeItems.Add(($"{labelPrefix}: {GetTypeName(type)}", type));
+
+                if (type.IsGenericType == false)
+                {
+                    return;
+                }
+
+                var genericArguments = type.GetGenericArguments();
+                for (int i = 0; i < genericArguments.Length; i++)
+                {
+                    AddTypeItem($"{labelPrefix} Arg {i}", genericArguments[i]);
+                }
             }
         }
 

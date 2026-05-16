@@ -16,5 +16,19 @@ namespace SerializeReferenceDropdown.Editor.Tests
             Assert.That(filePath, Does.EndWith("CodeAnalysisTests.cs"));
             Assert.Greater(lineNumber, 0, "Line number should be greater than 0");
         }
+
+        [Test]
+        public void GetSourceFileLocation_GenericType_FindsGenericDefinition()
+        {
+            var (filePath, lineNumber, columnNumber) = CodeAnalysis.GetSourceFileLocation(typeof(GenericSource<int>));
+
+            Assert.IsNotEmpty(filePath, "File path should not be empty");
+            Assert.That(filePath, Does.EndWith("CodeAnalysisTests.cs"));
+            Assert.Greater(lineNumber, 0, "Line number should be greater than 0");
+        }
+
+        private class GenericSource<T>
+        {
+        }
     }
 }

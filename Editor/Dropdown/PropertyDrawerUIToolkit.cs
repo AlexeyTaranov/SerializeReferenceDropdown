@@ -139,7 +139,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             openSourceFIleButton.SetDisplayElement(false);
             openSourceFIleButton.clicked += () =>
             {
-                PropertyDrawerTypesUtils.OpenSourceFile(property.managedReferenceValue.GetType());
+                PropertyDrawerTypesUtils.ShowOpenSourceFileMenu(property, GetButtonRect(openSourceFIleButton));
             };
 
             modifyDirectType = root.Q<Button>("modify-direct-type");
@@ -178,10 +178,14 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                     PropertyDrawerTypesUtils.WriteNewInstanceByType(type, property, propertyRect,
                         registerUndo: true);
                 });
-            var buttonMatrix = selectTypeButton.worldTransform;
+            dropdown.Show(GetButtonRect(selectTypeButton));
+        }
+
+        private static Rect GetButtonRect(Button button)
+        {
+            var buttonMatrix = button.worldTransform;
             var position = new Vector3(buttonMatrix.m03, buttonMatrix.m13, buttonMatrix.m23);
-            var buttonRect = new Rect(position, selectTypeButton.contentRect.size);
-            dropdown.Show(buttonRect);
+            return new Rect(position, button.contentRect.size);
         }
 
         private void RefreshDropdown(SerializedObject so)
