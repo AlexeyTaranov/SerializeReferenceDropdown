@@ -291,28 +291,25 @@ namespace SerializeReferenceDropdown.Editor.Utils
             var derivedTypes = TypeCache.GetTypesDerivedFrom(propertyType);
             var nonUnityTypes = derivedTypes.Where(IsAssignableNonUnityType).ToList();
             nonUnityTypes.Insert(0, null);
-            if (propertyType.IsGenericType && propertyType.IsInterface)
+            if (propertyType.IsGenericType)
             {
                 var allTypes = GetAllTypesInCurrentDomain().Where(IsAssignableNonUnityType)
                     .Where(t => t.IsGenericType);
 
-                var assignableGenericTypes = allTypes.Where(IsImplementedGenericInterfacesFromGenericProperty);
+                var assignableGenericTypes = allTypes.Where(IsAssignableGenericTypeFromGenericProperty);
                 nonUnityTypes.AddRange(assignableGenericTypes);
             }
 
-            return nonUnityTypes;
+            return nonUnityTypes.Distinct().ToList();
 
             bool IsAssignableNonUnityType(Type type)
             {
                 return IsFinalAssignableType(type) && !type.IsSubclassOf(typeof(UnityEngine.Object));
             }
 
-            bool IsImplementedGenericInterfacesFromGenericProperty(Type type)
+            bool IsAssignableGenericTypeFromGenericProperty(Type type)
             {
-                var interfaces = type.GetInterfaces().Where(t => t.IsGenericType);
-                var isImplementedInterface = interfaces.Any(t =>
-                    t.GetGenericTypeDefinition() == propertyType.GetGenericTypeDefinition());
-                return isImplementedInterface;
+                return TryGetGenericArgumentsFromTargetType(propertyType, type, out _);
             }
         }
     }

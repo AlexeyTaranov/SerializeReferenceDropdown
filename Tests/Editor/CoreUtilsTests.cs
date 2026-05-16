@@ -58,6 +58,22 @@ namespace SerializeReferenceDropdown.Editor.Tests
         }
 
         [Test]
+        public void GetAssignableSerializeReferenceTypes_GenericInterface_FindsOpenGenericType()
+        {
+            var types = TypeUtils.GetAssignableSerializeReferenceTypes(typeof(IGenericTarget<int>));
+
+            Assert.Contains(typeof(DirectGeneric<>), types);
+        }
+
+        [Test]
+        public void GetAssignableSerializeReferenceTypes_GenericBaseClass_FindsOpenGenericChildType()
+        {
+            var types = TypeUtils.GetAssignableSerializeReferenceTypes(typeof(GenericBase<int>));
+
+            Assert.Contains(typeof(GenericBaseChild<>), types);
+        }
+
+        [Test]
         public void GetConcreteGenericType_DirectInterfaceMapping_ReturnsConstructedType()
         {
             var type = TypeUtils.GetConcreteGenericType(typeof(IGenericTarget<int>), typeof(DirectGeneric<>));
