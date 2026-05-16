@@ -1,8 +1,6 @@
 using System.Collections.Generic;
-using SerializeReferenceDropdown.Editor.SearchTool;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace SerializeReferenceDropdown.Editor.Preferences
 {
@@ -14,7 +12,7 @@ namespace SerializeReferenceDropdown.Editor.Preferences
 
         private SerializedObject serializedObject;
 
-        public SerializeReferenceToolsSettingsProvider(string path, SettingsScope scopes,
+        private SerializeReferenceToolsSettingsProvider(string path, SettingsScope scopes,
             IEnumerable<string> keywords = null) : base(path, scopes, keywords)
         {
             label = "Serialize Reference Tools";
@@ -35,9 +33,6 @@ namespace SerializeReferenceDropdown.Editor.Preferences
             preferences.EnableCrossReferencesCheck = GUILayout.Toggle(preferences.EnableCrossReferencesCheck,
                 "Enable Cross References Check");
             preferences.EnableSearchTool = GUILayout.Toggle(preferences.EnableSearchTool, "Enable Search Tool");
-            preferences.EnableRiderIntegration =
-                GUILayout.Toggle(preferences.EnableRiderIntegration, "Enable Rider Integration");
-            
 
             if (EditorGUI.EndChangeCheck())
             {

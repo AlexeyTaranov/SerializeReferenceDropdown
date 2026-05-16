@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
 using UnityEditor;
 using UnityEditor.Compilation;
@@ -36,18 +37,34 @@ namespace SerializeReferenceDropdown.Editor.Utils
                 return null;
             }
 
-            var splitFieldTypename = typeName.Split(' ');
-            var assemblyName = splitFieldTypename[0];
-            assemblyName = assemblyName == "Assembly" ? "Assembly-CSharp" : assemblyName;
-            var subStringTypeName = splitFieldTypename[1];
-            if (splitFieldTypename.Length > 2)
+            var assemblyNameEndIndex = typeName.IndexOf(' ');
+            if (assemblyNameEndIndex < 0)
             {
-                subStringTypeName = typeName.Substring(assemblyName.Length + 1);
+                return Type.GetType(typeName, false);
             }
 
-            var assembly = Assembly.Load(assemblyName);
-            var targetType = assembly.GetType(subStringTypeName);
-            return targetType;
+            var assemblyName = typeName.Substring(0, assemblyNameEndIndex);
+            assemblyName = assemblyName == "Assembly" ? "Assembly-CSharp" : assemblyName;
+            var subStringTypeName = typeName.Substring(assemblyNameEndIndex + 1);
+
+            try
+            {
+                var assembly = Assembly.Load(assemblyName);
+                if (assembly != null)
+                {
+                    var type = assembly.GetType(subStringTypeName);
+                    if (type != null)
+                    {
+                        return type;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Assembly not found or invalid name
+            }
+
+            return Type.GetType($"{subStringTypeName}, {assemblyName}", false);
         }
 
         public static bool IsFinalAssignableType(Type type)
@@ -98,25 +115,225 @@ namespace SerializeReferenceDropdown.Editor.Utils
 
         public static Type GetConcreteGenericType(Type propertyType, Type genericType)
         {
-            if (propertyType.IsGenericType && CanCreateDirectGenericType())
+            if (TryGetGenericArgumentsFromTargetType(propertyType, genericType, out var genericArguments) == false)
             {
-                var genericConcreteType = genericType.MakeGenericType(propertyType.GetGenericArguments());
-                return genericConcreteType;
+                return null;
+            }
+
+            if (genericArguments.Any(t => t == null || t.IsAbstract || t.IsInterface) ||
+                AreGenericArgumentsValid(genericType, genericArguments) == false)
+            {
+                return null;
+            }
+
+            try
+            {
+                return genericType.MakeGenericType(genericArguments);
+            }
+            catch (Exception e)
+            {
+                Log.DevError(e);
+                return null;
+            }
+        }
+
+        public static bool TryGetGenericArgumentsFromTargetType(Type targetType, Type genericType,
+            out Type[] genericArguments)
+        {
+            genericArguments = null;
+            if (targetType?.IsGenericType != true || genericType?.IsGenericTypeDefinition != true)
+            {
+                return false;
+            }
+
+            var matchingGenericType = GetMatchingGenericType(targetType, genericType);
+            if (matchingGenericType == null)
+            {
+                return false;
+            }
+
+            var genericParameterMap = new Dictionary<Type, Type>();
+            if (TryMapGenericArguments(matchingGenericType, targetType, genericParameterMap) == false)
+            {
+                return false;
+            }
+
+            var genericParameters = genericType.GetGenericArguments();
+            genericArguments = genericParameters.Select(t =>
+                genericParameterMap.TryGetValue(t, out var mappedType) ? mappedType : null).ToArray();
+            return true;
+        }
+
+        private static Type GetMatchingGenericType(Type targetType, Type genericType)
+        {
+            var targetGenericDefinition = targetType.GetGenericTypeDefinition();
+            var genericInterfaces = genericType.GetInterfaces();
+            var matchingInterface = genericInterfaces.FirstOrDefault(IsMatchingGenericType);
+            if (matchingInterface != null)
+            {
+                return matchingInterface;
+            }
+
+            var currentBaseType = genericType.BaseType;
+            while (currentBaseType != null)
+            {
+                if (IsMatchingGenericType(currentBaseType))
+                {
+                    return currentBaseType;
+                }
+
+                currentBaseType = currentBaseType.BaseType;
             }
 
             return null;
 
-            bool CanCreateDirectGenericType()
+            bool IsMatchingGenericType(Type type)
             {
-                var genericArguments = genericType.GetInterfaces();
-                var interfaceIndex = Array.FindIndex(genericArguments,
-                    argType => argType.IsGenericType &&
-                               argType.GetGenericTypeDefinition() == propertyType.GetGenericTypeDefinition());
-                var isHaveSameArgumentsCount =
-                    propertyType.GetGenericArguments().Length == genericType.GetGenericArguments().Length &&
-                    interfaceIndex != -1;
-                var anyAbstract = propertyType.GetGenericArguments().Any(t => t.IsAbstract);
-                return isHaveSameArgumentsCount && anyAbstract == false;
+                return type.IsGenericType && type.GetGenericTypeDefinition() == targetGenericDefinition;
+            }
+        }
+
+        private static bool TryMapGenericArguments(Type sourceType, Type targetType,
+            Dictionary<Type, Type> genericParameterMap)
+        {
+            if (sourceType.IsGenericParameter)
+            {
+                if (genericParameterMap.TryGetValue(sourceType, out var mappedType))
+                {
+                    return mappedType == targetType;
+                }
+
+                genericParameterMap[sourceType] = targetType;
+                return true;
+            }
+
+            if (sourceType.IsArray && targetType.IsArray)
+            {
+                return TryMapGenericArguments(sourceType.GetElementType(), targetType.GetElementType(),
+                    genericParameterMap);
+            }
+
+            if (sourceType.IsGenericType && targetType.IsGenericType &&
+                sourceType.GetGenericTypeDefinition() == targetType.GetGenericTypeDefinition())
+            {
+                var sourceArguments = sourceType.GetGenericArguments();
+                var targetArguments = targetType.GetGenericArguments();
+                for (int i = 0; i < sourceArguments.Length; i++)
+                {
+                    if (TryMapGenericArguments(sourceArguments[i], targetArguments[i], genericParameterMap) == false)
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            return sourceType == targetType;
+        }
+
+        public static bool AreGenericArgumentsValid(Type genericType, IReadOnlyList<Type> genericArguments)
+        {
+            if (genericType?.IsGenericType != true)
+            {
+                return false;
+            }
+
+            var genericParameters = genericType.GetGenericArguments();
+            if (genericParameters.Length != genericArguments.Count)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < genericParameters.Length; i++)
+            {
+                if (IsGenericArgumentValid(genericParameters[i], genericArguments[i]) == false)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public static bool IsGenericArgumentValid(Type genericParameter, Type genericArgument)
+        {
+            if (genericParameter?.IsGenericParameter != true || genericArgument == null)
+            {
+                return false;
+            }
+
+            var attributes = genericParameter.GenericParameterAttributes;
+            var specialConstraints = attributes & GenericParameterAttributes.SpecialConstraintMask;
+            if (specialConstraints.HasFlag(GenericParameterAttributes.ReferenceTypeConstraint) &&
+                genericArgument.IsValueType)
+            {
+                return false;
+            }
+
+            if (specialConstraints.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint) &&
+                (genericArgument.IsValueType == false || Nullable.GetUnderlyingType(genericArgument) != null))
+            {
+                return false;
+            }
+
+            if (specialConstraints.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint) &&
+                HasDefaultConstructor(genericArgument) == false)
+            {
+                return false;
+            }
+
+            var constraints = genericParameter.GetGenericParameterConstraints();
+            foreach (var constraint in constraints)
+            {
+                if (SatisfiesGenericConstraint(constraint, genericArgument) == false)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+
+            bool HasDefaultConstructor(Type type)
+            {
+                return type.IsValueType || type.GetConstructor(Type.EmptyTypes) != null;
+            }
+
+            bool SatisfiesGenericConstraint(Type constraint, Type argument)
+            {
+                if (constraint.IsAssignableFrom(argument))
+                {
+                    return true;
+                }
+
+                if (constraint.IsGenericType == false)
+                {
+                    return false;
+                }
+
+                var constraintDefinition = constraint.GetGenericTypeDefinition();
+                return argument.GetInterfaces().Any(IsMatchingGenericConstraint) ||
+                       IsMatchingBaseGenericConstraint(argument.BaseType);
+
+                bool IsMatchingGenericConstraint(Type type)
+                {
+                    return type.IsGenericType && type.GetGenericTypeDefinition() == constraintDefinition;
+                }
+
+                bool IsMatchingBaseGenericConstraint(Type type)
+                {
+                    while (type != null)
+                    {
+                        if (IsMatchingGenericConstraint(type))
+                        {
+                            return true;
+                        }
+
+                        type = type.BaseType;
+                    }
+
+                    return false;
+                }
             }
         }
 
@@ -138,7 +355,7 @@ namespace SerializeReferenceDropdown.Editor.Utils
         }
 
         private static IReadOnlyList<Type> systemObjectTypes;
-        
+
         public static IReadOnlyList<Type> GetAllSystemObjectTypes()
         {
             if (systemObjectTypes == null)
@@ -175,34 +392,31 @@ namespace SerializeReferenceDropdown.Editor.Utils
             var propertyType = ExtractTypeFromString(property.managedReferenceFieldTypename);
             return GetAssignableSerializeReferenceTypes(propertyType);
         }
-        
+
         public static List<Type> GetAssignableSerializeReferenceTypes(Type propertyType)
         {
             var derivedTypes = TypeCache.GetTypesDerivedFrom(propertyType);
             var nonUnityTypes = derivedTypes.Where(IsAssignableNonUnityType).ToList();
             nonUnityTypes.Insert(0, null);
-            if (propertyType.IsGenericType && propertyType.IsInterface)
+            if (propertyType.IsGenericType)
             {
                 var allTypes = GetAllTypesInCurrentDomain().Where(IsAssignableNonUnityType)
                     .Where(t => t.IsGenericType);
 
-                var assignableGenericTypes = allTypes.Where(IsImplementedGenericInterfacesFromGenericProperty);
+                var assignableGenericTypes = allTypes.Where(IsAssignableGenericTypeFromGenericProperty);
                 nonUnityTypes.AddRange(assignableGenericTypes);
             }
 
-            return nonUnityTypes;
+            return nonUnityTypes.Distinct().ToList();
 
             bool IsAssignableNonUnityType(Type type)
             {
                 return IsFinalAssignableType(type) && !type.IsSubclassOf(typeof(UnityEngine.Object));
             }
 
-            bool IsImplementedGenericInterfacesFromGenericProperty(Type type)
+            bool IsAssignableGenericTypeFromGenericProperty(Type type)
             {
-                var interfaces = type.GetInterfaces().Where(t => t.IsGenericType);
-                var isImplementedInterface = interfaces.Any(t =>
-                    t.GetGenericTypeDefinition() == propertyType.GetGenericTypeDefinition());
-                return isImplementedInterface;
+                return TryGetGenericArgumentsFromTargetType(propertyType, type, out _);
             }
         }
     }
