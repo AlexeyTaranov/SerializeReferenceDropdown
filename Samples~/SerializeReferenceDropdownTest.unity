@@ -38,12 +38,12 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 12
+  serializedVersion: 13
+  m_BakeOnSceneLoad: 0
   m_GISettings:
     serializedVersion: 2
     m_BounceScale: 1
@@ -193,6 +193,9 @@ MeshRenderer:
   m_RayTraceProcedural: 0
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -214,9 +217,11 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &1261749243
 MeshFilter:
@@ -271,45 +276,45 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _singleShape:
-    rid: 7290041831390183645
+    rid: 6830438180139827272
   _shapesArray:
-  - rid: 1
-  - rid: 2
-  - rid: 3
+  - rid: 6830438180139827273
+  - rid: 6830438180139827274
+  - rid: 6830438180139827275
   _intData:
-    rid: 7290041831390183644
+    rid: 6830438180139827278
   _classData:
-    rid: 7290041831390183642
+    rid: 6830438180139827280
   references:
     version: 2
     RefIds:
-    - rid: 1
+    - rid: 6830438180139827272
       type: {class: Circle, ns: SRD.Sample, asm: SerializeReferenceDropdownSample}
       data:
-        _radius: 1.82
-    - rid: 2
-      type: {class: Rectangle, ns: SRD.Sample, asm: SerializeReferenceDropdownSample}
+        _radius: 1.74
+    - rid: 6830438180139827273
+      type: {class: Circle, ns: SRD.Sample, asm: SerializeReferenceDropdownSample}
       data:
-        _sideA: 1.71
-        _sideB: 2.82
-    - rid: 3
+        _radius: 1.29
+    - rid: 6830438180139827274
       type: {class: ColliderShape, ns: SRD.Sample, asm: SerializeReferenceDropdownSample}
       data:
-        _collider: {fileID: 1261749241}
-    - rid: 7290041831390183642
+        _collider: {fileID: 0}
+    - rid: 6830438180139827275
+      type: {class: Rectangle, ns: SRD.Sample, asm: SerializeReferenceDropdownSample}
+      data:
+        _sideA: 2.67
+        _sideB: 2.4
+    - rid: 6830438180139827278
+      type: {class: 'GenericData`1[[System.Int32, mscorlib]]', ns: SRD.Sample.Generics, asm: SerializeReferenceDropdownSample}
+      data:
+        _data: 0
+    - rid: 6830438180139827280
       type: {class: 'GenericData`1[[SRD.Sample.Data, SerializeReferenceDropdownSample]]', ns: SRD.Sample.Generics, asm: SerializeReferenceDropdownSample}
       data:
         _data:
-          Name: Name
-          Index: 123
-    - rid: 7290041831390183644
-      type: {class: 'GenericData`1[[System.Int32, mscorlib]]', ns: SRD.Sample.Generics, asm: SerializeReferenceDropdownSample}
-      data:
-        _data: 100
-    - rid: 7290041831390183645
-      type: {class: Circle, ns: SRD.Sample, asm: SerializeReferenceDropdownSample}
-      data:
-        _radius: 0
+          Name: 
+          Index: 0
 --- !u!4 &1617203132
 Transform:
   m_ObjectHideFlags: 0
