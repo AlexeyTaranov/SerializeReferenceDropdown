@@ -43,18 +43,18 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
                 return builtInTypeName;
             }
 
-            var typesWithNames = TypeCache.GetTypesWithAttribute(typeof(SerializeReferenceDropdownNameAttribute));
-            if (typesWithNames.Contains(type))
+            var customTypeName = GetCustomTypeName(type);
+            if (customTypeName != null)
             {
-                var dropdownNameAttribute = type.GetCustomAttribute<SerializeReferenceDropdownNameAttribute>();
-                return dropdownNameAttribute.Name;
+                return type.IsGenericType
+                    ? customTypeName + GetGenericArgumentsName(type)
+                    : customTypeName;
             }
 
             if (type.IsGenericType)
             {
-                var genericNames = type.GetGenericArguments().Select(GetTypeName);
-                var genericParamNames = "<" + string.Join(", ", genericNames) + ">";
-                var genericName = ObjectNames.NicifyVariableName(GetGenericTypeNameWithoutArity(type)) + genericParamNames;
+                var genericName = ObjectNames.NicifyVariableName(GetGenericTypeNameWithoutArity(type)) +
+                                  GetGenericArgumentsName(type);
                 return genericName;
             }
 
@@ -71,6 +71,35 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             }
 
             return ObjectNames.NicifyVariableName(type.Name);
+        }
+
+        private static string GetCustomTypeName(Type type)
+        {
+            var typesWithNames = TypeCache.GetTypesWithAttribute(typeof(SerializeReferenceDropdownNameAttribute));
+            if (typesWithNames.Contains(type))
+            {
+                var dropdownNameAttribute = type.GetCustomAttribute<SerializeReferenceDropdownNameAttribute>();
+                return dropdownNameAttribute.Name;
+            }
+
+            if (type.IsGenericType)
+            {
+                var genericTypeDefinition = type.GetGenericTypeDefinition();
+                if (typesWithNames.Contains(genericTypeDefinition))
+                {
+                    var dropdownNameAttribute =
+                        genericTypeDefinition.GetCustomAttribute<SerializeReferenceDropdownNameAttribute>();
+                    return dropdownNameAttribute.Name;
+                }
+            }
+
+            return null;
+        }
+
+        private static string GetGenericArgumentsName(Type type)
+        {
+            var genericNames = type.GetGenericArguments().Select(GetTypeName);
+            return "<" + string.Join(", ", genericNames) + ">";
         }
 
         private static string GetGenericTypeNameWithoutArity(Type type)

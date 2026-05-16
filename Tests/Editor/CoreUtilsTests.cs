@@ -167,6 +167,13 @@ namespace SerializeReferenceDropdown.Editor.Tests
             Assert.AreEqual("Generic Data<int>", prettyName);
         }
 
+        [Test]
+        public void PrettifyTypeName_GenericTypeWithNameAttribute_UsesDefinitionNameAndArguments()
+        {
+            var prettyName = PropertyDrawerTypesUtils.GetTypeName(typeof(NamedGenericData<int>));
+            Assert.AreEqual("Named Generic<int>", prettyName);
+        }
+
         private class TestScriptableObject : ScriptableObject
         {
             [SerializeReference] public ITestInterface Reference;
@@ -176,6 +183,8 @@ namespace SerializeReferenceDropdown.Editor.Tests
         private abstract class AbstractClass : ITestInterface { }
         private class ConcreteClass : ITestInterface { }
         private class GenericData<T> { }
+        [SerializeReferenceDropdownName("Named Generic")]
+        private class NamedGenericData<T> { }
         private interface IGenericTarget<T> { }
         private interface IReorderedTarget<TFirst, TSecond> { }
         private class DirectGeneric<T> : IGenericTarget<T> { }
