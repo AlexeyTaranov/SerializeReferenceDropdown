@@ -108,6 +108,38 @@ namespace SerializeReferenceDropdown.Editor.Tests
             Assert.IsFalse(result);
         }
 
+        [Test]
+        public void TypeData_FromType_NonGenericType_BuildsUnityTypeData()
+        {
+            var typeData = TypeData.FromType(typeof(TestYamlA));
+
+            Assert.AreEqual(typeof(TestYamlA).Assembly.GetName().Name, typeData.AssemblyName);
+            Assert.AreEqual(typeof(TestYamlA).Namespace, typeData.Namespace);
+            Assert.AreEqual(nameof(TestYamlA), typeData.ClassName);
+        }
+
+        [Test]
+        public void TypeData_FromType_GenericType_BuildsUnityTypeData()
+        {
+            var typeData = TypeData.FromType(typeof(GenericYamlData<int>));
+            var expectedClassName = $"GenericYamlData`1[[System.Int32, {typeof(int).Assembly.GetName().Name}]]";
+
+            Assert.AreEqual(typeof(GenericYamlData<>).Assembly.GetName().Name, typeData.AssemblyName);
+            Assert.AreEqual(typeof(GenericYamlData<>).Namespace, typeData.Namespace);
+            Assert.AreEqual(expectedClassName, typeData.ClassName);
+        }
+
+        [Test]
+        public void TypeData_BuildSRTypeStr_GenericType_QuotesClassName()
+        {
+            var typeData = TypeData.FromType(typeof(GenericYamlData<int>));
+            var expectedClassName = $"GenericYamlData`1[[System.Int32, {typeof(int).Assembly.GetName().Name}]]";
+
+            var typeString = typeData.BuildSRTypeStr();
+
+            Assert.That(typeString, Does.Contain($"class: '{expectedClassName}'"));
+        }
+
         private long GetFileId(Object obj)
         {
             AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out _, out long fileId);

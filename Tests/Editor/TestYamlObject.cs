@@ -12,6 +12,12 @@ namespace SerializeReferenceDropdown.Editor.Tests
         public int Value;
     }
 
+    [System.Serializable]
+    public class GenericYamlData<T> : ITestYaml
+    {
+        public T Value;
+    }
+
     [CreateAssetMenu(menuName = "SRD/TestYamlObject")]
     public class TestYamlObject : ScriptableObject
     {

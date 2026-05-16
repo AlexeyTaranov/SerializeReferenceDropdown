@@ -273,12 +273,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             else if (prop.managedReferenceValue != null)
             {
                 var type = prop.managedReferenceValue.GetType();
-                var typeData = new TypeData()
-                {
-                    AssemblyName = type.Assembly.GetName().Name,
-                    ClassName = type.Name,
-                    Namespace = type.Namespace
-                };
+                var typeData = TypeData.FromType(type);
                 ShowModifyWindow(typeData, property.managedReferenceId);
             }
 
