@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SerializeReferenceDropdown.Editor.Dropdown;
 using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
 using UnityEditor.Search;
@@ -64,7 +65,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
 
                 bool TargetTypeIsContainsQuery(Type type)
                 {
-                    var typeInvariant = type.FullName.ToLowerInvariant();
+                    var typeInvariant = GetSearchText(type).ToLowerInvariant();
                     foreach (var word in words)
                     {
                         if (typeInvariant.Contains(word) == false)
@@ -82,22 +83,23 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                     {
                         var typesList = new List<Type>();
                         var allTypes = TypeUtils.GetAllTypesInCurrentDomain();
-                        var interfaces = allTypes.Where(t => (t.IsInterface || t.IsAbstract) && t.IsGenericType == false);
+                        var interfaces = allTypes.Where(t => t.IsInterface || t.IsAbstract);
                         var nonUnityObjectTypes =
                             allTypes.Where(t =>
                                 t.IsClass && t.IsSubclassOf(typeof(UnityEngine.Object)) == false);
                         typesList.AddRange(interfaces);
                         typesList.AddRange(nonUnityObjectTypes);
-                        targetTypes = typesList;
+                        targetTypes = typesList.Distinct().ToArray();
                     }
                 }
 
                 SearchItem CreateSearchItem(Type t)
                 {
-                    var itemName = t.FullName;
+                    var itemName = t.AssemblyQualifiedName ?? t.FullName ?? t.Name;
                     var item = new SearchItem(itemName)
                     {
-                        label = itemName,
+                        label = PropertyDrawerTypesUtils.GetTypeName(t),
+                        description = t.FullName,
                         thumbnail = (Texture2D)icon,
                         context = context,
                         provider = last.provider,
@@ -105,6 +107,11 @@ namespace SerializeReferenceDropdown.Editor.SearchTool
                         data = t
                     };
                     return item;
+                }
+
+                string GetSearchText(Type type)
+                {
+                    return $"{PropertyDrawerTypesUtils.GetTypeName(type)} {type.FullName} {type.AssemblyQualifiedName}";
                 }
             }
         }

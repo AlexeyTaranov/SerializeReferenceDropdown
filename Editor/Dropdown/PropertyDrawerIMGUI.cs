@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using SerializeReferenceDropdown.Editor.Utils;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
@@ -5,14 +7,18 @@ using UnityEngine;
 
 namespace SerializeReferenceDropdown.Editor.Dropdown
 {
-    public partial class SerializeReferencePropertyDrawer
+    public class PropertyDrawerIMGUI
     {
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+        private readonly IReadOnlyList<Type> assignableTypes;
+        
+        private Rect propertyRect;
+
+        public PropertyDrawerIMGUI(IReadOnlyList<Type> assignableTypes)
         {
-            return EditorGUI.GetPropertyHeight(property, label, true);
+            this.assignableTypes = assignableTypes;
         }
 
-        public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
+        public void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
         {
             EditorGUI.BeginProperty(rect, label, property);
 
@@ -35,9 +41,8 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
         private void DrawIMGUITypeDropdown(Rect rect, SerializedProperty property, GUIContent label)
         {
             const float fixButtonWidth = 40f;
-            assignableTypes ??= GetAssignableTypes(property);
 
-            var isHaveOtherReference = IsHaveSameOtherSerializeReference(property, out _);
+            var isHaveOtherReference = PropertyDrawerCrossReferences.IsHaveSameOtherSerializeReference(property, out _);
 
             var referenceType = TypeUtils.ExtractTypeFromString(property.managedReferenceFullTypename);
 
@@ -46,13 +51,13 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             EditorGUI.EndDisabledGroup();
 
             var dropdownTypeContent = new GUIContent(
-                text: GetTypeName(referenceType),
-                tooltip: GetTypeTooltip(referenceType));
+                text: PropertyDrawerTypesUtils.GetTypeName(referenceType),
+                tooltip: PropertyDrawerTypesUtils.GetTypeTooltip(referenceType));
 
             var style = EditorStyles.miniPullDown;
             if (isHaveOtherReference)
             {
-                var uniqueColor = GetColorForEqualSerializeReference(property);
+                var uniqueColor = PropertyDrawerCrossReferences.GetColorForEqualSerializeReference(property);
                 style = new GUIStyle(EditorStyles.miniPullDown)
                     { normal = new GUIStyleState() { textColor = uniqueColor } };
             }
@@ -61,7 +66,8 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             {
                 var dropdown = new SerializeReferenceAdvancedDropdown(new AdvancedDropdownState(),
                     assignableTypes,
-                    type => WriteNewInstanceByType(type, property, propertyRect, registerUndo: true));
+                    type => PropertyDrawerTypesUtils.WriteNewInstanceByType(type, property, propertyRect,
+                        registerUndo: true));
                 dropdown.Show(dropdownRect);
             }
 
@@ -69,7 +75,7 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
             {
                 if (GUI.Button(GetFixCrossReferencesRect(dropdownRect), "Fix"))
                 {
-                    FixCrossReference(property);
+                    PropertyDrawerCrossReferences.FixCrossReference(property);
                 }
             }
 

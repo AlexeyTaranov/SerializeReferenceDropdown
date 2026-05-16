@@ -19,7 +19,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool.SearchToolWindow
         {
             selectedType = newType;
             var button = rootVisualElement.Q<Button>("target-type");
-            button.text = $"Type: {selectedType.Name}";
+            button.text = $"Type: {PropertyDrawerTypesUtils.GetTypeName(selectedType)}";
             button.tooltip = $"Type FullName: {selectedType.FullName}";
 
             var interfacesRoot = rootVisualElement.Q<VisualElement>("target-type-interfaces-root");
@@ -52,7 +52,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool.SearchToolWindow
                 {
                     var typeButton = new Button
                     {
-                        text = $"{type.Name}",
+                        text = PropertyDrawerTypesUtils.GetTypeName(type),
                         tooltip = $"FullName: {type.FullName}"
                     };
                     typeButton.clicked += () => SetNewType(type);
@@ -73,7 +73,7 @@ namespace SerializeReferenceDropdown.Editor.SearchTool.SearchToolWindow
         
         private void OpenTargetTypeSourceFile()
         {
-            SerializeReferencePropertyDrawer.OpenSourceFile(selectedType);
+            PropertyDrawerTypesUtils.OpenSourceFile(selectedType);
         }
 
         private void ShowAssignableTypes()

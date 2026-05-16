@@ -10,6 +10,7 @@ namespace SerializeReferenceDropdown.Editor.Utils
     {
         public static (string filePath, int lineNumber, int columnNumber) GetSourceFileLocation(Type targetType)
         {
+            targetType = targetType.IsGenericType ? targetType.GetGenericTypeDefinition() : targetType;
             var iterator = new FileIterator<MonoScript>(AnalyseSourceFile)
             {
                 ProgressBarLabel = "Open Source File",
@@ -40,7 +41,7 @@ namespace SerializeReferenceDropdown.Editor.Utils
                         foundNamespace = namespaceMatch.Groups[1].Value;
                     }
 
-                    var className = targetType.Name;
+                    var className = GetTypeNameWithoutArity(targetType);
                     var typeMatch = "class";
                     if (targetType.IsInterface)
                     {
@@ -59,6 +60,13 @@ namespace SerializeReferenceDropdown.Editor.Utils
 
                 return false;
             }
+        }
+
+        private static string GetTypeNameWithoutArity(Type type)
+        {
+            var name = type.Name;
+            var arityIndex = name.IndexOf('`');
+            return arityIndex < 0 ? name : name.Substring(0, arityIndex);
         }
     }
 }
