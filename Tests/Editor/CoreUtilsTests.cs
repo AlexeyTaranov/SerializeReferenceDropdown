@@ -58,6 +58,49 @@ namespace SerializeReferenceDropdown.Editor.Tests
         }
 
         [Test]
+        public void GetConcreteGenericType_DirectInterfaceMapping_ReturnsConstructedType()
+        {
+            var type = TypeUtils.GetConcreteGenericType(typeof(IGenericTarget<int>), typeof(DirectGeneric<>));
+
+            Assert.AreEqual(typeof(DirectGeneric<int>), type);
+        }
+
+        [Test]
+        public void GetConcreteGenericType_ReorderedInterfaceMapping_ReturnsConstructedType()
+        {
+            var type = TypeUtils.GetConcreteGenericType(typeof(IReorderedTarget<int, string>), typeof(ReorderedGeneric<,>));
+
+            Assert.AreEqual(typeof(ReorderedGeneric<string, int>), type);
+        }
+
+        [Test]
+        public void GetConcreteGenericType_PartialInterfaceMapping_ReturnsNull()
+        {
+            var type = TypeUtils.GetConcreteGenericType(typeof(IGenericTarget<int>), typeof(PartialGeneric<,>));
+
+            Assert.IsNull(type);
+        }
+
+        [Test]
+        public void TryGetGenericArgumentsFromTargetType_PartialInterfaceMapping_ReturnsMappedArguments()
+        {
+            var isMapped = TypeUtils.TryGetGenericArgumentsFromTargetType(typeof(IGenericTarget<int>), typeof(PartialGeneric<,>),
+                out var genericArguments);
+
+            Assert.IsTrue(isMapped);
+            Assert.IsNull(genericArguments[0]);
+            Assert.AreEqual(typeof(int), genericArguments[1]);
+        }
+
+        [Test]
+        public void GetConcreteGenericType_BaseClassMapping_ReturnsConstructedType()
+        {
+            var type = TypeUtils.GetConcreteGenericType(typeof(GenericBase<int>), typeof(GenericBaseChild<>));
+
+            Assert.AreEqual(typeof(GenericBaseChild<int>), type);
+        }
+
+        [Test]
         public void PrettifyTypeName_RemovesNamespaces()
         {
             var prettyName = PropertyDrawerTypesUtils.GetTypeName(typeof(UnityEngine.UIElements.Button));
@@ -80,5 +123,12 @@ namespace SerializeReferenceDropdown.Editor.Tests
         private abstract class AbstractClass : ITestInterface { }
         private class ConcreteClass : ITestInterface { }
         private class GenericData<T> { }
+        private interface IGenericTarget<T> { }
+        private interface IReorderedTarget<TFirst, TSecond> { }
+        private class DirectGeneric<T> : IGenericTarget<T> { }
+        private class ReorderedGeneric<TFirst, TSecond> : IReorderedTarget<TSecond, TFirst> { }
+        private class PartialGeneric<TFree, TTarget> : IGenericTarget<TTarget> { }
+        private class GenericBase<T> { }
+        private class GenericBaseChild<T> : GenericBase<T> { }
     }
 }

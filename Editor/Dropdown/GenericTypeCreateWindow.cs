@@ -88,38 +88,15 @@ namespace SerializeReferenceDropdown.Editor.Dropdown
         private void FillSpecifiedTypesFromProperty()
         {
             var propertyType = TypeUtils.ExtractTypeFromString(serializedProperty.managedReferenceFieldTypename);
-            if (propertyType.IsGenericType == false || propertyType.IsInterface == false)
+            var genericTypeArgs = inputGenericType.GetGenericArguments();
+            specifiedTypesFromProperty = new Type[genericTypeArgs.Length];
+            if (TypeUtils.TryGetGenericArgumentsFromTargetType(propertyType, inputGenericType,
+                    out var specifiedTypes) == false)
             {
                 return;
             }
 
-            var genericInterfaces = inputGenericType.GetInterfaces();
-            var genericInterfaceIndex = Array.FindIndex(genericInterfaces, IsSameGenericInterface);
-            var genericInterface = genericInterfaces[genericInterfaceIndex];
-            var genericInterfaceArgs = genericInterface.GetGenericArguments();
-
-            var propertyGenericArgs = propertyType.GetGenericArguments();
-            var genericTypeArgs = inputGenericType.GetGenericArguments();
-            var specifiedTypes = new Type[genericTypeArgs.Length];
-            for (int i = 0; i < genericInterfaceArgs.Length; i++)
-            {
-                var genericArg = genericInterfaceArgs[i];
-                var specifiedType = propertyGenericArgs[i];
-                var genericArgIndex = Array.FindIndex(genericTypeArgs, Match);
-                specifiedTypes[genericArgIndex] = specifiedType;
-
-                bool Match(Type type)
-                {
-                    return type.Name == genericArg.Name;
-                }
-            }
-
             specifiedTypesFromProperty = specifiedTypes;
-
-            bool IsSameGenericInterface(Type type)
-            {
-                return type.IsGenericType && propertyType.GetGenericTypeDefinition() == type.GetGenericTypeDefinition();
-            }
         }
 
 
