@@ -396,7 +396,7 @@ namespace SerializeReferenceDropdown.Editor.Utils
         public static List<Type> GetAssignableSerializeReferenceTypes(Type propertyType)
         {
             var derivedTypes = TypeCache.GetTypesDerivedFrom(propertyType);
-            var nonUnityTypes = derivedTypes.Where(IsAssignableNonUnityType).ToList();
+            var nonUnityTypes = derivedTypes.Prepend(propertyType).Where(IsAssignableNonUnityType).ToList();
             nonUnityTypes.Insert(0, null);
             if (propertyType.IsGenericType)
             {
