@@ -58,6 +58,15 @@ namespace SerializeReferenceDropdown.Editor.Tests
         }
 
         [Test]
+        public void GetAssignableSerializeReferenceTypes_ConcreteBaseType_IncludesPropertyType()
+        {
+            var types = TypeUtils.GetAssignableSerializeReferenceTypes(typeof(ConcreteBaseClass));
+
+            Assert.Contains(typeof(ConcreteBaseClass), types);
+            Assert.Contains(typeof(ConcreteBaseChildClass), types);
+        }
+
+        [Test]
         public void GetAssignableSerializeReferenceTypes_GenericInterface_FindsOpenGenericType()
         {
             var types = TypeUtils.GetAssignableSerializeReferenceTypes(typeof(IGenericTarget<int>));
@@ -182,6 +191,8 @@ namespace SerializeReferenceDropdown.Editor.Tests
         private interface ITestInterface { }
         private abstract class AbstractClass : ITestInterface { }
         private class ConcreteClass : ITestInterface { }
+        private class ConcreteBaseClass { }
+        private class ConcreteBaseChildClass : ConcreteBaseClass { }
         private class GenericData<T> { }
         [SerializeReferenceDropdownName("Named Generic")]
         private class NamedGenericData<T> { }

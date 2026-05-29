@@ -99,7 +99,22 @@ jobs:
       - name: Install jq
         run: sudo apt-get install -y jq
 
+      - name: Check for open release PR
+        id: check_release_pr
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          open_release_prs=$(gh pr list --state open --base master --label release --json number --jq 'length')
+          echo "open_release_prs=$open_release_prs"
+          if [ "$open_release_prs" != "0" ]; then
+            echo "has_open_release_pr=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_open_release_pr=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Get current version
+        if: steps.check_release_pr.outputs.has_open_release_pr != 'true'
         id: get_version
         run: |
           version=$(jq -r '.version' package.json)
@@ -107,6 +122,7 @@ jobs:
           echo "Current version: $version"
 
       - name: Check for new commits since last tag
+        if: steps.check_release_pr.outputs.has_open_release_pr != 'true'
         id: check_commits
         run: |
           last_commit_msg=$(git log -1 --pretty=%s)
@@ -189,23 +205,9 @@ jobs:
             This PR updates:
             - **package.json**
             - **CHANGELOG.md**
+
+            GitHub Release should be created after this PR is merged and tagged.
           labels: release
           add-paths: |
             package.json
             CHANGELOG.md
-
-      - name: Create draft GitHub release
-        if: steps.check_commits.outputs.no_new_commits == 'false'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.bump_version.outputs.new_version }}
-          name: Release ${{ steps.bump_version.outputs.new_version }}
-          body: |
-            🧩 Unity package **com.alexeytaranov.serializereferencedropdown**
-            Version: ${{ steps.bump_version.outputs.new_version }}
-
-            ### Changelog
-            ${{ steps.changelog.outputs.log }}
-          draft: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
