@@ -1,3 +1,6 @@
+## v1.2.11 - 2026-05-29
+- Include concrete base type in serialize reference dropdown (cb3d2f7)
+
 ## v1.2.10 - 2026-04-23
 - chore: release v1.2.9 (bb88e07)
 - Fix RefTo host (663b798)
