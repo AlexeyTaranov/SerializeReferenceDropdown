@@ -361,7 +361,7 @@ namespace SerializeReferenceDropdown.Editor.Utils
             if (systemObjectTypes == null)
             {
                 var assemblies = CompilationPipeline.GetAssemblies();
-                var playerAssemblies = assemblies.Where(t => t.flags.HasFlag(AssemblyFlags.EditorAssembly) == false)
+                var playerAssemblies = assemblies.Where(t => t.flags.HasFlag(UnityEditor.Compilation.AssemblyFlags.EditorAssembly) == false)
                     .Select(t => t.name).ToArray();
                 var baseType = typeof(object);
                 var typesCollection = TypeCache.GetTypesDerivedFrom(baseType);
