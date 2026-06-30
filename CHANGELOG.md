@@ -1,3 +1,6 @@
+## v1.2.12 - 2026-06-30
+- Fix AssemblyFlags ambiguity on Unity 6000.5 (79c50e3)
+
 ## v1.2.11 - 2026-05-29
 - Include concrete base type in serialize reference dropdown (cb3d2f7)
 
