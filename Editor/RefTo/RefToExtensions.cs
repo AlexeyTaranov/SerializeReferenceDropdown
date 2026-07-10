@@ -13,33 +13,42 @@ namespace SerializeReferenceDropdown.Editor.RefTo
 
         public static bool TryGetRefType(SerializedProperty property, out Type refToType, out Type hostType)
         {
-            var toType = property.boxedValue?.GetType();
             refToType = null;
             hostType = null;
-            if (toType == null)
+            try
             {
+                var toType = property.boxedValue?.GetType();
+
+                if (toType == null)
+                {
+                    return false;
+                }
+
+                if (toType?.BaseType != null && toType?.BaseType != typeof(System.Object))
+                {
+                    toType = toType.BaseType;
+                }
+
+                if (IsGenericTypeOf(toType, typeof(RefTo<,>)))
+                {
+                    refToType = toType.GenericTypeArguments[0];
+                    hostType = toType.GenericTypeArguments[1];
+                    return true;
+                }
+
+                if (IsGenericTypeOf(toType, typeof(RefTo<>)))
+                {
+                    refToType = toType.GenericTypeArguments[0];
+                    hostType = typeof(UnityEngine.Object);
+                }
+
                 return false;
             }
-
-            if (toType?.BaseType != null && toType?.BaseType != typeof(System.Object))
+            catch (Exception e)
             {
-                toType = toType.BaseType;
+                //
+                return false;
             }
-
-            if (IsGenericTypeOf(toType, typeof(RefTo<,>)))
-            {
-                refToType = toType.GenericTypeArguments[0];
-                hostType = toType.GenericTypeArguments[1];
-                return true;
-            }
-
-            if (IsGenericTypeOf(toType, typeof(RefTo<>)))
-            {
-                refToType = toType.GenericTypeArguments[0];
-                hostType = typeof(UnityEngine.Object);
-            }
-
-            return false;
         }
 
         private static bool IsGenericTypeOf(Type type, Type genericTypeDefinition)
