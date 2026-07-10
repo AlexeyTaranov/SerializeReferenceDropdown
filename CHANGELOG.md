@@ -1,3 +1,7 @@
+## v1.2.13 - 2026-07-10
+- Fix RefTo check type (0ba8410)
+- Fix AssemblyFlags ambiguity on Unity 6000.5 (79c50e3)
+
 ## v1.2.12 - 2026-06-30
 - Fix AssemblyFlags ambiguity on Unity 6000.5 (79c50e3)
 
